@@ -8,11 +8,7 @@ import re
 import uuid
 import time
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+# selenium imported lazily inside functions (not available in production)
 
 from sqlalchemy.orm import Session
 from app.models import Job
@@ -35,8 +31,10 @@ DEFAULT_KEYWORDS = [
 MAX_JOBS_PER_KEYWORD = 5  # Batas per keyword agar tidak terlalu lama
 
 
-def _build_driver() -> webdriver.Chrome:
+def _build_driver():
     """Buat Chrome WebDriver dengan konfigurasi anti-bot."""
+    from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
     options = webdriver.ChromeOptions()
 
     if _IS_HEADLESS:
@@ -69,8 +67,11 @@ def _build_driver() -> webdriver.Chrome:
     return driver
 
 
-def _get_job_links(driver: webdriver.Chrome, keyword: str, max_jobs: int) -> list[str]:
+def _get_job_links(driver, keyword: str, max_jobs: int) -> list[str]:
     """Ambil link lowongan dari halaman pencarian Glints."""
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
     wait = WebDriverWait(driver, 15)
     search_kw = keyword.replace(" ", "+")
     url = f"https://glints.com/id/opportunities/jobs/explore?keyword={search_kw}&country=ID"
@@ -108,8 +109,11 @@ def _get_job_links(driver: webdriver.Chrome, keyword: str, max_jobs: int) -> lis
     return job_links[:max_jobs]
 
 
-def _scrape_job_detail(driver: webdriver.Chrome, link: str) -> dict | None:
+def _scrape_job_detail(driver, link: str) -> dict | None:
     """Buka halaman detail satu lowongan dan ekstrak semua data."""
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
     wait = WebDriverWait(driver, 15)
 
     try:
