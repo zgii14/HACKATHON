@@ -3,17 +3,22 @@ scraper_service.py
 Mengambil data lowongan kerja dari Glints menggunakan Selenium.
 Dipanggil oleh endpoint POST /admin/scrape-jobs
 """
+import os
 import re
 import uuid
 import time
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from sqlalchemy.orm import Session
 from app.models import Job
+
+# Railway/Linux production: set ke True jika tidak ada display (DISPLAY env var kosong)
+_IS_HEADLESS = os.environ.get("DISPLAY") is None or os.environ.get("RAILWAY_ENVIRONMENT") is not None
 
 
 # ── Keyword yang akan di-scrape ──────────────────────────────────────────────
@@ -33,11 +38,16 @@ MAX_JOBS_PER_KEYWORD = 5  # Batas per keyword agar tidak terlalu lama
 def _build_driver() -> webdriver.Chrome:
     """Buat Chrome WebDriver dengan konfigurasi anti-bot."""
     options = webdriver.ChromeOptions()
-    # Catatan: TIDAK pakai --headless karena Glints memblokir headless browser.
-    # Chrome akan terbuka di background (minimize), tapi ini lebih reliable.
+
+    if _IS_HEADLESS:
+        # Mode headless untuk Railway/Linux production (tidak ada display)
+        options.add_argument("--headless=new")
+    else:
+        # Mode non-headless untuk development (lebih reliable tapi perlu display)
+        options.add_argument("--start-minimized")
+
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("--start-minimized")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
@@ -45,10 +55,14 @@ def _build_driver() -> webdriver.Chrome:
         "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     )
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
 
-    driver = webdriver.Chrome(options=options)
+    # Jika ada custom Chrome binary (misalnya chromium dari nixpacks)
+    chrome_bin = os.environ.get("CHROME_BIN")
+    if chrome_bin:
+        options.binary_location = chrome_bin
+
+    service = Service()
+    driver = webdriver.Chrome(service=service, options=options)
     driver.execute_script(
         "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
     )
