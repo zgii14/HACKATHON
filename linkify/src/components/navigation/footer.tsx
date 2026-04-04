@@ -19,7 +19,7 @@ const Footer = () => {
                             Manage your links with ease.
                         </p>
                         <span className="mt-4 text-neutral-200 text-sm flex items-center">
-                            Made by <Link href="https://shreyas-sihasane.vercel.app/" className="font-semibold ml-1">Shreyas</Link>
+                            Made by <span className="font-semibold ml-1 bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">GitHire Team</span>
                         </span>
                     </div>
                 </AnimationContainer>
@@ -143,7 +143,7 @@ const Footer = () => {
             </div>
 
             <div className="h-[20rem] lg:h-[20rem] hidden md:flex items-center justify-center">
-                <TextHoverEffect text="LINKIFY" />
+                <TextHoverEffect text="GitHire" />
             </div>
         </footer>
     )
