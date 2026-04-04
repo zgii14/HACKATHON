@@ -85,7 +85,7 @@ const FEATURES = [
     {
         icon: SearchIcon,
         title: "187+ Lowongan Fresh Grad",
-        description: "Data lowongan IT terkini dari Glints — Junior, Internship, Fresh Graduate. Dilengkapi gaji, min. pendidikan, dan pengalaman.",
+        description: "Data lowongan IT terkini dari Glints. Tersedia kategori Junior, Internship, dan Fresh Graduate. Dilengkapi gaji, min. pendidikan, dan pengalaman.",
         color: "text-indigo-400",
         bg: "bg-indigo-500/10",
         badge: "Real Data",
@@ -128,7 +128,7 @@ const TESTIMONIALS = [
     {
         name: "Siti Nurhaliza",
         role: "Mahasiswa Tingkat Akhir, ITS",
-        review: "Match score 83% untuk posisi Machine Learning Engineer — aku jadi tahu persis harus belajar apa lagi sebelum apply. Fitur roadmap per-job ini keren banget.",
+        review: "Match score 83% untuk posisi Machine Learning Engineer. Aku jadi tahu persis harus belajar apa lagi sebelum apply. Fitur roadmap per-job ini keren banget.",
         rating: 5,
         avatar: "S",
         color: "bg-blue-500",
@@ -160,7 +160,7 @@ const TESTIMONIALS = [
     {
         name: "Nadia Putri",
         role: "Data Science Enthusiast",
-        review: "Platform ini jujur soal skill gap. Tidak ada gimmick. Langsung bilang 'kamu kurang TensorFlow dan Pandas' — dan langsung kasih roadmapnya.",
+        review: "Platform ini jujur soal skill gap. Tidak ada gimmick. Langsung bilang 'kamu kurang TensorFlow dan Pandas', dan langsung kasih roadmapnya.",
         rating: 5,
         avatar: "N",
         color: "bg-cyan-500",
@@ -225,7 +225,7 @@ const HomePage = async () => {
                             </Button>
                         </div>
 
-                        <p className="text-xs text-muted-foreground mt-3">Tidak perlu kartu kredit · Gratis selamanya</p>
+
 
                         {/* Stats row */}
                         <div className="flex flex-wrap gap-8 mt-12 justify-center">
@@ -391,7 +391,7 @@ const HomePage = async () => {
                                 </span>
                             </h2>
                             <p className="mt-4 text-center text-lg text-muted-foreground max-w-lg">
-                                Dari analisis keahlian otomatis hingga surat lamaran berbasis AI — semua tersedia dalam satu platform, tanpa biaya.
+                                Semua tersedia dalam satu platform tanpa biaya, mulai dari analisis keahlian otomatis hingga surat lamaran berbasis AI.
                             </p>
                         </div>
                     </AnimationContainer>
@@ -611,12 +611,12 @@ const HomePage = async () => {
                             <div className="mt-6 flex gap-3 flex-wrap justify-center">
                                 <Button asChild size="lg" className="shadow-lg shadow-violet-500/25">
                                     <Link href={user ? "/dashboard" : "/auth/sign-in"}>
-                                        {user ? "Buka Dashboard" : "Mulai Sekarang — Gratis"}
+                                        {user ? "Buka Dashboard" : "Mulai Sekarang, Gratis"}
                                         <ArrowRightIcon className="w-4 h-4 ml-2" />
                                     </Link>
                                 </Button>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-3">Tidak diperlukan kartu kredit · Gratis selamanya · 100+ lowongan aktif</p>
+
                         </div>
                     </LampContainer>
                 </AnimationContainer>

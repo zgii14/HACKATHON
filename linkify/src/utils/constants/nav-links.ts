@@ -13,28 +13,19 @@ import {
 
 export const NAV_LINKS = [
     {
-        title: "Product",
+        title: "Features",
         href: "/#features",
-        menu: [
-            {
-                title: "Job matching",
-                tagline: "GitHub + CV, scored with transparent skill overlap.",
-                href: "/#features",
-                icon: BriefcaseIcon,
-            },
-            {
-                title: "Skill gap",
-                tagline: "See what to learn next versus market demand.",
-                href: "/#features",
-                icon: TargetIcon,
-            },
-            {
-                title: "Learning roadmap",
-                tagline: "Personalized steps powered by AI.",
-                href: "/#features",
-                icon: GraduationCapIcon,
-            },
-        ],
+        menu: null,
+    },
+    {
+        title: "How It Works",
+        href: "/how-it-works",
+        menu: null,
+    },
+    {
+        title: "About",
+        href: "/about",
+        menu: null,
     },
 ];
 

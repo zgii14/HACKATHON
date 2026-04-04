@@ -8,7 +8,7 @@ import { useApi } from "@/hooks/use-api";
 import { parseApiError } from "@/lib/errors";
 import { useAuth } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowRight, BookOpen, CheckCircle2, RefreshCw, Sparkles, TrendingUp } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpen, CheckCircle2, FileTextIcon, RefreshCw, Sparkles, TrendingUp, UploadCloudIcon, XCircleIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -394,14 +394,73 @@ export default function OnboardingPage() {
                         />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="cv">CV (hanya PDF)</Label>
-                        <Input
+                        <Label>CV (hanya PDF)</Label>
+
+                        {/* Upload zone */}
+                        <label
+                            htmlFor="cv"
+                            className={`flex flex-col items-center justify-center w-full rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200 ${
+                                file
+                                    ? "border-green-500/50 bg-green-500/5"
+                                    : "border-border hover:border-primary/50 hover:bg-muted/30 bg-muted/10"
+                            } px-4 py-5`}
+                        >
+                            {file ? (
+                                /* File selected state */
+                                <div className="flex items-center gap-3 w-full">
+                                    <div className="w-10 h-10 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0">
+                                        <FileTextIcon className="w-5 h-5 text-green-500" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            {(file.size / 1024).toFixed(0)} KB · PDF
+                                        </p>
+                                    </div>
+                                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                                </div>
+                            ) : (
+                                /* Empty state */
+                                <div className="flex flex-col items-center gap-2 text-center py-2">
+                                    <UploadCloudIcon className="w-8 h-8 text-muted-foreground" />
+                                    <div>
+                                        <p className="text-sm font-medium text-foreground">Klik untuk pilih file PDF</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">Hanya file .pdf yang diterima</p>
+                                    </div>
+                                </div>
+                            )}
+                        </label>
+
+                        <input
                             id="cv"
                             type="file"
                             accept=".pdf,application/pdf"
-                            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                            className="hidden"
+                            onChange={(e) => {
+                                const selectedFile = e.target.files?.[0] ?? null;
+                                if (selectedFile && selectedFile.type !== "application/pdf") {
+                                    toast.error("Hanya file PDF yang diterima.");
+                                    e.target.value = "";
+                                    setFile(null);
+                                    return;
+                                }
+                                setFile(selectedFile);
+                            }}
                             disabled={sync.isPending}
                         />
+
+                        {/* Remove file button */}
+                        {file && (
+                            <button
+                                type="button"
+                                onClick={() => setFile(null)}
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                                <XCircleIcon className="w-3.5 h-3.5" />
+                                Hapus file
+                            </button>
+                        )}
+
                         <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3 text-green-500" />
                             Pastikan CV berbasis teks, bukan hasil scan/foto
