@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AnimationContainer, Icons } from "@/components"
+import { AnimationContainer } from "@/components"
 import { TextHoverEffect } from "@/components/ui/text-hover-effect"
 
 const Footer = () => {
@@ -10,121 +10,136 @@ const Footer = () => {
 
             <div className="grid gap-8 xl:grid-cols-3 xl:gap-8 w-full">
 
+                {/* Brand */}
                 <AnimationContainer delay={0.1}>
-                    <div className="flex flex-col items-start justify-start md:max-w-[200px]">
-                        <div className="flex items-start">
-                            <Icons.logo className="w-7 h-7" />
-                        </div>
-                        <p className="text-muted-foreground mt-4 text-sm text-start">
-                            Manage your links with ease.
+                    <div className="flex flex-col items-start justify-start md:max-w-[220px]">
+                        <Link href="/" className="flex items-center">
+                            <svg width="110" height="30" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg" aria-label="GitHire">
+                                <circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                                <circle cx="16" cy="44" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
+                                <circle cx="34" cy="30" r="6" fill="#6d28d9" />
+                                <line x1="16" y1="22" x2="16" y2="38" stroke="currentColor" strokeWidth="2" />
+                                <line x1="20" y1="18" x2="30" y2="26" stroke="currentColor" strokeWidth="2" />
+                                <text x="50" y="30" fontFamily="system-ui,sans-serif" fontSize="22" fontWeight="700" fill="currentColor" dominantBaseline="central">
+                                    Git<tspan fill="#8b5cf6">Hire</tspan>
+                                </text>
+                            </svg>
+                        </Link>
+                        <p className="text-muted-foreground mt-4 text-sm text-start leading-relaxed">
+                            Platform karir berbasis AI untuk fresh graduate dan developer Indonesia.
                         </p>
                         <span className="mt-4 text-neutral-200 text-sm flex items-center">
-                            Made by <span className="font-semibold ml-1 bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">GitHire Team</span>
+                            Dibuat oleh <span className="font-semibold ml-1 bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">Tim GitHire</span>
                         </span>
                     </div>
                 </AnimationContainer>
 
                 <div className="grid-cols-2 gap-8 grid mt-16 xl:col-span-2 xl:mt-0">
                     <div className="md:grid md:grid-cols-2 md:gap-8">
+                        {/* Platform */}
                         <AnimationContainer delay={0.2}>
-                            <div className="">
-                                <h3 className="text-base font-medium text-white">
-                                    Product
-                                </h3>
-                                <ul className="mt-4 text-sm text-muted-foreground">
-                                    <li className="mt-2">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            Features
+                            <div>
+                                <h3 className="text-base font-medium text-white">Platform</h3>
+                                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
+                                    <li>
+                                        <Link href="/#features" className="hover:text-foreground transition-all duration-300">
+                                            Fitur
                                         </Link>
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            Pricing
+                                    <li>
+                                        <Link href="/how-it-works" className="hover:text-foreground transition-all duration-300">
+                                            Cara Kerja
                                         </Link>
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            Testimonials
+                                    <li>
+                                        <Link href="/auth/sign-in" className="hover:text-foreground transition-all duration-300">
+                                            Masuk
                                         </Link>
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            Integration
+                                    <li>
+                                        <Link href="/auth/sign-up" className="hover:text-foreground transition-all duration-300">
+                                            Daftar Gratis
                                         </Link>
                                     </li>
                                 </ul>
                             </div>
                         </AnimationContainer>
+
+                        {/* Dashboard */}
                         <AnimationContainer delay={0.3}>
                             <div className="mt-10 md:mt-0 flex flex-col">
-                                <h3 className="text-base font-medium text-white">
-                                    Integrations
-                                </h3>
-                                <ul className="mt-4 text-sm text-muted-foreground">
-                                    <li className="">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            Facebook
+                                <h3 className="text-base font-medium text-white">Dashboard</h3>
+                                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
+                                    <li>
+                                        <Link href="/dashboard/jobs" className="hover:text-foreground transition-all duration-300">
+                                            Lowongan
                                         </Link>
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            Instagram
+                                    <li>
+                                        <Link href="/dashboard/skill-gap" className="hover:text-foreground transition-all duration-300">
+                                            Skill Gap
                                         </Link>
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            Twitter
+                                    <li>
+                                        <Link href="/dashboard/roadmap" className="hover:text-foreground transition-all duration-300">
+                                            Roadmap
                                         </Link>
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            LinkedIn
+                                    <li>
+                                        <Link href="/dashboard/onboarding" className="hover:text-foreground transition-all duration-300">
+                                            Sync Profil
                                         </Link>
                                     </li>
                                 </ul>
                             </div>
                         </AnimationContainer>
                     </div>
+
                     <div className="md:grid md:grid-cols-2 md:gap-8">
+                        {/* Company */}
                         <AnimationContainer delay={0.4}>
-                            <div className="">
-                                <h3 className="text-base font-medium text-white">
-                                    Resources
-                                </h3>
-                                <ul className="mt-4 text-sm text-muted-foreground">
-                                    <li className="mt-2">
-                                        <Link href="/resources/blog" className="hover:text-foreground transition-all duration-300">
-                                            Blog
+                            <div>
+                                <h3 className="text-base font-medium text-white">Perusahaan</h3>
+                                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
+                                    <li>
+                                        <Link href="/about" className="hover:text-foreground transition-all duration-300">
+                                            Tentang Kami
                                         </Link>
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="/resources/help" className="hover:text-foreground transition-all duration-300">
-                                            Support
+                                    <li>
+                                        <Link href="/privacy" className="hover:text-foreground transition-all duration-300">
+                                            Kebijakan Privasi
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link href="/terms" className="hover:text-foreground transition-all duration-300">
+                                            Syarat & Ketentuan
                                         </Link>
                                     </li>
                                 </ul>
                             </div>
                         </AnimationContainer>
+
+                        {/* Tech Stack */}
                         <AnimationContainer delay={0.5}>
                             <div className="mt-10 md:mt-0 flex flex-col">
-                                <h3 className="text-base font-medium text-white">
-                                    Company
-                                </h3>
-                                <ul className="mt-4 text-sm text-muted-foreground">
-                                    <li className="">
-                                        <Link href="" className="hover:text-foreground transition-all duration-300">
-                                            About Us
-                                        </Link>
+                                <h3 className="text-base font-medium text-white">Teknologi</h3>
+                                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
+                                    <li className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                                        Next.js
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="/privacy" className="hover:text-foreground transition-all duration-300">
-                                            Privacy Policy
-                                        </Link>
+                                    <li className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                        FastAPI
                                     </li>
-                                    <li className="mt-2">
-                                        <Link href="/terms" className="hover:text-foreground transition-all duration-300">
-                                            Terms & Conditions
-                                        </Link>
+                                    <li className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                        Gemini AI
+                                    </li>
+                                    <li className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                                        GitHub API
                                     </li>
                                 </ul>
                             </div>

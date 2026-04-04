@@ -169,7 +169,7 @@ const TESTIMONIALS = [
 
 const STATS = [
     { value: "100+", label: "Lowongan IT Aktif", icon: BriefcaseIcon },
-    { value: "8", label: "Kategori Pekerjaan", icon: SearchIcon },
+    { value: "6", label: "Fitur AI Terintegrasi", icon: SparklesIcon },
     { value: "AI", label: "Ditenagai Kecerdasan Buatan", icon: BrainCircuitIcon },
     { value: "100%", label: "Tanpa Biaya", icon: ZapIcon },
 ];
@@ -228,9 +228,9 @@ const HomePage = async () => {
 
 
                         {/* Stats row */}
-                        <div className="flex flex-wrap gap-8 mt-12 justify-center">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-5 mt-12 w-full max-w-xs md:max-w-xl mx-auto">
                             {STATS.map((s) => (
-                                <div key={s.label} className="text-center">
+                                <div key={s.label} className="flex flex-col items-center text-center">
                                     <p className="text-2xl font-bold text-foreground">{s.value}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
                                 </div>
