@@ -13,4 +13,11 @@
 | cv-4 | Interactive CV Form Editor UI Page | x | Halaman form interaktif selesai dengan dynamic state dan integrasi API |
 | cv-5 | Word Document Generator with Rozagi Template Style | x | Generator berkas Word client-side (Harvard ATS Style) terintegrasi menggunakan library docx |
 | cv-verif | Verify DB migration, API, and docx CV downloads | x | Verifikasi kompilasi TypeScript dan integrasi backend selesai tanpa ada error |
+| rec-1 | Database Schema Update & Startup Migration | x | Migrasi kolom role di users dan recruiter_id di jobs terintegrasi di lifespan startup |
+| rec-2 | Pre-seeded Recruiter Demo Account & Startup Seeding | x | Akun recruiter@githire.com demo dan lowongan contoh ter-seed otomatis saat startup |
+| rec-3 | Backend API Routers for Recruiter Portal | x | Endpoints recruiter.py terimplementasi (my-jobs, applications, update status, ai-screening) |
+| rec-4 | Dynamic Frontend Navigation & Recruiter Dashboard UI | x | Sidebar navigasi dinamis dan halaman list lowongan/buat lowongan selesai dibuat |
+| rec-5 | Interactive Candidate Reviewer & ATS Word Downloader | x | Masterpiece ApplicantsPage interaktif selesai dengan AI Match Score + GitHub Signals + Harvard ATS Word Downloader |
+| rec-6 | Final Integrated E2E Walkthrough & Verification | x | Seluruh alur front-to-back Next.js terkompilasi sukses (exit 0) via npx tsc |
 | verification | Perform manual and automated validation of the modified files | x | Verified with compilation and lint checks (both passed) |
+

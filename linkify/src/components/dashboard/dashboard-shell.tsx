@@ -4,7 +4,7 @@ import { APP_NAME, cn, DASHBOARD_LINKS } from "@/utils";
 import { useApi } from "@/hooks/use-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -49,11 +49,32 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     // Mobile: sidebar drawer terbuka/tertutup
     const [mobileOpen, setMobileOpen] = useState(false);
 
+    // Fetch profile role untuk sidebar dinamis
+    const { data: profile } = useQuery({
+        queryKey: ["profile"],
+        queryFn: () => withAuth<{ role: string } | null>("/me/profile"),
+        enabled: authReady,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    const RECRUITER_LINKS = [
+        {
+            title: "Lowongan Saya",
+            href: "/dashboard/recruiter/jobs",
+            icon: Briefcase,
+        },
+        {
+            title: "Buat Lowongan",
+            href: "/dashboard/recruiter/jobs/new",
+            icon: PlusCircle,
+        },
+    ];
+
     // Fetch jumlah bookmark untuk badge di sidebar
     const { data: bookmarks = [] } = useQuery({
         queryKey: ["bookmarks"],
         queryFn: () => withAuth<{ job_id: string }[]>("/me/bookmarks"),
-        enabled: authReady,
+        enabled: authReady && profile?.role !== "recruiter",
         staleTime: 60_000,
     });
     const bookmarkCount: number = bookmarks.length;
@@ -62,7 +83,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const { data: applications = [] } = useQuery({
         queryKey: ["applications"],
         queryFn: () => withAuth<{ id: string }[]>("/applications"),
-        enabled: authReady,
+        enabled: authReady && profile?.role !== "recruiter",
         staleTime: 60_000,
     });
     const applicationCount: number = applications.length;
@@ -81,47 +102,51 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    const NavLinks = ({ showLabel = true }: { showLabel?: boolean }) => (
-        <nav className="flex flex-col gap-1">
-            {DASHBOARD_LINKS.map((item) => {
-                const active =
-                    pathname === item.href ||
-                    (item.href !== "/dashboard" && pathname.startsWith(item.href));
-                const isMyRoadmaps = item.href === "/dashboard/my-roadmaps";
-                const isApplications = item.href === "/dashboard/applications";
-                return (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        prefetch={false}
-                        title={!showLabel ? item.title : undefined}
-                        className={cn(
-                            "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150",
-                            showLabel ? "justify-start" : "justify-center",
-                            active
-                                ? "bg-primary/15 text-foreground font-medium"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
-                    >
-                        <item.icon className="size-4 shrink-0" />
-                        {showLabel && (
-                            <span className="truncate flex-1">{item.title}</span>
-                        )}
-                        {showLabel && isMyRoadmaps && bookmarkCount > 0 && (
-                            <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-primary/20 text-primary text-[10px] font-semibold flex items-center justify-center px-1">
-                                {bookmarkCount > 9 ? "9+" : bookmarkCount}
-                            </span>
-                        )}
-                        {showLabel && isApplications && applicationCount > 0 && (
-                            <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-emerald-500/20 text-emerald-500 text-[10px] font-semibold flex items-center justify-center px-1">
-                                {applicationCount > 9 ? "9+" : applicationCount}
-                            </span>
-                        )}
-                    </Link>
-                );
-            })}
-        </nav>
-    );
+    const NavLinks = ({ showLabel = true }: { showLabel?: boolean }) => {
+        const links = profile?.role === "recruiter" ? RECRUITER_LINKS : DASHBOARD_LINKS;
+
+        return (
+            <nav className="flex flex-col gap-1">
+                {links.map((item) => {
+                    const active =
+                        pathname === item.href ||
+                        (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                    const isMyRoadmaps = item.href === "/dashboard/my-roadmaps";
+                    const isApplications = item.href === "/dashboard/applications";
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            prefetch={false}
+                            title={!showLabel ? item.title : undefined}
+                            className={cn(
+                                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150",
+                                showLabel ? "justify-start" : "justify-center",
+                                active
+                                    ? "bg-primary/15 text-foreground font-medium"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            <item.icon className="size-4 shrink-0" />
+                            {showLabel && (
+                                <span className="truncate flex-1">{item.title}</span>
+                            )}
+                            {showLabel && isMyRoadmaps && bookmarkCount > 0 && (
+                                <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-primary/20 text-primary text-[10px] font-semibold flex items-center justify-center px-1">
+                                    {bookmarkCount > 9 ? "9+" : bookmarkCount}
+                                </span>
+                            )}
+                            {showLabel && isApplications && applicationCount > 0 && (
+                                <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-emerald-500/20 text-emerald-500 text-[10px] font-semibold flex items-center justify-center px-1">
+                                    {applicationCount > 9 ? "9+" : applicationCount}
+                                </span>
+                            )}
+                        </Link>
+                    );
+                })}
+            </nav>
+        );
+    };
 
     return (
         <div className="flex min-h-screen w-full bg-background">

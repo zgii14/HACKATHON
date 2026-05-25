@@ -9,6 +9,7 @@ class UserOut(BaseModel):
     id: UUID
     clerk_user_id: str
     email: str | None
+    role: str | None = "candidate"
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -69,6 +70,7 @@ class JobOut(BaseModel):
     min_education: str | None = None
     min_experience: str | None = None
     work_type: str | None = None
+    recruiter_id: UUID | None = None
 
     model_config = {"from_attributes": True}
 

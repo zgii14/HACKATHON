@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import jobs, me, profiles
+from app.routers import jobs, me, profiles, recruiter
 from app.routers import applications
 from app.seed import reseed_jobs, seed_jobs_if_empty
 from app.database import get_db
@@ -90,6 +90,35 @@ async def lifespan(app: FastAPI):
             """))
         conn.commit()
 
+    # DDL Migration: tambah kolom role ke users dan recruiter_id ke jobs, serta seed demo recruiter
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'candidate';
+        """))
+        conn.execute(text("""
+            ALTER TABLE jobs
+            ADD COLUMN IF NOT EXISTS recruiter_id VARCHAR(36) NULL;
+        """))
+        conn.commit()
+
+        # Seed recruiter@githire.com demo user
+        recruiter_id = "550e8400-e29b-41d4-a716-446655440000"
+        conn.execute(text(f"""
+            INSERT INTO users (id, clerk_user_id, email, role, created_at)
+            VALUES ('{recruiter_id}', 'clerk_recruiter_demo', 'recruiter@githire.com', 'recruiter', CURRENT_TIMESTAMP)
+            ON CONFLICT (clerk_user_id) DO UPDATE SET role = 'recruiter';
+        """))
+
+        # Seed a test job for this recruiter
+        job_id = "550e8400-e29b-41d4-a716-446655440001"
+        conn.execute(text(f"""
+            INSERT INTO jobs (id, title, company, description, required_skills, location, is_remote, recruiter_id)
+            VALUES ('{job_id}', 'Senior React Developer', 'GitHire Enterprise', 'We are looking for a Senior React Developer with deep knowledge in TypeScript and State Management.', '["React", "TypeScript", "Tailwind CSS", "Redux"]', 'Bengkulu, Indonesia', TRUE, '{recruiter_id}')
+            ON CONFLICT (id) DO NOTHING;
+        """))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)
@@ -113,6 +142,7 @@ app.include_router(me.router)
 app.include_router(profiles.router)
 app.include_router(jobs.router)
 app.include_router(applications.router)
+app.include_router(recruiter.router)
 
 
 @app.get("/health")
