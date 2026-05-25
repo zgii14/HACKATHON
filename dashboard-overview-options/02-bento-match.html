@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Overview 02 - Bento Match</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#0b0f14;color:#f8fafc;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}.page{min-height:100vh;padding:28px;display:grid;grid-template-columns:220px 1fr;gap:22px;background:linear-gradient(180deg,#0c1118,#07090c)}.side{border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:16px;background:#101721}.brand{font-weight:850;margin-bottom:18px}.brand span{color:#34d399}.nav{display:grid;gap:6px}.nav div{min-height:38px;border-radius:8px;padding:9px 10px;color:#9ca3af}.nav .active{background:#1f2937;color:white}.main{max-width:1160px}.head{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}.head h1{font-size:30px;margin:0}.head p{color:#9ca3af;margin:5px 0 0}.actions{display:flex;gap:8px}.btn{border:1px solid rgba(255,255,255,.12);background:#17202d;color:white;border-radius:8px;min-height:40px;padding:0 13px;font-weight:750}.btn.primary{background:#34d399;color:#06130d}.bento{display:grid;grid-template-columns:1.15fr .8fr .8fr;grid-auto-rows:154px;gap:14px}.tile{border:1px solid rgba(255,255,255,.1);border-radius:8px;background:#111827;padding:16px;overflow:hidden;position:relative}.big{grid-row:span 2;background:linear-gradient(135deg,rgba(52,211,153,.18),#111827 46%,rgba(96,165,250,.14))}.wide{grid-column:span 2}.tile h2,.tile h3{margin:0}.tile h2{font-size:36px;line-height:1.05}.tile h3{font-size:16px}.muted{color:#9ca3af}.label{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;font-weight:800}.score{font-size:72px;line-height:.9;font-weight:900;letter-spacing:-2px;color:#34d399}.chips{display:flex;gap:7px;flex-wrap:wrap}.chip{font-size:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);border-radius:999px;padding:5px 9px}.job{display:flex;justify-content:space-between;gap:12px;border-top:1px solid rgba(255,255,255,.08);padding-top:11px;margin-top:11px}.bar{height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}.bar span{display:block;height:100%;background:linear-gradient(90deg,#34d399,#60a5fa);border-radius:inherit}.ring{width:94px;height:94px;border-radius:50%;background:conic-gradient(#60a5fa 0 72%,rgba(255,255,255,.08) 72%);display:grid;place-items:center}.ring:after{content:"72%";width:68px;height:68px;border-radius:50%;background:#111827;display:grid;place-items:center;font-weight:850}@media(max-width:980px){.page{grid-template-columns:1fr}.side{display:none}.bento{grid-template-columns:1fr;grid-auto-rows:auto}.big,.wide{grid-column:auto;grid-row:auto}.head{display:block}.actions{margin-top:12px}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="side"><div class="brand">Git<span>Hire</span></div><div class="nav"><div class="active">Overview</div><div>Profil & Skill</div><div>Browse Jobs</div><div>Rekomendasi</div><div>Skill Gap</div><div>Roadmaps</div><div>Lamaranku</div></div></aside>
+    <main class="main">
+      <header class="head"><div><h1>Overview</h1><p>Bento layout yang menonjolkan job match dan kartu skor.</p></div><div class="actions"><button class="btn">Update profil</button><button class="btn primary">Cari job</button></div></header>
+      <section class="bento">
+        <article class="tile big"><span class="label">Top match</span><h2>Backend Engineer</h2><p class="muted">KitaLulus - Jakarta - Hybrid</p><div class="score">86%</div><div class="chips"><span class="chip">Python</span><span class="chip">FastAPI</span><span class="chip">PostgreSQL</span><span class="chip">REST API</span></div></article>
+        <article class="tile"><span class="label">Profile</span><div class="ring"></div></article>
+        <article class="tile"><span class="label">Skills</span><h2>18</h2><p class="muted">12 dari GitHub, 9 dari CV, 3 overlap.</p></article>
+        <article class="tile wide"><span class="label">Next action</span><h3>Selesaikan Docker basic untuk menaikkan confidence apply.</h3><p class="muted">Estimasi 45 menit, impact tinggi ke 4 lowongan backend.</p><div class="bar"><span style="width:38%"></span></div></article>
+        <article class="tile"><span class="label">Roadmap aktif</span><h2>43%</h2><p class="muted">7 dari 16 langkah.</p></article>
+        <article class="tile"><span class="label">Applications</span><h2>4</h2><p class="muted">1 interview, 3 applied.</p></article>
+        <article class="tile wide"><span class="label">Recommended jobs</span><div class="job"><div><strong>API Developer</strong><p class="muted">Mekari - Remote</p></div><span class="chip">78%</span></div><div class="job"><div><strong>Junior Fullstack</strong><p class="muted">Sirclo - Bandung</p></div><span class="chip">71%</span></div></article>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, Check, ExternalLink, FileText, Send, Target, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ExternalLink, FileText, Send, Target, Sparkles, Trophy, XCircle, RotateCcw, Award } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Step = {
     index: number;
@@ -476,13 +477,24 @@ function RoadmapContent() {
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() => startQuiz(step.index)}
-                                                        className="text-xs border-primary/30 text-primary hover:bg-primary/10 gap-1.5 rounded-lg"
+                                                        className="text-xs border-primary/30 text-primary hover:bg-primary/10 gap-1.5 rounded-lg transition-transform active:scale-95 animate-pulse"
                                                     >
                                                         <Sparkles className="w-3.5 h-3.5" />
                                                         Uji Pemahaman Saya (AI Quiz)
                                                     </Button>
                                                 ) : (
-                                                    <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-4">
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: "auto" }}
+                                                        transition={{ duration: 0.3, ease: "easeOut" }}
+                                                        className={`border rounded-xl p-4 space-y-4 shadow-sm overflow-hidden ${
+                                                            quizQuestions && quizResult?.finished
+                                                                ? quizResult.passed
+                                                                    ? "bg-green-500/5 border-green-500/20"
+                                                                    : "bg-red-500/5 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.05)]"
+                                                                : "bg-muted/40 border-border"
+                                                        }`}
+                                                    >
                                                         {loadingQuiz ? (
                                                             <div className="flex items-center gap-2 py-2">
                                                                 <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0" />
@@ -491,78 +503,251 @@ function RoadmapContent() {
                                                                 </p>
                                                             </div>
                                                         ) : quizQuestions && quizResult?.finished ? (
-                                                            <div className="space-y-3">
-                                                                <div className="flex items-center gap-2">
+                                                            <motion.div
+                                                                initial={{ 
+                                                                    scale: 0.95, 
+                                                                    opacity: 0,
+                                                                    x: 0
+                                                                }}
+                                                                animate={{ 
+                                                                    scale: 1, 
+                                                                    opacity: 1,
+                                                                    x: quizResult.passed ? 0 : [0, -10, 10, -8, 8, -5, 5, 0]
+                                                                }}
+                                                                transition={{ 
+                                                                    x: { duration: 0.5, ease: "easeInOut" },
+                                                                    scale: { type: "spring", stiffness: 200, damping: 15 }
+                                                                }}
+                                                                className="space-y-4 relative overflow-hidden p-1"
+                                                            >
+                                                                {/* ── BACKGROUND PARTICLES EFFECT ── */}
+                                                                {quizResult.passed ? (
+                                                                    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+                                                                        {[...Array(16)].map((_, i) => {
+                                                                            const randomX = Math.random() * 100;
+                                                                            const randomDelay = Math.random() * 1.5;
+                                                                            const randomDuration = 1.5 + Math.random() * 2;
+                                                                            const size = 5 + Math.random() * 7;
+                                                                            const colors = ["#6366F1", "#10B981", "#F59E0B", "#EC4899", "#3B82F6"];
+                                                                            const color = colors[i % colors.length];
+                                                                            return (
+                                                                                <motion.div
+                                                                                    key={i}
+                                                                                    className="absolute rounded-full"
+                                                                                    style={{
+                                                                                        top: "-15px",
+                                                                                        left: `${randomX}%`,
+                                                                                        width: size,
+                                                                                        height: size,
+                                                                                        backgroundColor: color,
+                                                                                        opacity: 0.6,
+                                                                                    }}
+                                                                                    animate={{
+                                                                                        y: ["0px", "260px"],
+                                                                                        x: [0, Math.random() * 30 - 15],
+                                                                                        rotate: [0, Math.random() * 360],
+                                                                                    }}
+                                                                                    transition={{
+                                                                                        duration: randomDuration,
+                                                                                        repeat: Infinity,
+                                                                                        delay: randomDelay,
+                                                                                        ease: "easeOut",
+                                                                                    }}
+                                                                                />
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none bg-red-500/[0.005]">
+                                                                        {[...Array(8)].map((_, i) => {
+                                                                            const randomX = Math.random() * 100;
+                                                                            const randomDelay = Math.random() * 1;
+                                                                            const size = 3 + Math.random() * 5;
+                                                                            return (
+                                                                                <motion.div
+                                                                                    key={i}
+                                                                                    className="absolute rounded-full bg-red-500/20"
+                                                                                    style={{
+                                                                                        bottom: "-10px",
+                                                                                        left: `${randomX}%`,
+                                                                                        width: size,
+                                                                                        height: size,
+                                                                                    }}
+                                                                                    animate={{
+                                                                                        y: ["0px", "-160px"],
+                                                                                        x: [0, Math.random() * 20 - 10],
+                                                                                        opacity: [0.2, 0.5, 0],
+                                                                                    }}
+                                                                                    transition={{
+                                                                                        duration: 2 + Math.random() * 2,
+                                                                                        repeat: Infinity,
+                                                                                        delay: randomDelay,
+                                                                                        ease: "easeOut",
+                                                                                    }}
+                                                                                />
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
+
+                                                                <div className="flex flex-col sm:flex-row items-center gap-4 relative z-10 text-center sm:text-left">
                                                                     {quizResult.passed ? (
-                                                                        <span className="text-lg">🏆</span>
+                                                                        <motion.div
+                                                                            initial={{ scale: 0, rotate: -45 }}
+                                                                            animate={{ 
+                                                                                scale: [0, 1.25, 0.95, 1.05, 1], 
+                                                                                rotate: [0, 15, -10, 5, 0],
+                                                                                y: [0, -4, 0]
+                                                                            }}
+                                                                            transition={{ 
+                                                                                scale: { type: "spring", stiffness: 260, damping: 15 },
+                                                                                y: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                                                                            }}
+                                                                            className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-4xl shadow-[0_0_20px_rgba(16,185,129,0.15)] shrink-0 select-none"
+                                                                        >
+                                                                            🏆
+                                                                        </motion.div>
                                                                     ) : (
-                                                                        <span className="text-lg">❌</span>
+                                                                        <motion.div
+                                                                            animate={{ 
+                                                                                x: [0, -6, 6, -6, 6, 0],
+                                                                                rotate: [0, -3, 3, -3, 3, 0]
+                                                                            }}
+                                                                            transition={{ duration: 0.5, ease: "easeInOut" }}
+                                                                            className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20 text-4xl shadow-[0_0_20px_rgba(239,68,68,0.1)] shrink-0 select-none"
+                                                                        >
+                                                                            ❌
+                                                                        </motion.div>
                                                                     )}
-                                                                    <p className="text-sm font-semibold">
-                                                                        {quizResult.passed 
-                                                                            ? "Lulus! Jawabanmu 100% Benar" 
-                                                                            : `Belum lulus (${quizResult.score} dari 3 Benar)`
-                                                                        }
-                                                                    </p>
+                                                                    
+                                                                    <div className="space-y-1 flex-1">
+                                                                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                                                                            <h4 className="text-base font-bold text-foreground tracking-tight">
+                                                                                {quizResult.passed 
+                                                                                    ? "Verifikasi Berhasil!" 
+                                                                                    : "Verifikasi Belum Lulus"
+                                                                                }
+                                                                            </h4>
+                                                                            {quizResult.passed ? (
+                                                                                <Badge className="bg-emerald-500/20 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-full shadow-[0_0_10px_rgba(16,185,129,0.05)]">
+                                                                                    AI Verified
+                                                                                </Badge>
+                                                                            ) : (
+                                                                                <Badge className="bg-red-500/20 hover:bg-red-500/20 text-red-500 border border-red-500/30 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-full">
+                                                                                    Uji Ulang
+                                                                                </Badge>
+                                                                            )}
+                                                                        </div>
+
+                                                                        <p className="text-sm font-medium text-foreground/80">
+                                                                            {quizResult.passed 
+                                                                                ? "Jawabanmu 100% Benar (3 dari 3)" 
+                                                                                : `Skor Kamu: ${quizResult.score} dari 3 Benar`
+                                                                            }
+                                                                        </p>
+
+                                                                        <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
+                                                                            {quizResult.passed
+                                                                                ? "Luar biasa! Pemahamanmu terhadap materi ini telah divalidasi oleh Gemini AI. Langkah belajar ini otomatis ditandai sebagai selesai!"
+                                                                                : "Jangan berkecil hati! Ini adalah kesempatan emas untuk mengulas kembali materinya. Cukup baca kembali keterangan di atas dan kamu pasti bisa melaluinya!"
+                                                                            }
+                                                                        </p>
+                                                                    </div>
                                                                 </div>
-                                                                <p className="text-xs text-muted-foreground">
-                                                                    {quizResult.passed
-                                                                        ? "Selamat! Pemahamanmu terhadap materi ini telah terverifikasi dan langkah belajar ini otomatis diselesaikan."
-                                                                        : "Sayang sekali jawabanmu belum sepenuhnya tepat. Pelajari lagi deskripsi di atas dan coba uji kembali!"
-                                                                    }
-                                                                </p>
-                                                                <div className="flex gap-2 pt-1">
-                                                                    {!quizResult.passed && (
+
+                                                                <div className="flex flex-wrap justify-center sm:justify-start gap-2 pt-3 border-t border-border/40 relative z-10">
+                                                                    {!quizResult.passed ? (
                                                                         <Button
                                                                             size="sm"
                                                                             onClick={() => startQuiz(step.index)}
-                                                                            className="text-xs rounded-lg"
+                                                                            className="text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg px-4 shadow-md transition-all active:scale-95 duration-200 animate-pulse font-semibold"
                                                                         >
+                                                                            <RotateCcw className="w-3.5 h-3.5 mr-1.5 animate-spin-slow" />
                                                                             Coba Uji Lagi
+                                                                        </Button>
+                                                                    ) : (
+                                                                        <Button
+                                                                            size="sm"
+                                                                            onClick={() => setActiveQuizIdx(null)}
+                                                                            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 shadow-md shadow-emerald-500/10 transition-all active:scale-95 duration-200 font-semibold"
+                                                                        >
+                                                                            Lanjutkan Belajar
                                                                         </Button>
                                                                     )}
                                                                     <Button
                                                                         size="sm"
                                                                         variant="ghost"
                                                                         onClick={() => setActiveQuizIdx(null)}
-                                                                        className="text-xs text-muted-foreground hover:text-foreground rounded-lg"
+                                                                        className="text-xs text-muted-foreground hover:text-foreground rounded-lg px-3"
                                                                     >
                                                                         Tutup Kuis
                                                                     </Button>
                                                                 </div>
-                                                            </div>
+                                                            </motion.div>
                                                         ) : quizQuestions ? (
-                                                            <div className="space-y-3">
-                                                                <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                                                                    <span>AI Verification Quiz</span>
-                                                                    <span>Soal {currentQuestionIdx + 1} dari {quizQuestions.length}</span>
-                                                                </div>
-                                                                
-                                                                <p className="text-sm font-medium leading-snug">
-                                                                    {quizQuestions[currentQuestionIdx].question}
-                                                                </p>
-
-                                                                <div className="grid grid-cols-1 gap-2">
-                                                                    {quizQuestions[currentQuestionIdx].options.map((opt, oIdx) => (
-                                                                        <button
-                                                                            key={oIdx}
-                                                                            onClick={() => handleAnswerSelect(oIdx)}
-                                                                            className="w-full text-left text-xs p-3 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:bg-primary/[0.04] transition-all cursor-pointer"
-                                                                        >
-                                                                            {opt}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-
-                                                                <button
-                                                                    onClick={() => setActiveQuizIdx(null)}
-                                                                    className="text-[10px] text-muted-foreground hover:text-foreground transition-colors pt-1 block"
+                                                            <AnimatePresence mode="wait">
+                                                                <motion.div
+                                                                    key={currentQuestionIdx}
+                                                                    initial={{ opacity: 0, x: 30 }}
+                                                                    animate={{ opacity: 1, x: 0 }}
+                                                                    exit={{ opacity: 0, x: -30 }}
+                                                                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                                                                    className="space-y-4"
                                                                 >
-                                                                    Batal & Keluar Kuis
-                                                                </button>
-                                                            </div>
+                                                                    <div className="space-y-2">
+                                                                        <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                                                                            <span className="text-primary font-bold flex items-center gap-1">
+                                                                                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                                                                                AI Verification Quiz
+                                                                            </span>
+                                                                            <span>Soal {currentQuestionIdx + 1} dari {quizQuestions.length}</span>
+                                                                        </div>
+                                                                        
+                                                                        {/* Progress bar */}
+                                                                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                                                                            <motion.div 
+                                                                                className="h-full bg-primary"
+                                                                                initial={{ width: `${(currentQuestionIdx / quizQuestions.length) * 100}%` }}
+                                                                                animate={{ width: `${((currentQuestionIdx + 1) / quizQuestions.length) * 100}%` }}
+                                                                                transition={{ duration: 0.3 }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <p className="text-sm font-semibold leading-snug text-foreground">
+                                                                        {quizQuestions[currentQuestionIdx].question}
+                                                                    </p>
+
+                                                                    <div className="grid grid-cols-1 gap-2 pt-1">
+                                                                        {quizQuestions[currentQuestionIdx].options.map((opt, oIdx) => (
+                                                                            <motion.button
+                                                                                key={oIdx}
+                                                                                initial={{ opacity: 0, y: 8 }}
+                                                                                animate={{ opacity: 1, y: 0 }}
+                                                                                transition={{ delay: oIdx * 0.05, duration: 0.2 }}
+                                                                                whileHover={{ scale: 1.01, x: 4 }}
+                                                                                whileTap={{ scale: 0.99 }}
+                                                                                onClick={() => handleAnswerSelect(oIdx)}
+                                                                                className="w-full text-left text-xs p-3 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] hover:shadow-md transition-all cursor-pointer shadow-sm font-medium flex items-center gap-2 group text-foreground"
+                                                                            >
+                                                                                <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+                                                                                    {String.fromCharCode(65 + oIdx)}
+                                                                                </span>
+                                                                                <span className="flex-1">{opt}</span>
+                                                                            </motion.button>
+                                                                        ))}
+                                                                    </div>
+
+                                                                    <button
+                                                                        onClick={() => setActiveQuizIdx(null)}
+                                                                        className="text-[10px] text-muted-foreground hover:text-foreground transition-colors pt-2 block font-medium"
+                                                                    >
+                                                                        Batal & Keluar Kuis
+                                                                    </button>
+                                                                </motion.div>
+                                                            </AnimatePresence>
                                                         ) : null}
-                                                    </div>
+                                                    </motion.div>
                                                 )}
                                             </div>
                                         )}

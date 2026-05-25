@@ -58,14 +58,14 @@ function ScoreBadge({ score }: { score: number | null }) {
 }
 
 export default function MyRoadmapsPage() {
-    const { withAuth, isLoaded, isSignedIn } = useApi();
+    const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     const { data: bookmarks = [], isLoading } = useQuery({
         queryKey: ["bookmarks"],
         queryFn: () => withAuth<BookmarkedJob[]>("/me/bookmarks"),
-        enabled: isLoaded && isSignedIn,
+        enabled: authReady,
     });
 
     const remove = useMutation({
@@ -110,7 +110,7 @@ export default function MyRoadmapsPage() {
                     <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto" />
                     <h2 className="font-semibold text-lg">Belum ada roadmap yang tersimpan</h2>
                     <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                        Buka halaman detail job lalu klik <strong>"Buat Roadmap untuk Job Ini"</strong> untuk mulai menyimpan job yang kamu targetkan.
+                        Buka halaman detail job lalu klik <strong>&quot;Buat Roadmap untuk Job Ini&quot;</strong> untuk mulai menyimpan job yang kamu targetkan.
                     </p>
                     <Button asChild variant="outline">
                         <Link href="/dashboard/jobs">Browse Lowongan</Link>
@@ -189,13 +189,13 @@ export default function MyRoadmapsPage() {
                                 ) : (
                                     <div className="flex items-center gap-2">
                                         <Button asChild size="sm" variant="outline" className="flex-1 text-xs">
-                                            <Link href={`/dashboard/roadmap?job_id=${b.job_id}`}>
+                                            <Link href={`/dashboard/roadmap?job_id=${b.job_id}`} prefetch={false}>
                                                 <BookOpen className="w-3.5 h-3.5 mr-1.5" />
                                                 Buka Roadmap
                                             </Link>
                                         </Button>
                                         <Button asChild size="sm" variant="ghost" className="text-xs">
-                                            <Link href={`/dashboard/jobs/${b.job_id}`}>
+                                            <Link href={`/dashboard/jobs/${b.job_id}`} prefetch={false}>
                                                 Detail Job
                                             </Link>
                                         </Button>

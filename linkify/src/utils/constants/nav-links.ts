@@ -9,6 +9,7 @@ import {
     TargetIcon,
     UserIcon,
     UserCircle2,
+    FileText as FileTextIcon,
 } from "lucide-react";
 
 export const NAV_LINKS = [
@@ -32,6 +33,7 @@ export const NAV_LINKS = [
 export const DASHBOARD_LINKS = [
     { title: "Overview",       href: "/dashboard",                  icon: LayoutDashboardIcon },
     { title: "Profil & Skill", href: "/dashboard/profile",          icon: SparklesIcon },
+    { title: "CV Generator",   href: "/dashboard/cv-generator",     icon: FileTextIcon },
     { title: "Browse Jobs",    href: "/dashboard/jobs",             icon: BriefcaseIcon },
     { title: "Rekomendasi",    href: "/dashboard/jobs/recommended", icon: CompassIcon },
     { title: "Skill Gap",      href: "/dashboard/skill-gap",        icon: TargetIcon },

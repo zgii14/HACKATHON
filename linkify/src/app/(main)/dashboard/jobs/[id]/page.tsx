@@ -201,9 +201,8 @@ function ApplyDialog({
 export default function JobDetailPage() {
     const params = useParams();
     const id = params.id as string;
-    const { withAuth, isLoaded, isSignedIn } = useApi();
+    const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
-    const authReady = isLoaded && isSignedIn;
 
     const [dialogKind, setDialogKind] = useState<DialogKind | null>(null);
     const [pendingNote, setPendingNote] = useState("");

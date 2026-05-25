@@ -20,6 +20,7 @@ class ProfileOut(BaseModel):
     cv_skills: list | None
     merged_skills: list | None
     interests: list | None = None
+    cv_data: dict | None = None
     # Bio data
     bio_full_name: str | None = None
     bio_birth_place: str | None = None

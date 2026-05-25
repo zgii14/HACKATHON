@@ -86,6 +86,11 @@ def apply_to_job(
     if not job:
         raise HTTPException(404, "Lowongan tidak ditemukan")
 
+    # Guard: user harus sudah onboarding (punya profil & merged_skills)
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    if not profile or not profile.merged_skills:
+        raise HTTPException(400, "Selesaikan onboarding terlebih dahulu sebelum melamar")
+
     existing = db.query(JobApplication).filter(
         JobApplication.user_id == user.id,
         JobApplication.job_id == job_id,

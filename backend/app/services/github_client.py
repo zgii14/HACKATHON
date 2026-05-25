@@ -33,13 +33,13 @@ def parse_github_username(url_or_user: str) -> str | None:
     return None
 
 
-def _headers() -> dict[str, str]:
+def _headers(use_auth: bool = True) -> dict[str, str]:
     h = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "GitHire/1.0",
     }
-    if settings.github_token:
-        h["Authorization"] = f"token {settings.github_token}"
+    if use_auth and settings.github_token:
+        h["Authorization"] = f"Bearer {settings.github_token}"
     return h
 
 
@@ -53,12 +53,19 @@ async def fetch_github_signals(username: str) -> dict[str, Any]:
     - timeout: GitHub tidak merespons
     """
     async with httpx.AsyncClient(timeout=30.0) as client:
+        use_auth = bool(settings.github_token)
         # ── Step 1: Fetch profil user (sekaligus validasi keberadaan akun) ──
         try:
             user_r = await client.get(
                 f"https://api.github.com/users/{username}",
-                headers=_headers(),
+                headers=_headers(use_auth=use_auth),
             )
+            if user_r.status_code == 401 and use_auth:
+                use_auth = False
+                user_r = await client.get(
+                    f"https://api.github.com/users/{username}",
+                    headers=_headers(use_auth=False),
+                )
         except httpx.TimeoutException:
             raise HTTPException(
                 504,
@@ -79,6 +86,12 @@ async def fetch_github_signals(username: str) -> dict[str, Any]:
                 429,
                 "GitHub API rate limit tercapai. Coba lagi dalam beberapa menit."
             )
+        if user_r.status_code == 401:
+            raise HTTPException(
+                502,
+                "Token GitHub di server tidak valid atau sudah expired. "
+                "Perbarui GITHUB_TOKEN di backend/.env lalu restart backend."
+            )
         if not user_r.is_success:
             raise HTTPException(
                 502,
@@ -92,7 +105,7 @@ async def fetch_github_signals(username: str) -> dict[str, Any]:
         repos_r = await client.get(
             f"https://api.github.com/users/{username}/repos",
             params={"per_page": 30, "sort": "updated"},
-            headers=_headers(),
+            headers=_headers(use_auth=use_auth),
         )
         repos_r.raise_for_status()
         repos = repos_r.json()
@@ -105,7 +118,7 @@ async def fetch_github_signals(username: str) -> dict[str, Any]:
             if not langs_url:
                 continue
             try:
-                r = await client.get(langs_url, headers=_headers())
+                r = await client.get(langs_url, headers=_headers(use_auth=use_auth))
                 if r.is_success:
                     lang_responses.append(r.json())
             except Exception:

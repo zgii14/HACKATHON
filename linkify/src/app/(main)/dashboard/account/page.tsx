@@ -40,9 +40,8 @@ const FIELDS: { key: keyof BioData; label: string; placeholder: string; icon: Re
 
 export default function AccountPage() {
     const { user } = useUser();
-    const { withAuth, isLoaded, isSignedIn } = useApi();
+    const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
-    const authReady = isLoaded && isSignedIn;
 
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState<BioData>({

@@ -1,104 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  /* ── Light Mode ── */
   :root {
-    --foreground: 0 0% 98%;
-    --background: 0 0% 3.9%;
-
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 224 71.4% 4.1%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
+    --popover-foreground: 224 71.4% 4.1%;
 
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 262.1 83.3% 57.8%; /* Premium Violet accent */
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
 
-    --tertiary: 0 0% 90%;
-    --tertiary-foreground: 0 0% 9%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
 
-    --subtle: 240 6% 90%;
-    --subtle-foreground: 0 0% 9%;
-
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 20% 98%;
 
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 262.1 83.3% 57.8%;
+
+    --radius: 1rem; /* Rounded premium cards */
+  }
+
+  /* ── Dark Mode ── */
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+
+    --primary: 263.4 70% 50.4%; /* Deep premium violet */
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 263.4 70% 50.4%;
   }
 }
 
 ::selection {
-  background-color: rgba(168, 85, 247, 0.2);
+  background-color: rgba(109, 40, 217, 0.2);
   color: hsl(var(--foreground));
 }
 
 html, body {
-  font-family: "Inter", sans-serif !important;
+  font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
 }
 
-.dumy {
-  color: hsl(0 0% 98%);
-  color: rgb(38, 38, 38)
-    /* @apply to-purple-500 */
+/* Smooth theme transition */
+html.transitioning,
+html.transitioning *,
+html.transitioning *::before,
+html.transitioning *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
 }
 
 ::-webkit-scrollbar {
   width: 6px;
-  scrollbar-color: #262626;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #262626;
+  background-color: hsl(var(--muted-foreground) / 0.3);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0);
+  background: transparent;
 }
 
 .gradient {
@@ -107,4 +106,15 @@ html, body {
 
 .not-found {
   box-shadow: rgba(150, 18, 226, 0.3) 5px 5px;
+}
+
+/* ── Glass / Bento surface tokens (auto light↔dark) ── */
+@layer utilities {
+  .glass { @apply bg-black/[0.02] dark:bg-white/[0.025]; }
+  .glass-md { @apply bg-black/[0.03] dark:bg-white/[0.03]; }
+  .glass-lg { @apply bg-black/[0.04] dark:bg-white/[0.04]; }
+  .glass-border { @apply border-black/[0.08] dark:border-white/[0.06]; }
+  .glass-border-hover { @apply border-black/[0.15] dark:border-white/[0.12]; }
+  .glass-hover { @apply hover:bg-black/[0.04] dark:hover:bg-white/[0.04]; }
+  .glass-divider { @apply border-black/[0.06] dark:border-white/[0.04]; }
 }

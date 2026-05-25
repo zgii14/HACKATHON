@@ -6,16 +6,27 @@ export type FetchOptions = RequestInit & {
     token?: string | null;
 };
 
+export class ApiError extends Error {
+    status: number;
+
+    constructor(message: string, status: number) {
+        super(message);
+        this.name = "ApiError";
+        this.status = status;
+    }
+}
+
 export async function apiFetch<T>(
     path: string,
     options: FetchOptions = {}
 ): Promise<T> {
     const { token, headers, body, ...rest } = options;
     const h = new Headers(headers);
+
     if (token) {
         h.set("Authorization", `Bearer ${token}`);
     }
-    // Auto-set Content-Type for JSON bodies
+
     if (body && !h.has("Content-Type")) {
         h.set("Content-Type", "application/json");
     }
@@ -27,14 +38,8 @@ export async function apiFetch<T>(
     });
 
     if (!res.ok) {
-        // Jika backend balas 401, token mungkin expired tepat saat request berlangsung
-        // (Clerk sedang silent refresh). Lempar AUTH_NOT_READY agar React Query
-        // retry dengan token baru — bukan tampilkan error ke user.
-        if (res.status === 401) {
-            throw new Error("AUTH_NOT_READY");
-        }
         const message = await parseApiError(res);
-        throw new Error(message);
+        throw new ApiError(message, res.status);
     }
 
     if (res.status === 204) {

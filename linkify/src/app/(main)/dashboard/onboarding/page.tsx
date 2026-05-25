@@ -62,14 +62,14 @@ export default function OnboardingPage() {
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
     const { getToken } = useAuth();
-    const { withAuth, isLoaded, isSignedIn } = useApi();
+    const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
     const router = useRouter();
 
     const { data: existingProfile } = useQuery({
         queryKey: ["profile"],
         queryFn: () => withAuth<Profile>("/me/profile"),
-        enabled: isLoaded && isSignedIn,
+        enabled: authReady,
     });
 
     const hasExistingProfile = !!existingProfile?.merged_skills?.length;

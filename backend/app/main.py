@@ -1,3 +1,5 @@
+import logging
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import Body, Depends, FastAPI, Header, HTTPException
@@ -14,13 +16,29 @@ from app.database import get_db
 from app.services import scraper_service
 from sqlalchemy.orm import Session
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    # Retry DB connection — tunggu DB siap (max 5x, delay 2s)
+    for attempt in range(1, 6):
+        try:
+            Base.metadata.create_all(bind=engine)
+            break
+        except Exception as e:
+            if attempt == 5:
+                logger.error("Database tidak tersedia setelah 5 percobaan: %s", e)
+                raise
+            logger.warning("DB belum siap (attempt %d/5): %s — retry dalam 2s...", attempt, e)
+            time.sleep(2)
 
     # DDL Migration: tambah roadmap_key ke tabel roadmap_progress jika belum ada
     with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE candidate_profiles
+            ADD COLUMN IF NOT EXISTS cv_data JSON NULL
+        """))
         conn.execute(text("""
             ALTER TABLE roadmap_progress
             ADD COLUMN IF NOT EXISTS roadmap_key VARCHAR(64) NOT NULL DEFAULT '_generic'

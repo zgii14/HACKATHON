@@ -103,46 +103,18 @@ const MobileNavbar = () => {
                         </div>
 
                         {/* Nav Links */}
-                        <ul className="flex flex-col w-full">
-                            <Accordion type="single" collapsible className="!w-full">
-                                {NAV_LINKS.map((link) => (
-                                    <AccordionItem
-                                        key={link.title}
-                                        value={link.title}
-                                        className="border-b border-white/[0.06] last:border-none"
+                        <ul className="flex flex-col w-full divide-y divide-white/[0.06]">
+                            {NAV_LINKS.map((link) => (
+                                <li key={link.title}>
+                                    <Link
+                                        href={link.href!}
+                                        onClick={handleClose}
+                                        className="flex items-center w-full py-4 text-sm font-medium text-neutral-300 hover:text-white transition-colors"
                                     >
-                                        {link.menu ? (
-                                            <>
-                                                <AccordionTrigger className="text-sm text-neutral-300 hover:text-white font-medium py-4 hover:no-underline">
-                                                    {link.title}
-                                                </AccordionTrigger>
-                                                <AccordionContent>
-                                                    <ul onClick={handleClose} className="flex flex-col gap-1 pb-2">
-                                                        {link.menu.map((menuItem) => (
-                                                            <ListItem
-                                                                key={menuItem.title}
-                                                                title={menuItem.title}
-                                                                href={menuItem.href}
-                                                                icon={menuItem.icon}
-                                                            >
-                                                                {menuItem.tagline}
-                                                            </ListItem>
-                                                        ))}
-                                                    </ul>
-                                                </AccordionContent>
-                                            </>
-                                        ) : (
-                                            <Link
-                                                href={link.href!}
-                                                onClick={handleClose}
-                                                className="flex items-center w-full py-4 text-sm font-medium text-neutral-300 hover:text-white transition-colors"
-                                            >
-                                                {link.title}
-                                            </Link>
-                                        )}
-                                    </AccordionItem>
-                                ))}
-                            </Accordion>
+                                        {link.title}
+                                    </Link>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                 </SheetContent>

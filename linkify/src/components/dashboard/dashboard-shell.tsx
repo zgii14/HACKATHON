@@ -2,6 +2,7 @@
 
 import { APP_NAME, cn, DASHBOARD_LINKS } from "@/utils";
 import { useApi } from "@/hooks/use-api";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import Link from "next/link";
@@ -41,8 +42,7 @@ function GitHireIcon() {
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { withAuth, isLoaded, isSignedIn } = useApi();
-    const authReady = isLoaded && isSignedIn;
+    const { withAuth, authReady } = useApi();
 
     // Desktop: sidebar collapsed ke icon-only
     const [collapsed, setCollapsed] = useState(false);
@@ -93,6 +93,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     <Link
                         key={item.href}
                         href={item.href}
+                        prefetch={false}
                         title={!showLabel ? item.title : undefined}
                         className={cn(
                             "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150",
@@ -223,8 +224,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     {/* Desktop: spacer kiri */}
                     <div className="hidden md:block" />
 
-                    {/* UserButton selalu di kanan */}
-                    <div className="flex items-center gap-3">
+                    {/* Theme toggle + UserButton */}
+                    <div className="flex items-center gap-2">
+                        <ThemeToggle />
                         <UserButton
                             afterSignOutUrl="/"
                             appearance={{

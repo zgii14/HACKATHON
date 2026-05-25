@@ -63,7 +63,7 @@ function CoverLetterModal({
     fallbackName: string;
     onClose: () => void;
 }) {
-    const { withAuth, isLoaded, isSignedIn } = useApi();
+    const { withAuth, authReady } = useApi();
     const [letter, setLetter] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -71,7 +71,7 @@ function CoverLetterModal({
     const { data: bio } = useQuery({
         queryKey: ["biodata"],
         queryFn: () => withAuth<BioData>("/me/biodata"),
-        enabled: isLoaded && isSignedIn,
+        enabled: authReady,
         staleTime: 10 * 60 * 1000,
     });
 
@@ -475,11 +475,10 @@ function ApplicationCard({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ApplicationsPage() {
-    const { withAuth, isLoaded, isSignedIn } = useApi();
+    const { withAuth, authReady } = useApi();
     const { user } = useUser();
     const [activeFilter, setActiveFilter] = useState<ApplicationStatus | "all">("all");
     const [letterApp, setLetterApp] = useState<ApplicationOut | null>(null);
-    const authReady = isLoaded && isSignedIn;
 
     const { data: applications = [], isLoading } = useQuery({
         queryKey: ["applications"],

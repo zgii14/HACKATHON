@@ -7,7 +7,7 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.models import CandidateProfile, RoadmapProgress, User
 from app.services import github_client
-from app.services.gemini_service import extract_skills_from_cv_text
+from app.services.gemini_service import extract_skills_from_cv_text, extract_cv_data_from_text
 from app.services.pdf_extract import extract_text_from_pdf
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
@@ -112,8 +112,9 @@ async def sync_profile(
 
     try:
         cv_skills = extract_skills_from_cv_text(text)
+        cv_data = extract_cv_data_from_text(text)
     except Exception as e:
-        raise HTTPException(502, f"Gagal mengekstrak skill dari CV menggunakan Gemini AI: {e!s}") from e
+        raise HTTPException(502, f"Gagal mengekstrak data dari CV menggunakan Gemini AI: {e!s}") from e
 
     gh_skills = _skills_from_github(gh_signals)
     merged = _merge_skills(gh_skills, cv_skills)
@@ -131,6 +132,7 @@ async def sync_profile(
     profile.github_username = username
     profile.github_signals = gh_signals
     profile.cv_skills = cv_skills
+    profile.cv_data = cv_data
     profile.merged_skills = merged
 
     profile.updated_at = datetime.utcnow()

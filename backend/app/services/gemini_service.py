@@ -178,6 +178,78 @@ Aturan ketat:
         return []
 
 
+def extract_cv_data_from_text(cv_text: str) -> dict:
+    prompt = """
+    You are an expert ATS CV parser. Read the text of this CV and convert it into a valid JSON object matching this exact shape:
+    {
+      "summary": "Brief professional summary of the candidate...",
+      "education": [
+        {
+          "institution": "University Bengkulu",
+          "location": "Bengkulu, Indonesia",
+          "major": "Informatics",
+          "degree": "Bachelor Degree",
+          "period": "Aug 2022 - Present",
+          "gpa": "3.86/4.00"
+        }
+      ],
+      "work_experience": [
+        {
+          "company": "Coding Camp 2026",
+          "role": "Facilitator",
+          "location": "Bengkulu, Indonesia (Remote)",
+          "period": "Jan 2026 - Present",
+          "bullets": [
+            "Monitor learning progress of students",
+            "Hold weekly consultation sessions"
+          ]
+        }
+      ],
+      "org_experience": [
+        {
+          "organization": "HIMATIF",
+          "role": "Staff of Public Relations",
+          "location": "Bengkulu, Indonesia",
+          "period": "Nov 2023 - Dec 2024",
+          "bullets": [
+            "Designed and printed pamphlets for faculty activities"
+          ]
+        }
+      ],
+      "training": [
+        {
+          "title": "Machine Learning Cohort",
+          "provider": "Dicoding / DBS Coding Camp",
+          "location": "Remote",
+          "period": "Feb 2025 - Jun 2025",
+          "bullets": [
+            "Developed MoodMate emotion detection NLP model"
+          ]
+        }
+      ],
+      "skills": {
+        "soft_skills": ["Time Management", "Effective Communication"],
+        "hard_skills": ["Python", "TensorFlow", "Figma"],
+        "languages": ["Bahasa Indonesia (Native)", "English (Intermediate)"]
+      },
+      "certifications": [
+        "Introduction to Git and GitHub (Dicoding)",
+        "Applied Machine Learning (Dicoding)"
+      ]
+    }
+    Return ONLY valid JSON. Keep all descriptions/bullets in the same language as found in the text.
+    """
+    try:
+        text = _call_gemini_with_retry(f"{prompt}\n\n--- CV TEXT ---\n{cv_text[:12000]}")
+        data = _extract_json(text)
+        if data and isinstance(data, dict):
+            return data
+        return {}
+    except Exception as e:
+        print(f"[Gemini] Gagal mengekstrak CV data: {e}")
+        return {}
+
+
 # =========================
 # 🔹 PARSING UTILITIES
 # =========================

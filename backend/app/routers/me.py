@@ -530,3 +530,18 @@ def clear_roadmap_cache(
         db.query(RoadmapProgress).filter(RoadmapProgress.user_id == user.id).delete()
         db.commit()
         return {"ok": True, "pesan": "Semua roadmap berhasil dihapus. Buka halaman roadmap untuk generate ulang."}
+
+
+@router.put("/profile/cv-data")
+def update_cv_data(
+    payload: dict,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    if not profile:
+        raise HTTPException(404, "Candidate profile not found")
+    profile.cv_data = payload
+    db.commit()
+    db.refresh(profile)
+    return {"status": "success", "cv_data": profile.cv_data}

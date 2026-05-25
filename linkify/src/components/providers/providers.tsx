@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ClerkProvider, useAuth } from '@clerk/nextjs'
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { ThemeProvider } from "next-themes";
 
 // ── AuthCacheSync ──────────────────────────────────────────────────────────────
 // Komponen ini mendeteksi perubahan userId (sign out / ganti akun) dan
@@ -63,14 +64,19 @@ const Providers = ({ children }: Props) => {
     }));
 
     return (
-        // ClerkProvider di luar QueryClientProvider agar Clerk selesai init
-        // sebelum query pertama dieksekusi — mencegah 401 saat hard refresh
         <ClerkProvider>
-            <QueryClientProvider client={client}>
-                {/* Clear cache otomatis saat user sign out / ganti akun */}
-                <AuthCacheSync />
-                {children}
-            </QueryClientProvider>
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="dark"
+                enableSystem
+                disableTransitionOnChange={false}
+            >
+                <QueryClientProvider client={client}>
+                    {/* Clear cache otomatis saat user sign out / ganti akun */}
+                    <AuthCacheSync />
+                    {children}
+                </QueryClientProvider>
+            </ThemeProvider>
         </ClerkProvider>
     )
 };

@@ -49,6 +49,7 @@ class CandidateProfile(Base):
     roadmap_cached: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     roadmap_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     interests: Mapped[list | None] = mapped_column(JSON, nullable=True)  # e.g. ["backend", "ai_ml"]
+    cv_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     # ── Bio data untuk surat lamaran ──────────────────────────────────────────
     bio_full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     bio_birth_place: Mapped[str | None] = mapped_column(String(255), nullable=True)
