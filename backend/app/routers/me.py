@@ -169,14 +169,18 @@ def get_skill_gap(
     STRONG_BYTES_THRESHOLD = 3000  # bytes di GitHub → dianggap skill "kuat"
 
     gh_signals = profile.github_signals or {}
-    gh_langs: dict[str, int] = gh_signals.get("languages") or {}
-    gh_topics: list[str] = gh_signals.get("topics") or []
+    
+    _langs_raw = gh_signals.get("languages")
+    gh_langs: dict[str, int] = _langs_raw if isinstance(_langs_raw, dict) else {}
+    
+    _topics_raw = gh_signals.get("topics")
+    gh_topics: list[str] = _topics_raw if isinstance(_topics_raw, list) else []
 
     # Deteksi format data lama vs baru:
     # - Format lama: nilai = jumlah repo ({"Python": 3, "JavaScript": 1}) → max ~100
     # - Format baru: nilai = byte count  ({"Python": 82000, ...})          → max ribuan
     # Jika max value < 1000 → kemungkinan format lama → skip threshold "strong"
-    max_lang_value = max(gh_langs.values(), default=0)
+    max_lang_value = max(gh_langs.values()) if gh_langs else 0
     is_bytes_format = max_lang_value >= 1000
 
     # Normalisasi nama bahasa GitHub ke lowercase (untuk perbandingan)
@@ -220,7 +224,7 @@ def get_skill_gap(
         if normalize_skill(s) not in user_skills
     ]
     missing_with_freq.sort(key=lambda x: x["job_count"], reverse=True)
-    missing_skills = [item["skill"] for item in missing_with_freq]
+    missing_skills = [item["skill"] for item in missing_with_freq[:15]]
 
     # ── Weak skills: CV-only skills yang dibutuhkan setidaknya 1 job ───────
     # Ini bukan "missing" tapi "perlu diperdalam" — ada klaim tapi belum terbukti di GitHub
@@ -235,7 +239,7 @@ def get_skill_gap(
     return SkillGapOut(
         missing_skills=missing_skills,
         has_profile=True,
-        skill_freq=[{"skill": item["skill"], "job_count": item["job_count"]} for item in missing_with_freq[:30]],
+        skill_freq=[{"skill": item["skill"], "job_count": item["job_count"]} for item in missing_with_freq[:10]],
         user_skill_count=len(user_skills),
         total_job_skills=len(skill_freq),
         weak_skills=weak_skills,
@@ -315,6 +319,44 @@ def get_bookmarks(
     # Urutkan: progress paling banyak dulu, lalu match score
     result.sort(key=lambda x: (x.completed_steps, x.match_score or 0), reverse=True)
     return result
+
+
+@router.get("/roadmap/quiz")
+def get_roadmap_step_quiz(
+    step_index: int = Query(..., description="Index langkah roadmap"),
+    job_id: UUID | None = Query(default=None, description="UUID job target."),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Generate dynamic 3-question quiz for a specific roadmap step using Gemini AI.
+    """
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    if not profile or not profile.roadmap_cached:
+        raise HTTPException(400, "Silakan buat roadmap terlebih dahulu.")
+
+    cached_all = profile.roadmap_cached or {}
+    cache_key = str(job_id) if job_id else "_generic"
+
+    if "steps" in cached_all and "_generic" not in cached_all:
+        raw_steps = cached_all.get("steps") or []
+    else:
+        entry = cached_all.get(cache_key, {})
+        raw_steps = entry.get("steps") or []
+
+    if not raw_steps or step_index < 0 or step_index >= len(raw_steps):
+        raise HTTPException(400, "Langkah roadmap tidak valid atau belum digenerate.")
+
+    step = raw_steps[step_index]
+    step_title = step.get("title", f"Langkah {step_index + 1}")
+    step_description = step.get("description", "")
+
+    from app.services.gemini_service import generate_step_quiz
+    quiz = generate_step_quiz(step_title, step_description)
+    if not quiz:
+        raise HTTPException(502, "Gagal men-generate kuis dengan AI. Silakan coba lagi.")
+
+    return {"quiz": quiz}
 
 
 @router.get("/roadmap", response_model=RoadmapOut)

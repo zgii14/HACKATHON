@@ -127,6 +127,58 @@ Aturan ketat:
 
 
 # =========================
+# 🔹 STEP QUIZ GENERATION
+# =========================
+def generate_step_quiz(step_title: str, step_description: str) -> list[dict]:
+    prompt = f"""Kamu adalah instruktur pemrograman IT di Indonesia.
+Buatkan 3 soal kuis pilihan ganda singkat dan interaktif untuk materi belajar ini:
+Judul Langkah: {step_title}
+Deskripsi: {step_description}
+
+Kuis harus ditulis dalam Bahasa Indonesia. Soal harus relevan, mendidik, dan menguji konsep dasar materi tersebut.
+
+PENTING - Return HANYA valid JSON dengan format ini (tanpa markdown, tanpa kode blok, tanpa tanda ** atau *):
+{{"quiz":[
+  {{
+    "question": "Pertanyaan kuis singkat",
+    "options": ["Pilihan A", "Pilihan B", "Pilihan C", "Pilihan D"],
+    "correct_index": 0
+  }}
+]}}
+
+Aturan ketat:
+- correct_index: harus berupa angka integer 0 sampai 3 yang merujuk pada index opsi yang benar.
+- options: harus tepat 4 pilihan jawaban yang masuk akal dan menantang.
+- question: ajukan pertanyaan singkat yang konkret.
+"""
+    try:
+        text = _call_gemini_with_retry(prompt)
+        data = _extract_json(text)
+        if not data or not isinstance(data.get("quiz"), list):
+            return []
+        
+        quiz: list[dict] = []
+        for item in data["quiz"]:
+            if not isinstance(item, dict):
+                continue
+            question = item.get("question")
+            options = item.get("options")
+            correct_index = item.get("correct_index")
+            if (isinstance(question, str) and 
+                isinstance(options, list) and len(options) == 4 and 
+                isinstance(correct_index, int) and 0 <= correct_index <= 3):
+                quiz.append({
+                    "question": question.strip(),
+                    "options": [str(o).strip() for o in options],
+                    "correct_index": correct_index
+                })
+        return quiz[:3]
+    except Exception as e:
+        print(f"[Gemini] Gagal membuat kuis: {e}")
+        return []
+
+
+# =========================
 # 🔹 PARSING UTILITIES
 # =========================
 def _parse_skills_json(text: str) -> list[str]:

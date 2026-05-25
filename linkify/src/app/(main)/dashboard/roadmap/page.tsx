@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, Check, ExternalLink, FileText, Send, Target } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ExternalLink, FileText, Send, Target, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -28,13 +28,13 @@ type Roadmap = {
 
 // ── Apply CTA at finish marker ────────────────────────────────────────────────
 function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitle: string; jobCompany: string }) {
-    const { withAuth, isLoaded, isSignedIn } = useApi();
+    const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
 
     const { data: application } = useQuery({
         queryKey: ["applications", jobId],
         queryFn: () => withAuth<{ id: string; status: string; apply_url: string | null } | null>(`/applications/${jobId}`),
-        enabled: isLoaded && isSignedIn && !!jobId,
+        enabled: authReady && !!jobId,
     });
 
     const applyMutation = useMutation({
@@ -82,14 +82,14 @@ function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitl
                 )}
             </Button>
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground text-xs">
-                <Link href={`/dashboard/jobs/${jobId}`}>Lihat detail job</Link>
+                <Link href={`/dashboard/jobs/${jobId}`} prefetch={false}>Lihat detail job</Link>
             </Button>
         </div>
     );
 }
 
 function RoadmapContent() {
-    const { withAuth, isLoaded, isSignedIn } = useApi();
+    const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
     const searchParams = useSearchParams();
     const jobId = searchParams.get("job_id");
@@ -105,10 +105,75 @@ function RoadmapContent() {
     ];
     const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
+    // ── Kuis AI State ──
+    const [activeQuizIdx, setActiveQuizIdx] = useState<number | null>(null);
+    const [quizQuestions, setQuizQuestions] = useState<{ question: string; options: string[]; correct_index: number }[] | null>(null);
+    const [loadingQuiz, setLoadingQuiz] = useState(false);
+    const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+    const [userAnswers, setUserAnswers] = useState<number[]>([]);
+    const [quizResult, setQuizResult] = useState<{ finished: boolean; passed: boolean; score: number } | null>(null);
+
+    const startQuiz = async (index: number) => {
+        setActiveQuizIdx(index);
+        setLoadingQuiz(true);
+        setQuizQuestions(null);
+        setCurrentQuestionIdx(0);
+        setUserAnswers([]);
+        setQuizResult(null);
+
+        try {
+            const url = jobId
+                ? `/me/roadmap/quiz?step_index=${index}&job_id=${jobId}`
+                : `/me/roadmap/quiz?step_index=${index}`;
+            const data = await withAuth<{ quiz: any[] }>(url);
+            if (data?.quiz && data.quiz.length > 0) {
+                setQuizQuestions(data.quiz);
+            } else {
+                toast.error("Gagal mendapatkan soal kuis dari AI.");
+                setActiveQuizIdx(null);
+            }
+        } catch (err: any) {
+            toast.error(err.message || "Gagal membuat kuis.");
+            setActiveQuizIdx(null);
+        } finally {
+            setLoadingQuiz(false);
+        }
+    };
+
+    const handleAnswerSelect = (optionIdx: number) => {
+        const nextAnswers = [...userAnswers, optionIdx];
+        setUserAnswers(nextAnswers);
+
+        if (currentQuestionIdx + 1 < (quizQuestions?.length ?? 0)) {
+            setCurrentQuestionIdx((prev) => prev + 1);
+        } else {
+            // Hitung skor kelulusan kuis
+            let correctCount = 0;
+            quizQuestions?.forEach((q, i) => {
+                if (nextAnswers[i] === q.correct_index) {
+                    correctCount++;
+                }
+            });
+
+            const passed = correctCount === (quizQuestions?.length ?? 0);
+            setQuizResult({
+                finished: true,
+                passed,
+                score: correctCount,
+            });
+
+            if (passed) {
+                // Selesaikan langkah otomatis ke DB
+                patch.mutate({ index: activeQuizIdx!, completed: true });
+                toast.success("Hebat! Jawabanmu 100% benar.");
+            }
+        }
+    };
+
     const { data, isLoading, error } = useQuery({
         queryKey: ["roadmap", jobId ?? "generic"],
         queryFn: () => withAuth<Roadmap>(roadmapUrl),
-        enabled: isLoaded && isSignedIn,
+        enabled: authReady,
         retry: false,
     });
 
@@ -206,6 +271,7 @@ function RoadmapContent() {
                     </div>
                     <Link
                         href="/dashboard/my-roadmaps"
+                        prefetch={false}
                         className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-background/60 transition-all"
                     >
                         Pilih Job Target
@@ -217,7 +283,7 @@ function RoadmapContent() {
             <div className="flex items-start gap-3">
                 {jobId && (
                     <Button variant="ghost" size="icon" asChild className="mt-1 shrink-0">
-                        <Link href={`/dashboard/jobs/${jobId}`}>
+                        <Link href={`/dashboard/jobs/${jobId}`} prefetch={false}>
                             <ArrowLeft className="w-4 h-4" />
                         </Link>
                     </Button>
@@ -399,6 +465,105 @@ function RoadmapContent() {
                                                 <p className="text-xs text-primary/80 leading-relaxed">
                                                     <span className="font-medium">Target:</span> {step.target}
                                                 </p>
+                                            </div>
+                                        )}
+
+                                        {/* Quiz Section */}
+                                        {!isCompleted && (
+                                            <div className="mt-4 pt-4 border-t border-dashed border-border">
+                                                {activeQuizIdx !== step.index ? (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() => startQuiz(step.index)}
+                                                        className="text-xs border-primary/30 text-primary hover:bg-primary/10 gap-1.5 rounded-lg"
+                                                    >
+                                                        <Sparkles className="w-3.5 h-3.5" />
+                                                        Uji Pemahaman Saya (AI Quiz)
+                                                    </Button>
+                                                ) : (
+                                                    <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-4">
+                                                        {loadingQuiz ? (
+                                                            <div className="flex items-center gap-2 py-2">
+                                                                <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0" />
+                                                                <p className="text-xs font-medium text-muted-foreground animate-pulse">
+                                                                    Gemini sedang menyusun 3 pertanyaan interaktif...
+                                                                </p>
+                                                            </div>
+                                                        ) : quizQuestions && quizResult?.finished ? (
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    {quizResult.passed ? (
+                                                                        <span className="text-lg">🏆</span>
+                                                                    ) : (
+                                                                        <span className="text-lg">❌</span>
+                                                                    )}
+                                                                    <p className="text-sm font-semibold">
+                                                                        {quizResult.passed 
+                                                                            ? "Lulus! Jawabanmu 100% Benar" 
+                                                                            : `Belum lulus (${quizResult.score} dari 3 Benar)`
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    {quizResult.passed
+                                                                        ? "Selamat! Pemahamanmu terhadap materi ini telah terverifikasi dan langkah belajar ini otomatis diselesaikan."
+                                                                        : "Sayang sekali jawabanmu belum sepenuhnya tepat. Pelajari lagi deskripsi di atas dan coba uji kembali!"
+                                                                    }
+                                                                </p>
+                                                                <div className="flex gap-2 pt-1">
+                                                                    {!quizResult.passed && (
+                                                                        <Button
+                                                                            size="sm"
+                                                                            onClick={() => startQuiz(step.index)}
+                                                                            className="text-xs rounded-lg"
+                                                                        >
+                                                                            Coba Uji Lagi
+                                                                        </Button>
+                                                                    )}
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        onClick={() => setActiveQuizIdx(null)}
+                                                                        className="text-xs text-muted-foreground hover:text-foreground rounded-lg"
+                                                                    >
+                                                                        Tutup Kuis
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ) : quizQuestions ? (
+                                                            <div className="space-y-3">
+                                                                <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                                                                    <span>AI Verification Quiz</span>
+                                                                    <span>Soal {currentQuestionIdx + 1} dari {quizQuestions.length}</span>
+                                                                </div>
+                                                                
+                                                                <p className="text-sm font-medium leading-snug">
+                                                                    {quizQuestions[currentQuestionIdx].question}
+                                                                </p>
+
+                                                                <div className="grid grid-cols-1 gap-2">
+                                                                    {quizQuestions[currentQuestionIdx].options.map((opt, oIdx) => (
+                                                                        <button
+                                                                            key={oIdx}
+                                                                            onClick={() => handleAnswerSelect(oIdx)}
+                                                                            className="w-full text-left text-xs p-3 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] active:bg-primary/[0.04] transition-all cursor-pointer"
+                                                                        >
+                                                                            {opt}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+
+                                                                <button
+                                                                    onClick={() => setActiveQuizIdx(null)}
+                                                                    className="text-[10px] text-muted-foreground hover:text-foreground transition-colors pt-1 block"
+                                                                >
+                                                                    Batal & Keluar Kuis
+                                                                </button>
+                                                            </div>
+                                                        ) : null}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
