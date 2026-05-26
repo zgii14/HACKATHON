@@ -495,29 +495,31 @@ function ApplicationCard({
                                 💬 Hubungi Rekruter
                             </Button>
                             
-                            <div className="absolute left-0 bottom-full mb-1.5 hidden group-hover:block z-20 bg-background border border-border rounded-xl shadow-xl overflow-hidden min-w-[150px] animate-in slide-in-from-bottom-2 duration-200">
-                                {interviewDetails.hr_phone && (
+                            <div className="absolute left-0 bottom-full pb-1.5 hidden group-hover:block z-20 min-w-[150px] animate-in slide-in-from-bottom-2 duration-200">
+                                <div className="bg-background border border-border rounded-xl shadow-xl overflow-hidden">
+                                    {interviewDetails.hr_phone && (
+                                        <a
+                                            href={`https://wa.me/${interviewDetails.hr_phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                                                `Halo Bapak/Ibu HRD ${app.job_company}, saya ${fullName || "Pelamar"}. Terkait dengan undangan wawancara posisi ${app.job_title} pada hari ${new Date(interviewDetails.datetime).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}...`
+                                            )}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium border-b border-border/30"
+                                        >
+                                            WhatsApp Chat
+                                        </a>
+                                    )}
                                     <a
-                                        href={`https://wa.me/${interviewDetails.hr_phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
-                                            `Halo Bapak/Ibu HRD ${app.job_company}, saya ${fullName || "Pelamar"}. Terkait dengan undangan wawancara posisi ${app.job_title} pada hari ${new Date(interviewDetails.datetime).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}...`
+                                        href={`mailto:${app.recruiter_email || "recruiter@githire.com"}?subject=${encodeURIComponent(
+                                            `Konfirmasi Wawancara - ${fullName || "Pelamar"}`
+                                        )}&body=${encodeURIComponent(
+                                            `Halo Bapak/Ibu HRD ${app.job_company},\n\nTerima kasih atas undangan wawancaranya. Saya ingin mengonfirmasi bahwa saya akan hadir pada jadwal yang telah ditentukan.\n\nHormat saya,\n${fullName || "Pelamar"}`
                                         )}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium border-b border-border/30"
+                                        className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium"
                                     >
-                                        WhatsApp Chat
+                                        Kirim Email
                                     </a>
-                                )}
-                                <a
-                                    href={`mailto:${app.recruiter_email || "recruiter@githire.com"}?subject=${encodeURIComponent(
-                                        `Konfirmasi Wawancara - ${fullName || "Pelamar"}`
-                                    )}&body=${encodeURIComponent(
-                                        `Halo Bapak/Ibu HRD ${app.job_company},\n\nTerima kasih atas undangan wawancaranya. Saya ingin mengonfirmasi bahwa saya akan hadir pada jadwal yang telah ditentukan.\n\nHormat saya,\n${fullName || "Pelamar"}`
-                                    )}`}
-                                    className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium"
-                                >
-                                    Kirim Email
-                                </a>
+                                </div>
                             </div>
                         </div>
                     </div>
