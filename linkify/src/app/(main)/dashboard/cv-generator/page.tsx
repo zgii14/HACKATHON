@@ -85,6 +85,8 @@ type CVData = {
         languages?: string[];
     };
     certifications?: string[];
+    email?: string;
+    linkedin?: string;
 };
 
 type Profile = {
@@ -154,6 +156,10 @@ export default function CVGeneratorPage() {
             
             // Certificates
             setCertifications(cd.certifications || []);
+
+            // Set email & linkedin from cd
+            setEmail(cd.email || "");
+            setLinkedin(cd.linkedin || "");
         } else {
             // Default blank states
             setSummary("");
@@ -165,16 +171,29 @@ export default function CVGeneratorPage() {
             setHardSkills(profile.merged_skills?.join(", ") || "");
             setLanguages("Bahasa Indonesia (Native), English (Intermediate)");
             setCertifications([]);
+            setEmail("");
+            setLinkedin("");
         }
     }, [profile]);
 
     // ── Save Mutation ──
     const saveMutation = useMutation({
-        mutationFn: (payload: CVData) =>
-            withAuth("/me/profile/cv-data", {
+        mutationFn: async (payload: CVData) => {
+            // 1. Save cv_data JSON
+            await withAuth("/me/profile/cv-data", {
                 method: "PUT",
                 body: JSON.stringify(payload),
-            }),
+            });
+            // 2. Save basic bio data fields
+            await withAuth("/me/biodata", {
+                method: "PATCH",
+                body: JSON.stringify({
+                    bio_full_name: fullName,
+                    bio_phone: phone,
+                    bio_address: address,
+                }),
+            });
+        },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["profile"] });
             toast.success("Riwayat CV berhasil disimpan ke database!");
@@ -197,6 +216,8 @@ export default function CVGeneratorPage() {
                 languages: languages.split(",").map((s) => s.trim()).filter(Boolean),
             },
             certifications: certifications.filter((c) => c.trim()),
+            email,
+            linkedin,
         };
     };
 
@@ -319,7 +340,7 @@ export default function CVGeneratorPage() {
 
     // ── DOCX Generation Logic (Harvard ATS Rozagi Layout) ──
     const generateWordCV = async () => {
-        const FONT = "Calibri";
+        const FONT = "Times New Roman";
         const SIZE_NAME = 32; // 16pt
         const SIZE_SECTION = 22; // 11pt
         const SIZE_BODY = 20; // 10pt
@@ -328,7 +349,9 @@ export default function CVGeneratorPage() {
             top: { style: BorderStyle.NONE, size: 0, color: "auto" },
             bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
             left: { style: BorderStyle.NONE, size: 0, color: "auto" },
-            right: { style: BorderStyle.NONE, size: 0, color: "auto" }
+            right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" }
         };
 
         const createSectionHeader = (title: string) => {
@@ -789,6 +812,20 @@ export default function CVGeneratorPage() {
 
         // Document wrapper
         const doc = new Document({
+            styles: {
+                default: {
+                    document: {
+                        run: {
+                            font: FONT,
+                        },
+                        paragraph: {
+                            spacing: {
+                                line: 276, // 1.15 line spacing (1.15 * 240 dxa)
+                            }
+                        }
+                    }
+                }
+            },
             sections: [
                 {
                     properties: {

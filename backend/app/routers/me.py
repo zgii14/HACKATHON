@@ -69,8 +69,34 @@ def read_me(user: User = Depends(get_current_user)) -> User:
 def read_profile(user: User = Depends(get_current_user)):
     p = user.profile
     if not p:
-        return None
-    return p
+        # Kembalikan role saja walau profil belum diisi (untuk recruiter yang baru login)
+        return ProfileOut(
+            github_username=None,
+            github_signals=None,
+            cv_skills=None,
+            merged_skills=None,
+            interests=None,
+            cv_data=None,
+            updated_at=None,
+            role=user.role,
+        )
+    # Inject role dari User ke response ProfileOut
+    data = {
+        "github_username": p.github_username,
+        "github_signals": p.github_signals,
+        "cv_skills": p.cv_skills,
+        "merged_skills": p.merged_skills,
+        "interests": p.interests,
+        "cv_data": p.cv_data,
+        "bio_full_name": p.bio_full_name,
+        "bio_birth_place": p.bio_birth_place,
+        "bio_birth_date": p.bio_birth_date,
+        "bio_address": p.bio_address,
+        "bio_phone": p.bio_phone,
+        "updated_at": p.updated_at,
+        "role": user.role,
+    }
+    return ProfileOut(**data)
 
 
 @router.put("/interests", response_model=ProfileOut)

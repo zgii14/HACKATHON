@@ -79,6 +79,14 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
     const qc = useQueryClient();
     const [selectedApp, setSelectedApp] = useState<JobApplicant | null>(null);
 
+    // State untuk Wawancara Modal
+    const [showInterviewModal, setShowInterviewModal] = useState(false);
+    const [interviewMethod, setInterviewMethod] = useState<"online" | "offline">("online");
+    const [interviewDateTime, setInterviewDateTime] = useState("");
+    const [interviewLocation, setInterviewLocation] = useState("");
+    const [hrMessage, setHrMessage] = useState("");
+    const [hrPhone, setHrPhone] = useState("");
+
     // Fetch daftar pelamar
     const { data: applicants = [], isLoading } = useQuery<JobApplicant[]>({
         queryKey: ["applicants", params.id],
@@ -97,16 +105,16 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
 
     // Mutation untuk mengupdate status pelamar
     const statusMutation = useMutation({
-        mutationFn: ({ app_id, status }: { app_id: string; status: string }) =>
+        mutationFn: ({ app_id, status, note }: { app_id: string; status: string; note?: string }) =>
             withAuth(`/recruiter/applications/${app_id}/status`, {
                 method: "PUT",
-                body: JSON.stringify({ status }),
+                body: JSON.stringify({ status, note }),
             }),
         onSuccess: (_, variables) => {
             qc.invalidateQueries({ queryKey: ["applicants", params.id] });
             toast.success("Status lamaran berhasil diperbarui!");
             if (selectedApp?.id === variables.app_id) {
-                setSelectedApp((prev) => prev ? { ...prev, status: variables.status } : null);
+                setSelectedApp((prev) => prev ? { ...prev, status: variables.status, note: variables.note || null } : null);
             }
         },
         onError: (err: any) => {
@@ -115,13 +123,42 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
     });
 
     const handleStatusChange = (app_id: string, newStatus: string) => {
+        if (newStatus === "interview") {
+            setInterviewDateTime("");
+            setInterviewLocation("");
+            setHrMessage("");
+            setHrPhone("");
+            setShowInterviewModal(true);
+            return;
+        }
         statusMutation.mutate({ app_id, status: newStatus });
+    };
+
+    const submitInterviewInvitation = () => {
+        if (!selectedApp) return;
+        if (!interviewDateTime || !interviewLocation) {
+            toast.error("Mohon lengkapi jadwal dan link/alamat wawancara.");
+            return;
+        }
+        const notePayload = JSON.stringify({
+            type: interviewMethod,
+            datetime: interviewDateTime,
+            location_or_link: interviewLocation,
+            hr_message: hrMessage,
+            hr_phone: hrPhone,
+        });
+        statusMutation.mutate({
+            app_id: selectedApp.id,
+            status: "interview",
+            note: notePayload,
+        });
+        setShowInterviewModal(false);
     };
 
     // ── DOCX Resume Builder (Harvard ATS Layout) ──
     const downloadATSResume = async (app: JobApplicant) => {
         const cd = app.applicant.cv_data;
-        const FONT = "Calibri";
+        const FONT = "Times New Roman";
         const SIZE_NAME = 32; // 16pt
         const SIZE_SECTION = 22; // 11pt
         const SIZE_BODY = 20; // 10pt
@@ -130,7 +167,9 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
             top: { style: BorderStyle.NONE, size: 0, color: "auto" },
             bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
             left: { style: BorderStyle.NONE, size: 0, color: "auto" },
-            right: { style: BorderStyle.NONE, size: 0, color: "auto" }
+            right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" }
         };
 
         const createSectionHeader = (title: string) => {
@@ -371,7 +410,169 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
             });
         }
 
-        // 5. Skills
+        // 5. Pengalaman Organisasi
+        if (cd.org_experience && cd.org_experience.length > 0) {
+            elements.push(createSectionHeader("Pengalaman Organisasi"));
+            cd.org_experience.forEach((org: any) => {
+                const table = new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    borders: borderNone,
+                    rows: [
+                        new TableRow({
+                            children: [
+                                new TableCell({
+                                    width: { size: 70, type: WidthType.PERCENTAGE },
+                                    borders: borderNone,
+                                    children: [
+                                        new Paragraph({
+                                            spacing: { after: 20 },
+                                            children: [
+                                                new TextRun({
+                                                    text: `${org.organization || ""} – ${org.location || ""}`,
+                                                    font: FONT,
+                                                    size: SIZE_BODY,
+                                                    bold: true
+                                                })
+                                            ]
+                                        }),
+                                        new Paragraph({
+                                            spacing: { after: 60 },
+                                            children: [
+                                                new TextRun({
+                                                    text: org.role || "",
+                                                    font: FONT,
+                                                    size: SIZE_BODY,
+                                                    italics: true
+                                                })
+                                            ]
+                                        })
+                                    ]
+                                }),
+                                new TableCell({
+                                    width: { size: 30, type: WidthType.PERCENTAGE },
+                                    borders: borderNone,
+                                    children: [
+                                        new Paragraph({
+                                            alignment: AlignmentType.RIGHT,
+                                            children: [
+                                                new TextRun({
+                                                    text: org.period || "",
+                                                    font: FONT,
+                                                    size: SIZE_BODY,
+                                                })
+                                            ]
+                                        })
+                                    ]
+                                })
+                            ]
+                        })
+                    ]
+                });
+                elements.push(table);
+
+                if (Array.isArray(org.bullets)) {
+                    org.bullets.forEach((b: string) => {
+                        if (!b.trim()) return;
+                        elements.push(
+                            new Paragraph({
+                                bullet: { level: 0 },
+                                spacing: { before: 20, after: 20 },
+                                children: [
+                                    new TextRun({
+                                        text: b.trim(),
+                                        font: FONT,
+                                        size: SIZE_BODY
+                                    })
+                                ]
+                            })
+                        );
+                    });
+                }
+            });
+        }
+
+        // 6. Pelatihan / Training
+        if (cd.training && cd.training.length > 0) {
+            elements.push(createSectionHeader("Pelatihan"));
+            cd.training.forEach((t: any) => {
+                const table = new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    borders: borderNone,
+                    rows: [
+                        new TableRow({
+                            children: [
+                                new TableCell({
+                                    width: { size: 70, type: WidthType.PERCENTAGE },
+                                    borders: borderNone,
+                                    children: [
+                                        new Paragraph({
+                                            spacing: { after: 20 },
+                                            children: [
+                                                new TextRun({
+                                                    text: `${t.title || ""} – ${t.location || ""}`,
+                                                    font: FONT,
+                                                    size: SIZE_BODY,
+                                                    bold: true
+                                                })
+                                            ]
+                                        }),
+                                        new Paragraph({
+                                            spacing: { after: 60 },
+                                            children: [
+                                                new TextRun({
+                                                    text: t.provider || "",
+                                                    font: FONT,
+                                                    size: SIZE_BODY,
+                                                    italics: true
+                                                })
+                                            ]
+                                        })
+                                    ]
+                                }),
+                                new TableCell({
+                                    width: { size: 30, type: WidthType.PERCENTAGE },
+                                    borders: borderNone,
+                                    children: [
+                                        new Paragraph({
+                                            alignment: AlignmentType.RIGHT,
+                                            children: [
+                                                new TextRun({
+                                                    text: t.period || "",
+                                                    font: FONT,
+                                                    size: SIZE_BODY,
+                                                })
+                                            ]
+                                        })
+                                    ]
+                                })
+                            ]
+                        })
+                    ]
+                });
+                elements.push(table);
+
+                if (Array.isArray(t.bullets)) {
+                    t.bullets.forEach((b: string) => {
+                        if (!b.trim()) return;
+                        elements.push(
+                            new Paragraph({
+                                bullet: { level: 0 },
+                                spacing: { before: 20, after: 20 },
+                                children: [
+                                    new TextRun({
+                                        text: b.trim(),
+                                        font: FONT,
+                                        size: SIZE_BODY
+                                    })
+                                ]
+                            })
+                        );
+                    });
+                }
+            });
+        }
+
+        // 7. Skills
         const skills = cd.skills;
         if (skills) {
             elements.push(createSectionHeader("Keahlian"));
@@ -401,7 +602,42 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
             }
         }
 
+        // 8. Sertifikat
+        if (cd.certifications && cd.certifications.length > 0) {
+            elements.push(createSectionHeader("Sertifikat"));
+            cd.certifications.forEach((cert: string) => {
+                if (!cert.trim()) return;
+                elements.push(
+                    new Paragraph({
+                        bullet: { level: 0 },
+                        spacing: { before: 20, after: 20 },
+                        children: [
+                            new TextRun({
+                                text: cert.trim(),
+                                font: FONT,
+                                size: SIZE_BODY
+                            })
+                        ]
+                    })
+                );
+            });
+        }
+
         const doc = new Document({
+            styles: {
+                default: {
+                    document: {
+                        run: {
+                            font: FONT,
+                        },
+                        paragraph: {
+                            spacing: {
+                                line: 276, // 1.15 line spacing (1.15 * 240 dxa)
+                            }
+                        }
+                    }
+                }
+            },
             sections: [
                 {
                     properties: {
@@ -482,11 +718,12 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     {
                                         applied: "bg-blue-500/10 text-blue-400",
                                         interview: "bg-amber-500/10 text-amber-400",
+                                        interview_confirmed: "bg-emerald-500/10 text-emerald-400",
                                         offer: "bg-emerald-500/10 text-emerald-400",
                                         rejected: "bg-rose-500/10 text-rose-400"
                                     }[app.status] || "bg-muted text-muted-foreground"
                                 }`}>
-                                    {app.status.toUpperCase()}
+                                    {app.status === "interview_confirmed" ? "CONFIRMED" : app.status.toUpperCase()}
                                 </span>
                             </div>
                             <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
@@ -658,10 +895,12 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                         className={`h-8 text-xs rounded-lg px-4 ${
                                             selectedApp.status === "interview"
                                                 ? "bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                                                : selectedApp.status === "interview_confirmed"
+                                                ? "bg-emerald-500 hover:bg-emerald-600 text-white font-bold"
                                                 : "bg-muted text-muted-foreground hover:bg-muted/80"
                                         }`}
                                     >
-                                        Wawancara (Interview)
+                                        {selectedApp.status === "interview_confirmed" ? "Dikonfirmasi Hadir ✓" : "Wawancara (Interview)"}
                                     </Button>
                                     <Button
                                         onClick={() => handleStatusChange(selectedApp.id, "offer")}
@@ -705,6 +944,106 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                 </div>
 
             </div>
+
+            {/* Modal Undangan Wawancara */}
+            {showInterviewModal && selectedApp && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-violet-500/5 blur-2xl rounded-full pointer-events-none" />
+                        
+                        <div className="flex items-center justify-between border-b border-border pb-3">
+                            <h3 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                                <Brain className="w-4 h-4 text-violet-400" />
+                                Kirim Undangan Wawancara
+                            </h3>
+                            <button
+                                onClick={() => setShowInterviewModal(false)}
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-3.5 text-xs">
+                            <div>
+                                <label className="block font-semibold text-muted-foreground mb-1">Metode Wawancara</label>
+                                <select
+                                    value={interviewMethod}
+                                    onChange={(e) => {
+                                        setInterviewMethod(e.target.value as "online" | "offline");
+                                        setInterviewLocation("");
+                                    }}
+                                    className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                >
+                                    <option value="online">Online (Google Meet / Zoom)</option>
+                                    <option value="offline">Offline (Tatap Muka di Kantor)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-muted-foreground mb-1">Jadwal (Tanggal & Waktu)</label>
+                                <input
+                                    type="datetime-local"
+                                    value={interviewDateTime}
+                                    onChange={(e) => setInterviewDateTime(e.target.value)}
+                                    className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-muted-foreground mb-1">
+                                    {interviewMethod === "online" ? "Link Video Conference" : "Alamat Lengkap Kantor"}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={interviewLocation}
+                                    onChange={(e) => setInterviewLocation(e.target.value)}
+                                    placeholder={interviewMethod === "online" ? "https://meet.google.com/abc-defg-hij" : "Jl. Jenderal Sudirman No. 123..."}
+                                    className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-muted-foreground mb-1">Nomor WhatsApp Kontak (Opsional)</label>
+                                <input
+                                    type="text"
+                                    value={hrPhone}
+                                    onChange={(e) => setHrPhone(e.target.value)}
+                                    placeholder="Contoh: 083173289305"
+                                    className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-semibold text-muted-foreground mb-1">Pesan Khusus untuk Kandidat (Opsional)</label>
+                                <textarea
+                                    value={hrMessage}
+                                    onChange={(e) => setHrMessage(e.target.value)}
+                                    placeholder="Mohon siapkan laptop dan draf portofolio Anda..."
+                                    rows={3}
+                                    className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowInterviewModal(false)}
+                                className="h-8 text-xs px-4"
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                onClick={submitInterviewInvitation}
+                                className="h-8 text-xs px-4 bg-violet-600 hover:bg-violet-700 text-white font-semibold"
+                            >
+                                Kirim Undangan
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

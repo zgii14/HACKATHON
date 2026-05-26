@@ -20,4 +20,7 @@
 | rec-5 | Interactive Candidate Reviewer & ATS Word Downloader | x | Masterpiece ApplicantsPage interaktif selesai dengan AI Match Score + GitHub Signals + Harvard ATS Word Downloader |
 | rec-6 | Final Integrated E2E Walkthrough & Verification | x | Seluruh alur front-to-back Next.js terkompilasi sukses (exit 0) via npx tsc |
 | verification | Perform manual and automated validation of the modified files | x | Verified with compilation and lint checks (both passed) |
-
+| int-1 | Backend status updates & schemas | x | Enums and candidate PATCH endpoint extensions |
+| int-2 | Recruiter invitation pop-up form modal | x | Modal dialog, schedule inputs, and JSON serialization |
+| int-3 | Candidate ticket UI, confirmation CTA, and contact options | x | Glowing ticket UI, candidate status patch, direct WhatsApp & Email contact links verified and fully integrated. |
+| int-verif | Final E2E manual & verification walkthrough | x | All frontend and backend components compile successfully. npx tsc --noEmit passed cleanly with 0 errors. |

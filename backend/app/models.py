@@ -82,8 +82,8 @@ class Job(Base):
     min_education: Mapped[str | None] = mapped_column(String(255), nullable=True)   # "Minimal Sarjana (S1)"
     min_experience: Mapped[str | None] = mapped_column(String(255), nullable=True)  # "1 - 3 tahun pengalaman"
     work_type: Mapped[str | None] = mapped_column(String(100), nullable=True)       # "Hybrid" / "Remote" / "Kerja di kantor"
-    recruiter_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    recruiter_id: Mapped[str | None] = mapped_column(
+        String(36), nullable=True  # VARCHAR(36) di DB — disimpan sebagai string UUID
     )
 
 

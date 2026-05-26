@@ -67,7 +67,7 @@ def create_job(
         min_education=body.min_education,
         min_experience=body.min_experience,
         work_type=body.work_type,
-        recruiter_id=user.id
+        recruiter_id=str(user.id)  # VARCHAR di DB, cast ke string
     )
     db.add(new_job)
     db.commit()
@@ -87,7 +87,7 @@ def get_my_jobs(
     if user.role != "recruiter":
         raise HTTPException(403, "Hanya recruiter yang dapat mengakses endpoint ini.")
 
-    jobs = db.query(Job).filter(Job.recruiter_id == user.id).all()
+    jobs = db.query(Job).filter(Job.recruiter_id == str(user.id)).all()
     
     # Ambil jumlah pelamar (applications) untuk masing-masing job
     result = []
@@ -117,7 +117,7 @@ def get_job_applications(
         raise HTTPException(403, "Hanya recruiter yang diperbolehkan mengakses endpoint ini.")
 
     # Pastikan lowongan ini memang milik recruiter aktif
-    job = db.query(Job).filter(Job.id == job_id, Job.recruiter_id == user.id).first()
+    job = db.query(Job).filter(Job.id == job_id, Job.recruiter_id == str(user.id)).first()
     if not job:
         raise HTTPException(404, "Lowongan tidak ditemukan atau Anda tidak memiliki akses.")
 
@@ -163,7 +163,7 @@ def update_application_status(
         raise HTTPException(404, "Data lamaran tidak ditemukan.")
 
     # Verifikasi kepemilikan lowongan
-    job = db.query(Job).filter(Job.id == app.job_id, Job.recruiter_id == user.id).first()
+    job = db.query(Job).filter(Job.id == app.job_id, Job.recruiter_id == str(user.id)).first()
     if not job:
         raise HTTPException(403, "Anda tidak memiliki akses ke data lowongan pelamar ini.")
 
@@ -188,7 +188,7 @@ def ai_candidate_screening(
     if not app:
         raise HTTPException(404, "Data lamaran tidak ditemukan.")
 
-    job = db.query(Job).filter(Job.id == app.job_id, Job.recruiter_id == user.id).first()
+    job = db.query(Job).filter(Job.id == app.job_id, Job.recruiter_id == str(user.id)).first()
     if not job:
         raise HTTPException(403, "Anda tidak memiliki akses ke lowongan pelamar ini.")
 

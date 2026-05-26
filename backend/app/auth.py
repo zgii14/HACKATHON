@@ -81,12 +81,28 @@ def get_current_user(
         elif isinstance(first, str):
             email = first
 
+    # Tentukan role berdasarkan email khusus (demo/whitelist)
+    RECRUITER_EMAILS = {"recruiter@githire.com"}
+    auto_role = "recruiter" if email in RECRUITER_EMAILS else "candidate"
+
     user = db.query(User).filter(User.clerk_user_id == clerk_id).first()
     if not user:
+        # Coba juga cari berdasarkan email (untuk sync dengan demo seed)
+        if email:
+            user = db.query(User).filter(User.email == email).first()
+            if user:
+                # Update clerk_user_id jika user ditemukan via email
+                user.clerk_user_id = clerk_id
+                if email in RECRUITER_EMAILS:
+                    user.role = "recruiter"
+                db.commit()
+                db.refresh(user)
+                return user
+
         from sqlalchemy.exc import IntegrityError
         try:
             with db.begin_nested():
-                user = User(clerk_user_id=clerk_id, email=email)
+                user = User(clerk_user_id=clerk_id, email=email, role=auto_role)
                 db.add(user)
                 db.flush()
             db.commit()
@@ -99,9 +115,17 @@ def get_current_user(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Gagal mensinkronisasikan user ke database",
                 )
-    elif email and user.email != email:
-        user.email = email
-        db.commit()
-        db.refresh(user)
+    else:
+        # Sync email dan role jika perlu diperbarui
+        needs_update = False
+        if email and user.email != email:
+            user.email = email
+            needs_update = True
+        if email in RECRUITER_EMAILS and user.role != "recruiter":
+            user.role = "recruiter"
+            needs_update = True
+        if needs_update:
+            db.commit()
+            db.refresh(user)
 
     return user

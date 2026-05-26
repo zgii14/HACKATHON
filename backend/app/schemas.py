@@ -29,6 +29,8 @@ class ProfileOut(BaseModel):
     bio_address: str | None = None
     bio_phone: str | None = None
     updated_at: datetime | None
+    # User role — disertakan agar sidebar frontend bisa deteksi recruiter
+    role: str | None = "candidate"
 
     model_config = {"from_attributes": True}
 
@@ -144,6 +146,7 @@ class BookmarkedJobOut(BaseModel):
 class ApplicationStatus(str, Enum):
     applied   = "applied"
     interview = "interview"
+    interview_confirmed = "interview_confirmed"
     rejected  = "rejected"
     offer     = "offer"
 

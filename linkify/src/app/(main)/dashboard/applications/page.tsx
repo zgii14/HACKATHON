@@ -18,7 +18,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-type ApplicationStatus = "applied" | "interview" | "rejected" | "offer";
+type ApplicationStatus = "applied" | "interview" | "interview_confirmed" | "rejected" | "offer";
 
 type ApplicationOut = {
     id: string;
@@ -46,11 +46,12 @@ type BioData = {
 const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: string }> = {
     applied:   { label: "Dilamar",       className: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
     interview: { label: "Interview",     className: "bg-violet-500/15 text-violet-500 border-violet-500/30" },
+    interview_confirmed: { label: "Hadir Wawancara ✓", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
     offer:     { label: "Dapat Offer! 🎉", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
     rejected:  { label: "Ditolak",       className: "bg-rose-500/15 text-rose-500 border-rose-500/30" },
 };
 
-const ALL_STATUSES: ApplicationStatus[] = ["applied", "interview", "offer", "rejected"];
+const ALL_STATUSES: ApplicationStatus[] = ["applied", "interview", "interview_confirmed", "offer", "rejected"];
 
 // ── Cover Letter Modal ────────────────────────────────────────────────────────
 
@@ -299,9 +300,11 @@ function CoverLetterModal({
 
 function ApplicationCard({
     app,
+    fullName,
     onGenerateLetter,
 }: {
     app: ApplicationOut;
+    fullName: string;
     onGenerateLetter: (app: ApplicationOut) => void;
 }) {
     const { withAuth } = useApi();
@@ -351,6 +354,19 @@ function ApplicationCard({
     });
     const matchPct = app.match_score != null ? Math.round(app.match_score * 100) : null;
 
+    // Parse interview metadata if status is interview or interview_confirmed
+    let interviewDetails: any = null;
+    let isJsonNote = false;
+    if ((app.status === "interview" || app.status === "interview_confirmed") && app.note) {
+        try {
+            interviewDetails = JSON.parse(app.note);
+            isJsonNote = true;
+        } catch (e) {
+            interviewDetails = null;
+            isJsonNote = false;
+        }
+    }
+
     return (
         <div className="rounded-2xl border border-border bg-card p-5 space-y-4 hover:shadow-md transition-shadow">
             {/* Top row */}
@@ -385,11 +401,126 @@ function ApplicationCard({
                 )}
             </div>
 
-            {/* Note */}
-            {app.note && (
+            {/* Note - Default raw string for non-interview / backward compat */}
+            {app.note && !isJsonNote && (
                 <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 italic">
                     &ldquo;{app.note}&rdquo;
                 </p>
+            )}
+
+            {/* Glowing Ticket Undangan Wawancara */}
+            {isJsonNote && interviewDetails && (
+                <div className={`rounded-xl border p-4 space-y-3.5 relative overflow-hidden transition-all duration-300 ${
+                    app.status === "interview_confirmed"
+                        ? "border-emerald-500/20 bg-emerald-500/[0.02]"
+                        : "border-violet-500/30 bg-violet-500/[0.02] shadow-[0_0_15px_rgba(139,92,246,0.06)] animate-pulse"
+                }`}>
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-violet-500/[0.02] blur-xl rounded-full pointer-events-none" />
+                    
+                    <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-violet-400 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block animate-ping" />
+                            Undangan Wawancara
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-semibold">
+                            {interviewDetails.type === "online" ? "💻 Online Meeting" : "🏢 Offline (Tatap Muka)"}
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div className="space-y-0.5">
+                            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">Jadwal & Waktu</span>
+                            <p className="font-bold text-foreground">
+                                {new Date(interviewDetails.datetime).toLocaleString("id-ID", {
+                                    weekday: "long",
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                })} WIB
+                            </p>
+                        </div>
+                        <div className="space-y-0.5">
+                            <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+                                {interviewDetails.type === "online" ? "Link Meeting" : "Lokasi Kantor"}
+                            </span>
+                            {interviewDetails.type === "online" ? (
+                                <a
+                                    href={interviewDetails.location_or_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-bold text-primary underline break-all block hover:text-primary/80"
+                                >
+                                    {interviewDetails.location_or_link}
+                                </a>
+                            ) : (
+                                <p className="font-bold text-foreground">{interviewDetails.location_or_link}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {interviewDetails.hr_message && (
+                        <div className="pt-2.5 border-t border-border/30">
+                            <span className="text-[9px] text-muted-foreground font-bold tracking-wider uppercase">Pesan dari HRD</span>
+                            <p className="text-xs text-muted-foreground leading-relaxed italic mt-1">&ldquo;{interviewDetails.hr_message}&rdquo;</p>
+                        </div>
+                    )}
+
+                    {/* Action Row */}
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/20">
+                        {app.status === "interview" ? (
+                            <Button
+                                size="sm"
+                                onClick={() => statusMutation.mutate("interview_confirmed")}
+                                disabled={statusMutation.isPending}
+                                className="h-7 text-[10px] font-bold gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/10"
+                            >
+                                ✓ Konfirmasi Hadir
+                            </Button>
+                        ) : (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                                ✓ Kehadiran Telah Dikonfirmasi
+                            </span>
+                        )}
+
+                        {/* WhatsApp / Email Dropdown */}
+                        <div className="relative group">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-[10px] font-bold gap-1 rounded-lg border-muted-foreground/20"
+                            >
+                                💬 Hubungi Rekruter
+                            </Button>
+                            
+                            <div className="absolute left-0 bottom-full mb-1.5 hidden group-hover:block z-20 bg-background border border-border rounded-xl shadow-xl overflow-hidden min-w-[150px] animate-in slide-in-from-bottom-2 duration-200">
+                                {interviewDetails.hr_phone && (
+                                    <a
+                                        href={`https://wa.me/${interviewDetails.hr_phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                                            `Halo Bapak/Ibu HRD ${app.job_company}, saya ${fullName || "Pelamar"}. Terkait dengan undangan wawancara posisi ${app.job_title} pada hari ${new Date(interviewDetails.datetime).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}...`
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium border-b border-border/30"
+                                    >
+                                        WhatsApp Chat
+                                    </a>
+                                )}
+                                <a
+                                    href={`mailto:recruiter@githire.com?subject=${encodeURIComponent(
+                                        `Konfirmasi Wawancara - ${fullName || "Pelamar"}`
+                                    )}&body=${encodeURIComponent(
+                                        `Halo Bapak/Ibu HRD ${app.job_company},\n\nTerima kasih atas undangan wawancaranya. Saya ingin mengonfirmasi bahwa saya akan hadir pada jadwal yang telah ditentukan.\n\nHormat saya,\n${fullName || "Pelamar"}`
+                                    )}`}
+                                    className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium"
+                                >
+                                    Kirim Email
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Bottom row */}
@@ -606,6 +737,7 @@ export default function ApplicationsPage() {
                         <ApplicationCard
                             key={app.id}
                             app={app}
+                            fullName={fullName}
                             onGenerateLetter={setLetterApp}
                         />
                     ))}

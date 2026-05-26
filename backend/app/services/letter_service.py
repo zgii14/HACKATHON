@@ -6,7 +6,7 @@ from google import genai
 
 _client: genai.Client | None = None
 
-GEMINI_MODEL = "gemini-3.1-flash-lite-preview"  # sama dengan gemini_service.py
+GEMINI_MODEL = "gemini-3.1-flash-lite"  # sama dengan gemini_service.py
 
 
 def _get_client() -> genai.Client:

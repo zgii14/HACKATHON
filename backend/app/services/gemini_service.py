@@ -12,7 +12,7 @@ if not settings.gemini_api_key:
 client = genai.Client(api_key=settings.gemini_api_key)
 
 # Model GA yang stabil (bukan preview)
-GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
+GEMINI_MODEL = "gemini-3.1-flash-lite"
 
 # Konfigurasi retry
 MAX_RETRIES = 3
