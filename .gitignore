@@ -61,3 +61,13 @@ body.json
 # ── Agent System Files ────────────────────────────
 .agent/
 .superpowers/
+
+# ── Excluded Project Files & Folders ──────────────
+dashboard-overview-options/
+design-system/
+docs/plans/
+Cv muhammad rozagi.docx
+RZZ part 1 cek 1.pptx
+dashboard-overview-5-options.html
+dashboard-redesign-preview.html
+githire_logos.html
