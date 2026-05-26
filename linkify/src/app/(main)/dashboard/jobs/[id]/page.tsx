@@ -18,7 +18,7 @@ import { toast } from "sonner";
 const STATUS_LABELS: Record<string, string> = {
     applied:   "Dilamar",
     interview: "Interview",
-    offer:     "Dapat Offer! 🎉",
+    offer:     "Dapat Offer!",
     rejected:  "Ditolak",
 };
 

@@ -48,7 +48,7 @@ const STATUS_CONFIG: Record<ApplicationStatus, { label: string; className: strin
     applied:   { label: "Dilamar",       className: "bg-blue-500/15 text-blue-500 border-blue-500/30" },
     interview: { label: "Interview",     className: "bg-violet-500/15 text-violet-500 border-violet-500/30" },
     interview_confirmed: { label: "Hadir Wawancara ✓", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
-    offer:     { label: "Dapat Offer! 🎉", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
+    offer:     { label: "Dapat Offer!", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
     rejected:  { label: "Ditolak",       className: "bg-rose-500/15 text-rose-500 border-rose-500/30" },
 };
 
