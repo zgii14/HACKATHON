@@ -124,6 +124,23 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
 
     const handleStatusChange = (app_id: string, newStatus: string) => {
         if (newStatus === "interview") {
+            if (selectedApp && selectedApp.note) {
+                try {
+                    const existing = JSON.parse(selectedApp.note);
+                    if (existing.datetime || existing.location_or_link) {
+                        setInterviewMethod(existing.type || "online");
+                        setInterviewDateTime(existing.datetime || "");
+                        setInterviewLocation(existing.location_or_link || "");
+                        setHrMessage(existing.hr_message || "");
+                        setHrPhone(existing.hr_phone || "");
+                        setShowInterviewModal(true);
+                        return;
+                    }
+                } catch (e) {
+                    // ignore and fallback to blank form
+                }
+            }
+            setInterviewMethod("online");
             setInterviewDateTime("");
             setInterviewLocation("");
             setHrMessage("");
