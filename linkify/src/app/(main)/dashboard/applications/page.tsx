@@ -368,6 +368,25 @@ function ApplicationCard({
         }
     }
 
+    let formattedDate = "";
+    let formattedTime = "";
+    if (interviewDetails && interviewDetails.datetime) {
+        try {
+            formattedDate = new Date(interviewDetails.datetime).toLocaleDateString("id-ID", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric"
+            });
+            formattedTime = new Date(interviewDetails.datetime).toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+        } catch (e) {
+            // fallback
+        }
+    }
+
     return (
         <div className="rounded-2xl border border-border bg-card p-5 space-y-4 hover:shadow-md transition-shadow">
             {/* Top row */}
@@ -513,7 +532,7 @@ function ApplicationCard({
                                         href={`https://mail.google.com/mail/?view=cm&fs=1&to=${app.recruiter_email || "recruiter@githire.com"}&su=${encodeURIComponent(
                                             `Konfirmasi Wawancara - ${fullName || "Pelamar"}`
                                         )}&body=${encodeURIComponent(
-                                            `Halo Bapak/Ibu HRD ${app.job_company},\n\nTerima kasih atas undangan wawancaranya. Saya ingin mengonfirmasi bahwa saya akan hadir pada jadwal yang telah ditentukan.\n\nHormat saya,\n${fullName || "Pelamar"}`
+                                            `Selamat pagi/siang Bapak/Ibu HRD,\nPerkenalkan saya ${fullName || "Muhammad Rozagi"}, kandidat untuk posisi ${app.job_title}.\n\nSaya ingin mengonfirmasi bahwa saya akan hadir pada interview yang telah dijadwalkan pada ${formattedDate} pukul ${formattedTime} WIB.\n\nTerima kasih atas kesempatan yang diberikan. Saya akan hadir tepat waktu sesuai jadwal yang telah ditentukan.\n\nHormat saya,\n${fullName || "Muhammad Rozagi"}`
                                         )}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
