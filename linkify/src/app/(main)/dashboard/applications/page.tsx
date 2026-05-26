@@ -515,10 +515,19 @@ function ApplicationCard({
                                         )}&body=${encodeURIComponent(
                                             `Halo Bapak/Ibu HRD ${app.job_company},\n\nTerima kasih atas undangan wawancaranya. Saya ingin mengonfirmasi bahwa saya akan hadir pada jadwal yang telah ditentukan.\n\nHormat saya,\n${fullName || "Pelamar"}`
                                         )}`}
-                                        className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium"
+                                        className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium border-b border-border/30"
                                     >
                                         Kirim Email
                                     </a>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(app.recruiter_email || "recruiter@githire.com");
+                                            toast.success("Alamat email rekruter berhasil disalin!");
+                                        }}
+                                        className="w-full flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium text-left"
+                                    >
+                                        Salin Alamat Email
+                                    </button>
                                 </div>
                             </div>
                         </div>
