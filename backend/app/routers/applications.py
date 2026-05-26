@@ -56,6 +56,16 @@ def _match_score(db: Session, user: User, job: Job) -> float | None:
 
 
 def _build_out(app: JobApplication, job: Job, db: Session) -> ApplicationOut:
+    recruiter_email = None
+    if job.recruiter_id:
+        try:
+            rec_id = UUID(job.recruiter_id)
+            recruiter = db.query(User).filter(User.id == rec_id).first()
+            if recruiter:
+                recruiter_email = recruiter.email
+        except (ValueError, TypeError):
+            pass
+
     return ApplicationOut(
         id=app.id,
         job_id=app.job_id,
@@ -69,6 +79,7 @@ def _build_out(app: JobApplication, job: Job, db: Session) -> ApplicationOut:
         updated_at=app.updated_at,
         roadmap_completed=_roadmap_completed(db, app.user_id, app.job_id),
         match_score=None,  # computed separately when needed
+        recruiter_email=recruiter_email,
     )
 
 

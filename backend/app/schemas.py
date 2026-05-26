@@ -173,6 +173,7 @@ class ApplicationOut(BaseModel):
     updated_at: datetime
     roadmap_completed: bool
     match_score: float | None
+    recruiter_email: str | None = None
 
 
 # ── Cover Letter schemas ─────────────────────────────────────────────────────

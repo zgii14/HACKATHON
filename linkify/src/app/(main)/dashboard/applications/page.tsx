@@ -33,6 +33,7 @@ type ApplicationOut = {
     updated_at: string;
     roadmap_completed: boolean;
     match_score: number | null;
+    recruiter_email?: string | null;
 };
 
 type BioData = {
@@ -508,7 +509,7 @@ function ApplicationCard({
                                     </a>
                                 )}
                                 <a
-                                    href={`mailto:recruiter@githire.com?subject=${encodeURIComponent(
+                                    href={`mailto:${app.recruiter_email || "recruiter@githire.com"}?subject=${encodeURIComponent(
                                         `Konfirmasi Wawancara - ${fullName || "Pelamar"}`
                                     )}&body=${encodeURIComponent(
                                         `Halo Bapak/Ibu HRD ${app.job_company},\n\nTerima kasih atas undangan wawancaranya. Saya ingin mengonfirmasi bahwa saya akan hadir pada jadwal yang telah ditentukan.\n\nHormat saya,\n${fullName || "Pelamar"}`
