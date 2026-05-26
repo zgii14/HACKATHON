@@ -510,6 +510,18 @@ function ApplicationCard({
                                         </a>
                                     )}
                                     <a
+                                        href={`https://mail.google.com/mail/?view=cm&fs=1&to=${app.recruiter_email || "recruiter@githire.com"}&su=${encodeURIComponent(
+                                            `Konfirmasi Wawancara - ${fullName || "Pelamar"}`
+                                        )}&body=${encodeURIComponent(
+                                            `Halo Bapak/Ibu HRD ${app.job_company},\n\nTerima kasih atas undangan wawancaranya. Saya ingin mengonfirmasi bahwa saya akan hadir pada jadwal yang telah ditentukan.\n\nHormat saya,\n${fullName || "Pelamar"}`
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium border-b border-border/30"
+                                    >
+                                        Kirim via Gmail Web
+                                    </a>
+                                    <a
                                         href={`mailto:${app.recruiter_email || "recruiter@githire.com"}?subject=${encodeURIComponent(
                                             `Konfirmasi Wawancara - ${fullName || "Pelamar"}`
                                         )}&body=${encodeURIComponent(
@@ -517,7 +529,7 @@ function ApplicationCard({
                                         )}`}
                                         className="flex items-center px-3.5 py-2 text-[10px] hover:bg-muted text-foreground transition-colors font-medium border-b border-border/30"
                                     >
-                                        Kirim Email
+                                        Kirim via Aplikasi Email
                                     </a>
                                     <button
                                         onClick={() => {
