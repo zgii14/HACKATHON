@@ -57,3 +57,7 @@ body.json
 *.pem
 *.key
 *.cert
+
+# ── Agent System Files ────────────────────────────
+.agent/
+.superpowers/
