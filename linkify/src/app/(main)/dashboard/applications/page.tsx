@@ -7,7 +7,7 @@ import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
     BookOpen, CheckCircle2, ChevronDown, Copy, Download,
-    ExternalLink, FileText, Info, Loader2, SendHorizonal,
+    ExternalLink, FileText, Filter, Info, Loader2, SendHorizonal,
     Trash2, X,
 } from "lucide-react";
 import {
@@ -634,6 +634,7 @@ export default function ApplicationsPage() {
     const { user } = useUser();
     const [activeFilter, setActiveFilter] = useState<ApplicationStatus | "all">("all");
     const [letterApp, setLetterApp] = useState<ApplicationOut | null>(null);
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
 
     const { data: applications = [], isLoading } = useQuery({
         queryKey: ["applications"],
@@ -680,11 +681,10 @@ export default function ApplicationsPage() {
 
                 {/* Stats */}
                 {applications.length > 0 && (
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                         {[
                             { label: "Total", value: stats.total, color: "text-foreground" },
                             { label: "Interview", value: stats.interview, color: "text-violet-500" },
-                            { label: "Offer", value: stats.offer, color: "text-emerald-500" },
                             { label: "Ditolak", value: stats.rejected, color: "text-rose-500" },
                         ].map((s) => (
                             <div key={s.label} className="rounded-xl border bg-card p-3 text-center">
@@ -695,27 +695,46 @@ export default function ApplicationsPage() {
                     </div>
                 )}
 
-                {/* Filter tabs */}
+                {/* Filter Dropdown */}
                 {applications.length > 0 && (
-                    <div className="flex gap-1.5 flex-wrap">
-                        {(["all", ...ALL_STATUSES] as const).map((f) => {
-                            const isActive = activeFilter === f;
-                            const count = f === "all" ? applications.length : applications.filter(a => a.status === f).length;
-                            return (
-                                <button
-                                    key={f}
-                                    onClick={() => setActiveFilter(f)}
-                                    className={`text-xs px-3 py-1.5 rounded-lg border transition-all font-medium ${
-                                        isActive
-                                            ? "bg-primary text-primary-foreground border-primary"
-                                            : "border-border text-muted-foreground hover:bg-muted"
-                                    }`}
-                                >
-                                    {f === "all" ? "Semua" : STATUS_CONFIG[f].label}
-                                    <span className="ml-1.5 opacity-70">({count})</span>
-                                </button>
-                            );
-                        })}
+                    <div className="relative inline-block text-left">
+                        <button
+                            onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-card rounded-2xl text-xs font-bold text-foreground hover:bg-muted/50 transition-all shadow-sm group"
+                        >
+                            <Filter className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span>Filter Status:</span>
+                            <span className="text-primary font-black">
+                                {activeFilter === "all" ? "Semua" : STATUS_CONFIG[activeFilter].label}
+                            </span>
+                            <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${isFilterDropdownOpen ? "rotate-180" : ""}`} />
+                        </button>
+
+                        {isFilterDropdownOpen && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setIsFilterDropdownOpen(false)} />
+                                <div className="absolute left-0 mt-2 w-52 rounded-2xl border border-border bg-background shadow-xl z-20 overflow-hidden py-1.5 animate-in slide-in-from-top-2 duration-150">
+                                    {(["all", ...ALL_STATUSES] as const).map((f) => {
+                                        const count = f === "all" ? applications.length : applications.filter(a => a.status === f).length;
+                                        return (
+                                            <button
+                                                key={f}
+                                                onClick={() => {
+                                                    setActiveFilter(f);
+                                                    setIsFilterDropdownOpen(false);
+                                                }}
+                                                className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-muted transition-colors flex items-center justify-between ${
+                                                    activeFilter === f ? "text-primary bg-primary/[0.03] font-bold" : "text-muted-foreground"
+                                                }`}
+                                            >
+                                                <span>{f === "all" ? "Semua" : STATUS_CONFIG[f].label}</span>
+                                                <span className="text-[10px] opacity-60">({count})</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
 
