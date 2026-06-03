@@ -90,6 +90,22 @@ async def lifespan(app: FastAPI):
             """))
         conn.commit()
 
+    # DDL Migration: tambah index untuk performa pencarian kandidat B2B
+    with engine.connect() as conn:
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_candidate_profiles_skills 
+            ON candidate_profiles USING gin (merged_skills);
+        """))
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_candidate_profiles_name 
+            ON candidate_profiles (bio_full_name);
+        """))
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS idx_candidate_profiles_address 
+            ON candidate_profiles (bio_address);
+        """))
+        conn.commit()
+
     # DDL Migration: tambah kolom role ke users dan recruiter_id ke jobs, serta seed demo recruiter
     with engine.connect() as conn:
         conn.execute(text("""
