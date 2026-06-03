@@ -4,7 +4,7 @@ import { APP_NAME, cn, DASHBOARD_LINKS } from "@/utils";
 import { useApi } from "@/hooks/use-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -68,7 +68,13 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             href: "/dashboard/recruiter/jobs/new",
             icon: PlusCircle,
         },
+        {
+            title: "Cari Kandidat",
+            href: "/dashboard/recruiter/candidates",
+            icon: Search,
+        },
     ];
+
 
     // Fetch jumlah bookmark untuk badge di sidebar
     const { data: bookmarks = [] } = useQuery({
