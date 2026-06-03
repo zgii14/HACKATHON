@@ -55,6 +55,7 @@ type JobApplicant = {
     status: string;
     note: string | null;
     applied_at: string;
+    match_score: number | null;
     applicant: {
         id: string;
         email: string | null;
@@ -717,7 +718,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                 {/* Left Side: Applicants List */}
                 <div className="lg:col-span-5 space-y-3">
                     <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Semua Pelamar ({applicants.length})</h3>
-                    {applicants.map((app) => (
+                    {[...applicants].sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0)).map((app) => (
                         <div
                             key={app.id}
                             onClick={() => setSelectedApp(app)}
@@ -753,6 +754,14 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     <Clock className="w-3.5 h-3.5" />
                                     {new Date(app.applied_at).toLocaleDateString("id-ID")}
                                 </span>
+                                {app.match_score != null && (
+                                    <>
+                                        <span>•</span>
+                                        <span className="text-emerald-400 font-bold">
+                                            Match: {Math.round(app.match_score * 100)}%
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     ))}

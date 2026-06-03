@@ -123,16 +123,23 @@ def get_job_applications(
 
     applications = db.query(JobApplication).filter(JobApplication.job_id == job_id).all()
     
+    from app.services.matching import jaccard_score
+
     result = []
     for app in applications:
         applicant = db.query(User).filter(User.id == app.user_id).first()
         profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == app.user_id).first()
         
+        score = None
+        if profile and profile.merged_skills and job.required_skills:
+            score = jaccard_score(profile.merged_skills, job.required_skills)
+
         result.append({
             "id": app.id,
             "status": app.status,
             "note": app.note,
             "applied_at": app.applied_at,
+            "match_score": score,
             "applicant": {
                 "id": applicant.id if applicant else None,
                 "email": applicant.email if applicant else None,
