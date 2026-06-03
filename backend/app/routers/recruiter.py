@@ -31,6 +31,14 @@ class StatusUpdate(BaseModel):
     status: str  # applied | interview | offer | rejected
     note: str | None = None
 
+class CandidateInvitePayload(BaseModel):
+    job_id: uuid.UUID
+    type: str  # online | offline
+    datetime: str
+    location_or_link: str
+    hr_message: str | None = None
+    hr_phone: str | None = None
+
 # Helper JSON parser dari respons Gemini
 def _extract_json_data(text: str) -> dict | None:
     text = text.strip()
@@ -327,3 +335,58 @@ def search_candidates(
         "offset": offset,
         "candidates": paginated
     }
+
+@router.post("/candidates/{candidate_user_id}/invite")
+def invite_candidate(
+    candidate_user_id: uuid.UUID,
+    body: CandidateInvitePayload,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mengundang kandidat langsung untuk wawancara pada lowongan tertentu."""
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang diperbolehkan mengundang kandidat.")
+
+    # Pastikan lowongan ini memang milik recruiter aktif
+    job = db.query(Job).filter(Job.id == body.job_id, Job.recruiter_id == str(user.id)).first()
+    if not job:
+        raise HTTPException(404, "Lowongan tidak ditemukan atau Anda tidak memiliki akses.")
+
+    # Pastikan kandidat ada
+    candidate = db.query(User).filter(User.id == candidate_user_id).first()
+    if not candidate:
+        raise HTTPException(404, "Kandidat tidak ditemukan.")
+
+    # Bangun note payload
+    note_payload = {
+        "type": body.type,
+        "datetime": body.datetime,
+        "location_or_link": body.location_or_link,
+        "hr_message": body.hr_message,
+        "hr_phone": body.hr_phone
+    }
+    note_str = json.dumps(note_payload)
+
+    # Cek apakah lamaran sudah ada
+    app = db.query(JobApplication).filter(
+        JobApplication.user_id == candidate_user_id,
+        JobApplication.job_id == body.job_id
+    ).first()
+
+    if app:
+        app.status = "interview"
+        app.note = note_str
+        app.updated_at = datetime.utcnow()
+    else:
+        app = JobApplication(
+            user_id=candidate_user_id,
+            job_id=body.job_id,
+            status="interview",
+            note=note_str
+        )
+        db.add(app)
+
+    db.commit()
+    db.refresh(app)
+    return {"status": "success", "application_id": app.id}
+
