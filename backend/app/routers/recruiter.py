@@ -2,7 +2,7 @@ import json
 import re
 import uuid
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -253,3 +253,77 @@ def ai_candidate_screening(
             "strengths": [f"Gagal memanggil AI: {str(e)}"],
             "weaknesses": ["Gagal menganalisis."]
         }
+
+@router.get("/candidates/search")
+def search_candidates(
+    q: str | None = None,
+    skills: list[str] = Query([]),
+    location: str | None = None,
+    min_commits: int | None = None,
+    limit: int = 20,
+    offset: int = 0,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mencari kandidat secara global menggunakan pencarian teks penuh dan filter parametrik."""
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang diperbolehkan mengakses database kandidat.")
+
+    query = db.query(CandidateProfile, User).join(User, CandidateProfile.user_id == User.id)
+
+    if q:
+        query = query.filter(
+            (CandidateProfile.bio_full_name.ilike(f"%{q}%")) |
+            (CandidateProfile.bio_address.ilike(f"%{q}%")) |
+            (CandidateProfile.github_username.ilike(f"%{q}%"))
+        )
+
+    if location:
+        query = query.filter(CandidateProfile.bio_address.ilike(f"%{location}%"))
+
+    results = query.all()
+
+    # Filter menggunakan Python untuk normalisasi alias skill dan commits
+    filtered = []
+    from app.services.matching import normalize_skill_set
+
+    # Filter empty elements from skills query list
+    clean_skills = [s for s in skills if s.strip()]
+    target_skills = normalize_skill_set(clean_skills)
+
+    for profile, u in results:
+        # 1. Filter by skills
+        if target_skills:
+            candidate_skills = normalize_skill_set(profile.merged_skills or [])
+            if not target_skills.issubset(candidate_skills):
+                continue
+
+        # 2. Filter by min_commits
+        if min_commits is not None:
+            commits = 0
+            if profile.github_signals and isinstance(profile.github_signals, dict):
+                commits = profile.github_signals.get("commits", 0)
+            if commits < min_commits:
+                continue
+
+        filtered.append({
+            "id": profile.id,
+            "user_id": u.id,
+            "email": u.email,
+            "fullName": profile.bio_full_name,
+            "phone": profile.bio_phone,
+            "address": profile.bio_address,
+            "github": profile.github_username,
+            "cv_skills": profile.cv_skills or [],
+            "merged_skills": profile.merged_skills or [],
+            "cv_data": profile.cv_data or {},
+            "github_signals": profile.github_signals or {}
+        })
+
+    paginated = filtered[offset : offset + limit]
+    return {
+        "total": len(filtered),
+        "limit": limit,
+        "offset": offset,
+        "candidates": paginated
+    }
