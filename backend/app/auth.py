@@ -82,7 +82,12 @@ def get_current_user(
             email = first
 
     # Tentukan role berdasarkan email khusus (demo/whitelist)
+    import os
+    env_emails = os.getenv("RECRUITER_EMAILS", "")
     RECRUITER_EMAILS = {"recruiter@githire.com"}
+    if env_emails:
+        RECRUITER_EMAILS.update([e.strip() for e in env_emails.split(",") if e.strip()])
+        
     auto_role = "recruiter" if email in RECRUITER_EMAILS else "candidate"
 
     user = db.query(User).filter(User.clerk_user_id == clerk_id).first()
