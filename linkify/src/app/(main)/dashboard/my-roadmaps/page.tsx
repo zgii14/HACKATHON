@@ -9,6 +9,7 @@ import { AlertTriangle, BookOpen, CheckCircle2, MapPin, Trash2, Wifi } from "luc
 import Link from "next/link";
 import { toast } from "sonner";
 import { useState } from "react";
+export const dynamic = 'force-dynamic';
 
 type BookmarkedJob = {
     job_id: string;
