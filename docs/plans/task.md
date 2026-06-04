@@ -29,7 +29,7 @@
 | search-3 | Frontend Candidate Search Page and Sidebar Filters | x | Implemented search & filters side panel, integrated backend. |
 | search-4 | Frontend Direct Invite Modal Dialog with active jobs | x | Added scheduling invite modal with active jobs select dropdown. |
 | search-verif | E2E verification and type-checking | x | Checked backend compiling & frontend tsc passing cleanly. |
-| dep-1 | GitHub Repository Forking & Setup |   | Forking zgii14/HACKATHON to Account B |
+| dep-1 | GitHub Repository Forking & Setup | x | Forked repository successfully to Account B |
 | dep-2 | Railway Project & Database Service Initialization |   | Creating Railway project and Postgres instance |
 | dep-3 | Deploy FastAPI Backend Service |   | Setting up backend root /backend and variables |
 | dep-4 | Deploy Next.js Frontend Service |   | Setting up frontend root /linkify and variables |
