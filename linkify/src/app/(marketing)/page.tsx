@@ -171,7 +171,7 @@ const STATS = [
     { value: "100+", label: "Lowongan IT Aktif", icon: BriefcaseIcon },
     { value: "6", label: "Fitur AI Terintegrasi", icon: SparklesIcon },
     { value: "AI", label: "Ditenagai Kecerdasan Buatan", icon: BrainCircuitIcon },
-    { value: "100%", label: "Tanpa Biaya", icon: ZapIcon },
+    { value: "Mulai", label: "Gratis", icon: ZapIcon },
 ];
 
 const COMPARISON = [
@@ -393,7 +393,7 @@ const HomePage = async () => {
                                 </span>
                             </h2>
                             <p className="mt-4 text-center text-lg text-muted-foreground max-w-lg">
-                                Semua tersedia dalam satu platform tanpa biaya, mulai dari analisis keahlian otomatis hingga surat lamaran berbasis AI.
+                                Semua fitur utama dapat Anda mulai secara gratis, mulai dari analisis keahlian otomatis hingga pencarian lowongan kerja.
                             </p>
                         </div>
                     </AnimationContainer>
@@ -583,7 +583,7 @@ const HomePage = async () => {
                 <AnimationContainer delay={0.1}>
                     <div className="flex flex-wrap gap-6 justify-center items-center py-6 border-y border-border">
                         {[
-                            { icon: ZapIcon, text: "Tanpa Biaya" },
+                            { icon: ZapIcon, text: "Mulai Gratis" },
                             { icon: CodeIcon, text: "Sumber Terbuka" },
                             { icon: GithubIcon, text: "Integrasi GitHub" },
                             { icon: BrainCircuitIcon, text: "Ditenagai AI Gemini" },
