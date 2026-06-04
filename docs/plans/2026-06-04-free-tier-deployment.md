@@ -77,6 +77,7 @@
   - `CLERK_JWKS_URL` = *[Your Clerk JWKS URL]*
   - `CLERK_ISSUER` = *[Your Clerk Issuer]*
   - `CORS_ORIGINS` = `http://localhost:3000` (temporary placeholder)
+  - `PORT` = `7860` (Hugging Face Spaces runs containers on port 7860 by default)
 - Once pushed and secrets are saved, the Space will rebuild automatically.
 - Copy your direct backend URL. In Hugging Face, the direct API URL format is: `https://YOUR_HF_USERNAME-githire-backend.hf.space` (Note: remove `spaces/` and the colon from the standard Space URL).
 
