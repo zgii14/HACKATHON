@@ -37,5 +37,10 @@
 | dep-6 | Link CORS Domains | x | Configured Vercel domain in Hugging Face Space secrets |
 | dep-7 | End-to-End Live Verification |   | Verify live APIs and user flow |
 | dep-8 | Fix 404 on saving biodata for new users | x | Auto-create CandidateProfile in PATCH /me/biodata |
+| dep-9 | Align Landing Page Features Grid | x | Update FEATURES array to include ATS Resume, AI Quiz, Recruiter Portal |
+| dep-10 | Update Comparison Matrix Data | x | Add ATS builder, Recruiter portal, and AI Quiz comparison metrics |
+| dep-11 | Update How It Works Section and CTA | x | Update STEPS and badges text (100+ IT jobs, ATS CV Builder) |
+| dep-12 | End-to-End Compile and Verification | x | Compile and visually verify frontend pages |
+
 
 
