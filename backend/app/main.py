@@ -94,7 +94,7 @@ async def lifespan(app: FastAPI):
     with engine.connect() as conn:
         conn.execute(text("""
             CREATE INDEX IF NOT EXISTS idx_candidate_profiles_skills 
-            ON candidate_profiles USING gin (merged_skills);
+            ON candidate_profiles USING gin ((merged_skills::jsonb));
         """))
         conn.execute(text("""
             CREATE INDEX IF NOT EXISTS idx_candidate_profiles_name 
