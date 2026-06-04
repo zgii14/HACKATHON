@@ -21,6 +21,8 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+export const dynamic = 'force-dynamic';
+
 type Job = {
     id: string;
     title: string;
