@@ -15,6 +15,8 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+export const dynamic = 'force-dynamic';
+
 const STATUS_LABELS: Record<string, string> = {
     applied:   "Dilamar",
     interview: "Interview",
