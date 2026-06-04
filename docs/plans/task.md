@@ -32,7 +32,7 @@
 | dep-1 | GitHub Repository Forking & Setup | x | Forked repository successfully to Account B |
 | dep-2 | Initialize Neon PostgreSQL Database | x | Created database project in Neon and obtained connection URL |
 | dep-3 | Restore Database Schema & Data to Neon | x | Restored SQL schema and seed data to Neon successfully |
-| dep-4 | Deploy FastAPI Backend on Hugging Face |   | Clone Space and push /backend files to Hugging Face |
+| dep-4 | Deploy FastAPI Backend on Hugging Face | x | Pushed backend files to Hugging Face Space and started build |
 | dep-5 | Deploy Next.js Frontend on Vercel |   | Deploy /linkify on Vercel |
 | dep-6 | Link CORS Domains |   | Configure Vercel domain in Hugging Face Space secrets |
 | dep-7 | End-to-End Live Verification |   | Verify live APIs and user flow |
