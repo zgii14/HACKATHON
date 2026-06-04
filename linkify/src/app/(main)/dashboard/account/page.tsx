@@ -22,6 +22,8 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+export const dynamic = 'force-dynamic';
+
 type BioData = {
     bio_full_name: string | null;
     bio_birth_place: string | null;
