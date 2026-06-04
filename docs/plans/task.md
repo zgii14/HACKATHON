@@ -31,7 +31,7 @@
 | search-verif | E2E verification and type-checking | x | Checked backend compiling & frontend tsc passing cleanly. |
 | dep-1 | GitHub Repository Forking & Setup | x | Forked repository successfully to Account B |
 | dep-2 | Railway Project & Database Service Initialization | x | Created Railway project and Postgres instance successfully |
-| dep-3 | Deploy FastAPI Backend Service |   | Setting up backend root /backend and variables |
+| dep-3 | Deploy FastAPI Backend Service | x | Configured backend root directory and environment variables |
 | dep-4 | Deploy Next.js Frontend Service |   | Setting up frontend root /linkify and variables |
 | dep-5 | Database Seeding & Data Restoration |   | Restoring database schema and mock records |
 | dep-6 | End-to-End Live Verification |   | Testing live URL health and connection |
