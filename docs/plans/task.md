@@ -31,7 +31,7 @@
 | search-verif | E2E verification and type-checking | x | Checked backend compiling & frontend tsc passing cleanly. |
 | dep-1 | GitHub Repository Forking & Setup | x | Forked repository successfully to Account B |
 | dep-2 | Initialize Neon PostgreSQL Database | x | Created database project in Neon and obtained connection URL |
-| dep-3 | Restore Database Schema & Data to Neon |   | Run SQL restore locally using psql to Neon |
+| dep-3 | Restore Database Schema & Data to Neon | x | Restored SQL schema and seed data to Neon successfully |
 | dep-4 | Deploy FastAPI Backend on Render |   | Deploy /backend on Render via Docker |
 | dep-5 | Deploy Next.js Frontend on Vercel |   | Deploy /linkify on Vercel |
 | dep-6 | Link CORS Domains |   | Configure Vercel domain in Render backend CORS origins |
