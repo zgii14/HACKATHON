@@ -12,6 +12,7 @@ import { AlertTriangle, ArrowRight, BookOpen, CheckCircle2, FileTextIcon, Refres
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+export const dynamic = 'force-dynamic';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
