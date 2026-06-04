@@ -39,6 +39,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+export const dynamic = 'force-dynamic';
+
 // ── Types ──
 type EducationItem = {
     institution: string;
