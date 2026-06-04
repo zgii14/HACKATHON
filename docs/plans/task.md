@@ -36,5 +36,6 @@
 | dep-5 | Deploy Next.js Frontend on Vercel | x | Re-generated lockfile and pushed update to trigger Vercel deploy |
 | dep-6 | Link CORS Domains | x | Configured Vercel domain in Hugging Face Space secrets |
 | dep-7 | End-to-End Live Verification |   | Verify live APIs and user flow |
+| dep-8 | Fix 404 on saving biodata for new users | / | Auto-create CandidateProfile in PATCH /me/biodata |
 
 

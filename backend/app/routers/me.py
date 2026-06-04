@@ -133,7 +133,10 @@ def update_biodata(
     """Simpan bio data user untuk dipakai otomatis saat generate surat lamaran."""
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
     if not profile:
-        raise HTTPException(404, "Profil belum ada. Selesaikan onboarding terlebih dahulu.")
+        profile = CandidateProfile(user_id=user.id)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
 
     # Gunakan targeted SQL UPDATE — JANGAN load full ORM object lalu commit,
     # karena SQLAlchemy bisa inadvertently overwrite JSON columns (roadmap_cached, dll).
