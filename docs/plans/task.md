@@ -30,9 +30,10 @@
 | search-4 | Frontend Direct Invite Modal Dialog with active jobs | x | Added scheduling invite modal with active jobs select dropdown. |
 | search-verif | E2E verification and type-checking | x | Checked backend compiling & frontend tsc passing cleanly. |
 | dep-1 | GitHub Repository Forking & Setup | x | Forked repository successfully to Account B |
-| dep-2 | Railway Project & Database Service Initialization | x | Created Railway project and Postgres instance successfully |
-| dep-3 | Deploy FastAPI Backend Service | x | Configured backend root directory and environment variables |
-| dep-4 | Deploy Next.js Frontend Service | x | Configured frontend root directory, variables, and CORS origins |
-| dep-5 | Database Seeding & Data Restoration |   | Restoring database schema and mock records |
-| dep-6 | End-to-End Live Verification |   | Testing live URL health and connection |
+| dep-2 | Initialize Neon PostgreSQL Database |   | Create project in Neon and get connection string |
+| dep-3 | Restore Database Schema & Data to Neon |   | Run SQL restore locally using psql to Neon |
+| dep-4 | Deploy FastAPI Backend on Render |   | Deploy /backend on Render via Docker |
+| dep-5 | Deploy Next.js Frontend on Vercel |   | Deploy /linkify on Vercel |
+| dep-6 | Link CORS Domains |   | Configure Vercel domain in Render backend CORS origins |
+| dep-7 | End-to-End Live Verification |   | Verify live APIs and user flow |
 
