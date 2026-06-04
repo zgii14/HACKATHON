@@ -2,11 +2,11 @@
 
 > **For Antigravity:** REQUIRED WORKFLOW: Use `.agent/workflows/execute-plan.md` to execute this plan in single-flow mode.
 
-**Goal:** Deploy the GitHire monorepo (FastAPI backend + Next.js frontend + PostgreSQL) end-to-end to a free-tier hosting stack (Neon, Render, and Vercel).
+**Goal:** Deploy the GitHire monorepo (FastAPI backend + Next.js frontend + PostgreSQL) end-to-end to a free-tier hosting stack (Neon, Koyeb, and Vercel).
 
-**Architecture:** Use Neon for serverless PostgreSQL database hosting, Render for running the FastAPI backend Docker container, and Vercel for hosting the static Next.js frontend.
+**Architecture:** Use Neon for serverless PostgreSQL database hosting, Koyeb for running the FastAPI backend Docker container (always-on, zero cold starts), and Vercel for hosting the static Next.js frontend.
 
-**Tech Stack:** Vercel (Frontend), Render Web Services (Backend), Neon (Database), Docker.
+**Tech Stack:** Vercel (Frontend), Koyeb Web Services (Backend), Neon (Database), Docker.
 
 ---
 
@@ -23,7 +23,7 @@
 
 **Step 2: Copy connection string**
 - In the Neon dashboard, find the **Connection Details** panel.
-- Select **PostgreSQL** dialect and make sure **Pooled connection** is enabled or copy the main connection string.
+- Select **PostgreSQL** dialect and make sure **Connection pooling** is enabled.
 - Copy the Connection String URL (it will look like: `postgresql://neondb_owner:PASSWORD@ep-xxx.region.pooler.neon.tech/neondb?sslmode=require`).
 - Save this connection string as it will be used for local seeding and backend environment variables.
 
@@ -48,34 +48,38 @@
 
 ---
 
-### Task 3: Deploy FastAPI Backend on Render
+### Task 3: Deploy FastAPI Backend on Koyeb
 
 **Files:**
 - Reference: [Dockerfile](file:///c:/Users/muham/Downloads/HACKATHON/backend/Dockerfile)
 
-**Step 1: Create Web Service on Render**
-- Go to [https://render.com](https://render.com) and log in.
-- Click **New +** -> **Web Service**.
-- Select **Build and deploy from a Git repository**.
+**Step 1: Create Web Service on Koyeb**
+- Go to [https://koyeb.com](https://koyeb.com) and log in.
+- Click **Create App** or **Create Service**.
+- Select **GitHub** as deployment method.
 - Connect your GitHub account and select your forked repository `HACKATHON`.
 
-**Step 2: Configure Build Settings**
-- Name: `githire-backend`
-- Region: Select a region close to your Neon database.
-- Branch: `master`
-- Root Directory: `backend`
-- Runtime: **Docker** (it will automatically pick up `backend/Dockerfile`)
-- Instance Type: **Free**
+**Step 2: Configure Service Settings**
+- **Repository Branch:** `master`
+- **Root Directory:** `/backend`
+- **Build Provider:** Select **Dockerfile** (it will auto-detect the Dockerfile in the `/backend` folder).
+- **Service Name:** `githire-backend`
+- **App Name:** `githire`
+- **Instance Size:** Select **Eco / Nano** (completely free, 256MB RAM). This instance is always-on.
 
 **Step 3: Configure Environment Variables**
-- Click **Advanced** and add the following variables:
+- Scroll to the **Environment Variables** section and add the following keys and values:
   - `DATABASE_URL` = *[Your Neon connection string]*
   - `GEMINI_API_KEY` = *[Your Gemini API Key]*
   - `CLERK_JWKS_URL` = *[Your Clerk JWKS URL]*
   - `CLERK_ISSUER` = *[Your Clerk Issuer URL]*
-  - `CORS_ORIGINS` = `https://<temp-placeholder-url-until-frontend-deployed>`
-- Click **Create Web Service** to start the build and deployment process.
-- Copy your generated Render URL (e.g., `https://githire-backend.onrender.com`).
+  - `CORS_ORIGINS` = `http://localhost:3000` (temporary placeholder)
+  - `PORT` = `8000` (Koyeb uses the PORT env var to bind. Keep this as 8000)
+- In the **Exposed Ports** settings:
+  - Set the port to `8000` (the same port FastAPI runs on, configured in `Dockerfile` CMD).
+  - Set the protocol to `HTTP` and path to `/health`.
+- Click **Deploy** to start building and deploying the backend.
+- Copy your generated Koyeb URL once deployed (e.g., `https://githire-backend-<org-name>.koyeb.app`).
 
 ---
 
@@ -97,11 +101,11 @@
 **Step 3: Configure Environment Variables**
 - Add the following environment variables:
   - `NEXT_PUBLIC_APP_NAME` = `GitHire`
-  - `NEXT_PUBLIC_API_URL` = `https://githire-backend.onrender.com` (Replace with your actual Render backend URL)
+  - `NEXT_PUBLIC_API_URL` = `https://githire-backend-<org-name>.koyeb.app` (Replace with your actual Koyeb backend URL)
   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = *[Your Clerk Publishable Key]*
   - `CLERK_SECRET_KEY` = *[Your Clerk Secret Key]*
 - Click **Deploy** and wait for the build to finish.
-- Copy your generated Vercel URL (e.g. `https://githire-frontend.vercel.app`).
+- Copy your generated Vercel URL (e.g., `https://githire-frontend.vercel.app`).
 
 ---
 
@@ -110,12 +114,12 @@
 **Files:**
 - None
 
-**Step 1: Update Render CORS Origins**
-- Go to your Render Dashboard and open the `githire-backend` service settings.
-- Navigate to the **Environment** tab.
+**Step 1: Update Koyeb CORS Origins**
+- Go to your Koyeb Dashboard and open the `githire-backend` service settings.
+- Navigate to the **Environment Variables** tab.
 - Edit the value of the `CORS_ORIGINS` variable.
-- Replace the temporary URL with your actual Vercel frontend URL (e.g. `https://githire-frontend.vercel.app`).
-- Click **Save Changes** (Render will automatically redeploy with the new settings).
+- Replace the temporary URL with your actual Vercel frontend URL (e.g., `https://githire-frontend.vercel.app`).
+- Click **Save Changes** (Koyeb will trigger a redeploy automatically).
 
 ---
 
@@ -125,9 +129,9 @@
 - None
 
 **Step 1: Test Backend Health**
-- Open `https://githire-backend.onrender.com/health` in your browser.
+- Open `https://githire-backend-<org-name>.koyeb.app/health` in your browser.
 - Verify the JSON output reads `{"status":"ok"}`.
 
 **Step 2: Test Frontend & Integrations**
-- Go to your Vercel URL (e.g. `https://githire-frontend.vercel.app`).
-- Verify that you can browse the home page, log in via Clerk, and successfully fetch job list data from the backend.
+- Go to your Vercel URL (e.g., `https://githire-frontend.vercel.app`).
+- Verify that you can browse the home page, log in via Clerk, and successfully fetch job list data from the database.
