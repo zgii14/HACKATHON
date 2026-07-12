@@ -87,23 +87,6 @@ class Job(Base):
     )
 
 
-class JobMatch(Base):
-    __tablename__ = "job_matches"
-
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
-    )
-    job_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE"), index=True
-    )
-    score: Mapped[float] = mapped_column(Float)
-    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-
-    __table_args__ = (UniqueConstraint("user_id", "job_id", name="uq_user_job_match"),)
-
 
 class RoadmapProgress(Base):
     __tablename__ = "roadmap_progress"
@@ -139,6 +122,9 @@ class JobApplication(Base):
     )
     status: Mapped[str] = mapped_column(String(32), default="applied")  # applied | interview | rejected | offer
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cover_letter: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_screening: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    screening_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     applied_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )

@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
                 ALTER TABLE roadmap_progress
                 ADD CONSTRAINT uq_user_roadmap_step
                 UNIQUE (user_id, roadmap_key, step_index);
-            EXCEPTION WHEN duplicate_table THEN NULL;
+            EXCEPTION WHEN duplicate_table OR duplicate_object THEN NULL;
             END $$;
         """))
         conn.commit()
@@ -132,6 +132,26 @@ async def lifespan(app: FastAPI):
             INSERT INTO jobs (id, title, company, description, required_skills, location, is_remote, recruiter_id)
             VALUES ('{job_id}', 'Senior React Developer', 'GitHire Enterprise', 'We are looking for a Senior React Developer with deep knowledge in TypeScript and State Management.', '["React", "TypeScript", "Tailwind CSS", "Redux"]', 'Bengkulu, Indonesia', TRUE, '{recruiter_id}')
             ON CONFLICT (id) DO NOTHING;
+        """))
+        conn.commit()
+
+    # DDL Migration: tambah kolom cover_letter ke job_applications (cache surat lamaran)
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE job_applications
+            ADD COLUMN IF NOT EXISTS cover_letter TEXT NULL
+        """))
+        conn.commit()
+
+    # DDL Migration: tambah kolom cache AI screening ke job_applications
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE job_applications
+            ADD COLUMN IF NOT EXISTS ai_screening JSON NULL
+        """))
+        conn.execute(text("""
+            ALTER TABLE job_applications
+            ADD COLUMN IF NOT EXISTS screening_fingerprint VARCHAR(64) NULL
         """))
         conn.commit()
 
