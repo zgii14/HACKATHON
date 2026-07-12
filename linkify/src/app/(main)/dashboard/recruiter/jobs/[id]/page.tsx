@@ -71,8 +71,11 @@ type JobApplicant = {
 
 type AIScreeningResult = {
     match_score: number;
+    recommendation?: "interview" | "consider" | "reject";
+    reasoning?: string;
     strengths: string[];
     weaknesses: string[];
+    cached?: boolean;
 };
 
 export default function JobApplicantsPage({ params }: { params: { id: string } }) {
@@ -102,6 +105,17 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
         queryFn: () => withAuth(`/recruiter/applications/${selectedApp?.id}/ai-screening`, { method: "POST" }),
         enabled: authReady && !!selectedApp?.id,
         staleTime: 60 * 1000,
+    });
+
+    // Paksa analisis ulang (bypass cache backend via ?refresh=true)
+    const refreshScreening = useMutation({
+        mutationFn: () =>
+            withAuth<AIScreeningResult>(`/recruiter/applications/${selectedApp?.id}/ai-screening?refresh=true`, { method: "POST" }),
+        onSuccess: (data) => {
+            qc.setQueryData(["ai-screening", selectedApp?.id], data);
+            toast.success("Analisis diperbarui.");
+        },
+        onError: () => toast.error("Gagal menganalisis ulang."),
     });
 
     // Mutation untuk mengupdate status pelamar
@@ -693,6 +707,12 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
         );
     }
 
+    const VERDICT: Record<string, { label: string; cls: string }> = {
+        interview: { label: "Rekomendasi: Interview", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
+        consider: { label: "Rekomendasi: Pertimbangkan", cls: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+        reject: { label: "Rekomendasi: Tolak", cls: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
+    };
+
     return (
         <div className="space-y-6 max-w-5xl pb-16 relative">
             {/* Header */}
@@ -813,10 +833,14 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                         <Brain className="w-4 h-4 text-violet-400" />
                                         Hasil Screening AI (Gemini)
                                     </h3>
-                                    <span className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
+                                    <button
+                                        onClick={() => refreshScreening.mutate()}
+                                        disabled={refreshScreening.isPending || !selectedApp?.id}
+                                        className="text-[10px] font-semibold flex items-center gap-1 text-violet-300 hover:text-violet-200 disabled:opacity-50"
+                                    >
                                         <Sparkles className="w-3 h-3 text-amber-400" />
-                                        Dianalisis secara real-time
-                                    </span>
+                                        {refreshScreening.isPending ? "Menganalisis…" : "Analisis ulang"}
+                                    </button>
                                 </div>
 
                                 {aiLoading ? (
@@ -825,8 +849,19 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                         <p className="text-[10px] text-muted-foreground animate-pulse font-medium">Gemini sedang menganalisis kecocokan pelamar...</p>
                                     </div>
                                 ) : aiResult ? (
+                                    <div>
+                                    {aiResult.recommendation && (
+                                        <div className="mb-4 space-y-2">
+                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${VERDICT[aiResult.recommendation]?.cls ?? ""}`}>
+                                                {VERDICT[aiResult.recommendation]?.label ?? aiResult.recommendation}
+                                            </span>
+                                            {aiResult.reasoning && (
+                                                <p className="text-xs text-muted-foreground leading-relaxed">{aiResult.reasoning}</p>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                                        
+
                                         {/* Match Score donut circle */}
                                         <div className="md:col-span-4 flex flex-col items-center justify-center">
                                             <div className="relative w-20 h-20 flex items-center justify-center">
@@ -861,6 +896,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                             </div>
                                         </div>
 
+                                    </div>
                                     </div>
                                 ) : (
                                     <div className="text-center py-6">
