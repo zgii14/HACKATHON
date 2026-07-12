@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 import uuid
@@ -9,6 +10,7 @@ from pydantic import BaseModel
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import CandidateProfile, Job, JobApplication, User
+from app.schemas import ApplicationStatus
 from app.services.gemini_service import _call_gemini_with_retry
 
 router = APIRouter(prefix="/recruiter", tags=["recruiter"])
@@ -28,7 +30,7 @@ class JobCreate(BaseModel):
     work_type: str | None = None
 
 class StatusUpdate(BaseModel):
-    status: str  # applied | interview | offer | rejected
+    status: ApplicationStatus
     note: str | None = None
 
 class CandidateInvitePayload(BaseModel):
@@ -38,6 +40,22 @@ class CandidateInvitePayload(BaseModel):
     location_or_link: str
     hr_message: str | None = None
     hr_phone: str | None = None
+
+def _screening_fingerprint(job: "Job", profile: "CandidateProfile") -> str:
+    """Hash semua input yang mempengaruhi hasil screening. Fingerprint sama -> cache boleh dipakai."""
+    payload = {
+        "required_skills": sorted(job.required_skills or []),
+        "description": job.description or "",
+        "min_experience": job.min_experience or "",
+        "min_education": job.min_education or "",
+        "work_type": job.work_type or "",
+        "salary": job.salary or "",
+        "merged_skills": sorted(profile.merged_skills or []),
+        "cv_data": profile.cv_data or {},
+        "github_signals": profile.github_signals or {},
+    }
+    blob = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 # Helper JSON parser dari respons Gemini
 def _extract_json_data(text: str) -> dict | None:
@@ -182,16 +200,18 @@ def update_application_status(
     if not job:
         raise HTTPException(403, "Anda tidak memiliki akses ke data lowongan pelamar ini.")
 
-    app.status = body.status
+    app.status = body.status.value
     if body.note is not None:
         app.note = body.note
     app.updated_at = datetime.utcnow()
     db.commit()
+    db.refresh(app)
     return {"status": "success", "application_id": app.id, "new_status": app.status}
 
 @router.post("/applications/{application_id}/ai-screening")
 def ai_candidate_screening(
     application_id: uuid.UUID,
+    refresh: bool = False,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -215,6 +235,12 @@ def ai_candidate_screening(
             "strengths": ["Profil kandidat belum disinkronkan sepenuhnya."],
             "weaknesses": ["Kandidat belum mengunggah CV / portofolio."]
         }
+
+    fingerprint = _screening_fingerprint(job, profile)
+    if not refresh and app.ai_screening and app.screening_fingerprint == fingerprint:
+        cached = dict(app.ai_screening)
+        cached["cached"] = True
+        return cached
 
     # Bangun prompt untuk Gemini AI
     prompt = f"""
@@ -245,22 +271,19 @@ def ai_candidate_screening(
     
     try:
         text = _call_gemini_with_retry(prompt)
-        res_json = _extract_json_data(text)
-        if res_json and "match_score" in res_json:
-            return res_json
-        
-        # Fallback jika parsing JSON gagal
-        return {
-            "match_score": 50,
-            "strengths": ["Kandidat menunjukkan keahlian teknis umum."],
-            "weaknesses": ["Gagal menganalisis detail secara dinamis."]
-        }
-    except Exception as e:
-        return {
-            "match_score": 50,
-            "strengths": [f"Gagal memanggil AI: {str(e)}"],
-            "weaknesses": ["Gagal menganalisis."]
-        }
+    except Exception:
+        raise HTTPException(502, "Layanan AI sedang tidak tersedia. Silakan coba lagi.")
+
+    res_json = _extract_json_data(text)
+    if not res_json or "match_score" not in res_json:
+        raise HTTPException(502, "Hasil analisis AI tidak valid. Silakan coba lagi.")
+    # Tandai bahwa skor ini dari AI (berbeda metodologi dari skor algoritma di job list)
+    res_json["score_source"] = "ai"
+    res_json["cached"] = False
+    app.ai_screening = res_json
+    app.screening_fingerprint = fingerprint
+    db.commit()
+    return res_json
 
 @router.get("/candidates/search")
 def search_candidates(
@@ -289,15 +312,23 @@ def search_candidates(
     if location:
         query = query.filter(CandidateProfile.bio_address.ilike(f"%{location}%"))
 
-    results = query.all()
-
-    # Filter menggunakan Python untuk normalisasi alias skill dan commits
-    filtered = []
     from app.services.matching import normalize_skill_set
+    from sqlalchemy import String, cast
 
-    # Filter empty elements from skills query list
     clean_skills = [s for s in skills if s.strip()]
     target_skills = normalize_skill_set(clean_skills)
+
+    # Pre-filter SQL: kurangi kandidat yang dimuat ke Python menggunakan ILIKE pada teks JSON.
+    # GIN index tidak aktif di sini, tapi mencegah full-table load ke memori.
+    # Python normalize filter di bawah memastikan kebenaran final (alias, case, dsb).
+    if clean_skills:
+        merged_text = cast(CandidateProfile.merged_skills, String)
+        for skill in clean_skills[:5]:
+            query = query.filter(merged_text.ilike(f'%{skill}%'))
+
+    results = query.all()
+
+    # Filter Python untuk normalisasi alias skill dan commits (fine-grained setelah SQL pre-filter)
 
     for profile, u in results:
         # 1. Filter by skills
@@ -374,14 +405,14 @@ def invite_candidate(
     ).first()
 
     if app:
-        app.status = "interview"
+        app.status = ApplicationStatus.interview.value
         app.note = note_str
         app.updated_at = datetime.utcnow()
     else:
         app = JobApplication(
             user_id=candidate_user_id,
             job_id=body.job_id,
-            status="interview",
+            status=ApplicationStatus.interview.value,
             note=note_str
         )
         db.add(app)
