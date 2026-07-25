@@ -180,9 +180,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="GitHire API", version="0.1.0", lifespan=lifespan)
 
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+# Regex origin: izinkan semua deployment/preview Vercel (URL berubah tiap deploy).
+# Bisa dioverride via env CORS_ORIGIN_REGEX. Default: semua *.vercel.app + localhost.
+cors_regex = settings.cors_origin_regex or r"https://.*\.vercel\.app|http://localhost:\d+"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=cors_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
