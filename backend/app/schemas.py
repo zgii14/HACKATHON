@@ -5,6 +5,52 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+class CVDataSkills(BaseModel):
+    soft_skills: list[str] | None = None
+    hard_skills: list[str] | None = None
+    languages: list[str] | None = None
+
+class CVDataEducation(BaseModel):
+    institution: str | None = None
+    location: str | None = None
+    major: str | None = None
+    degree: str | None = None
+    period: str | None = None
+    gpa: str | None = None
+
+class CVDataExperience(BaseModel):
+    company: str | None = None
+    role: str | None = None
+    location: str | None = None
+    period: str | None = None
+    bullets: list[str] | None = None
+
+class CVDataOrg(BaseModel):
+    organization: str | None = None
+    role: str | None = None
+    location: str | None = None
+    period: str | None = None
+    bullets: list[str] | None = None
+
+class CVDataTraining(BaseModel):
+    title: str | None = None
+    provider: str | None = None
+    location: str | None = None
+    period: str | None = None
+    bullets: list[str] | None = None
+
+class CVDataSchema(BaseModel):
+    summary: str | None = None
+    education: list[CVDataEducation] | None = None
+    work_experience: list[CVDataExperience] | None = None
+    org_experience: list[CVDataOrg] | None = None
+    training: list[CVDataTraining] | None = None
+    skills: CVDataSkills | None = None
+    certifications: list[str] | None = None
+    email: str | None = None
+    linkedin: str | None = None
+
+
 class UserOut(BaseModel):
     id: UUID
     clerk_user_id: str
@@ -174,12 +220,17 @@ class ApplicationOut(BaseModel):
     roadmap_completed: bool
     match_score: float | None
     recruiter_email: str | None = None
+    # True jika lamaran dibuat oleh recruiter (undangan), bukan kandidat sendiri
+    is_invited: bool = False
+    invite_detail: dict | None = None
+    has_cover_letter: bool = False
 
 
 # ── Cover Letter schemas ─────────────────────────────────────────────────────
 
 class GenerateLetterRequest(BaseModel):
-    full_name: str | None = None  # opsional, fallback ke bio_full_name dari profil
+    full_name: str | None = None
+    force_regenerate: bool = False  # True = paksa generate ulang meski sudah ada cache
 
 
 class CoverLetterOut(BaseModel):

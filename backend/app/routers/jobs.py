@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import CandidateProfile, Job, JobMatch, User
+from app.models import CandidateProfile, Job, User
 from app.schemas import JobDetailOut, JobOut
 from app.services.matching import explain_match, jaccard_score
 

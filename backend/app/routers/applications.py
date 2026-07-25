@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
+import json
+
 from app.models import CandidateProfile, Job, JobApplication, RoadmapProgress, User
 from app.schemas import (
     ApplicationCreate,
@@ -55,6 +57,19 @@ def _match_score(db: Session, user: User, job: Job) -> float | None:
     return jaccard_score(merged_norm, required_norm)
 
 
+def _detect_invite(note: str | None) -> tuple[bool, dict | None]:
+    """Deteksi apakah note adalah undangan dari recruiter (format JSON invite)."""
+    if not note:
+        return False, None
+    try:
+        data = json.loads(note)
+        if isinstance(data, dict) and "type" in data and "datetime" in data:
+            return True, data
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return False, None
+
+
 def _build_out(app: JobApplication, job: Job, db: Session) -> ApplicationOut:
     recruiter_email = None
     if job.recruiter_id:
@@ -65,6 +80,8 @@ def _build_out(app: JobApplication, job: Job, db: Session) -> ApplicationOut:
                 recruiter_email = recruiter.email
         except (ValueError, TypeError):
             pass
+
+    is_invited, invite_detail = _detect_invite(app.note)
 
     return ApplicationOut(
         id=app.id,
@@ -78,8 +95,11 @@ def _build_out(app: JobApplication, job: Job, db: Session) -> ApplicationOut:
         applied_at=app.applied_at,
         updated_at=app.updated_at,
         roadmap_completed=_roadmap_completed(db, app.user_id, app.job_id),
-        match_score=None,  # computed separately when needed
+        match_score=None,
         recruiter_email=recruiter_email,
+        is_invited=is_invited,
+        invite_detail=invite_detail,
+        has_cover_letter=bool(app.cover_letter),
     )
 
 
@@ -178,13 +198,22 @@ def update_status(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Update status of an application (applied → interview → rejected / offer)."""
+    """Update status lamaran oleh kandidat. Hanya boleh konfirmasi wawancara (interview_confirmed)."""
     app = db.query(JobApplication).filter(
         JobApplication.user_id == user.id,
         JobApplication.job_id == job_id,
     ).first()
     if not app:
         raise HTTPException(404, "Lamaran tidak ditemukan")
+
+    # Kandidat hanya boleh konfirmasi kehadiran wawancara.
+    # Status lain (interview, rejected, offer) hanya recruiter yang bisa set.
+    if body.status != ApplicationStatus.interview_confirmed:
+        raise HTTPException(
+            403,
+            "Kamu hanya bisa mengkonfirmasi kehadiran wawancara. "
+            "Perubahan status lain dilakukan oleh recruiter."
+        )
 
     app.status = body.status.value
     if body.note is not None:
@@ -193,6 +222,8 @@ def update_status(
     db.refresh(app)
 
     job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(404, "Lowongan tidak ditemukan")
     out = _build_out(app, job, db)
     out.match_score = _match_score(db, user, job)
     return out
@@ -224,7 +255,7 @@ def generate_letter(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Generate a personalized cover letter for this job using Gemini AI."""
+    """Generate surat lamaran personal untuk job ini menggunakan Gemini AI. Hasil di-cache per lamaran."""
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(404, "Lowongan tidak ditemukan")
@@ -233,10 +264,21 @@ def generate_letter(
     if not profile or not profile.merged_skills:
         raise HTTPException(400, "Selesaikan sinkronisasi profil terlebih dahulu sebelum generate surat lamaran")
 
+    # Cek cache — jika sudah pernah generate dan tidak dipaksa ulang, return cached
+    app_row = db.query(JobApplication).filter(
+        JobApplication.user_id == user.id,
+        JobApplication.job_id == job_id,
+    ).first()
+    if app_row and app_row.cover_letter and not body.force_regenerate:
+        return CoverLetterOut(
+            letter=app_row.cover_letter,
+            job_title=job.title,
+            job_company=job.company,
+        )
+
     merged = profile.merged_skills or []
     required = list(job.required_skills or [])
 
-    # Compute matched vs missing skills
     merged_norm = {normalize_skill(s) for s in merged}
     required_norm_map = {normalize_skill(s): s for s in required}
     matching = [orig for norm, orig in required_norm_map.items() if norm in merged_norm]
@@ -253,7 +295,6 @@ def generate_letter(
             required_skills=required,
             matching_skills=matching,
             missing_skills=missing,
-            # Bio data dari profil (diisi dari form bio data)
             birth_place=profile.bio_birth_place,
             birth_date=profile.bio_birth_date,
             address=profile.bio_address,
@@ -262,6 +303,11 @@ def generate_letter(
         )
     except Exception as e:
         raise HTTPException(502, f"Gagal generate surat lamaran: {e!s}") from e
+
+    # Simpan ke cache jika ada application row
+    if app_row:
+        app_row.cover_letter = letter_text
+        db.commit()
 
     return CoverLetterOut(
         letter=letter_text,

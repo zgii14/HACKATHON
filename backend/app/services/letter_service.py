@@ -1,19 +1,6 @@
 from datetime import datetime
 
-from app.config import settings
-from google import genai
-
-
-_client: genai.Client | None = None
-
-GEMINI_MODEL = "gemini-3.1-flash-lite"  # sama dengan gemini_service.py
-
-
-def _get_client() -> genai.Client:
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=settings.gemini_api_key)
-    return _client
+from app.services.gemini_service import _call_gemini_with_retry
 
 
 def generate_cover_letter(
@@ -105,9 +92,4 @@ Aturan:
 - Tulis kalimat biasa yang mengalir secara natural
 - Hasilkan HANYA teks surat, tanpa penjelasan tambahan, tanpa tanda ```"""
 
-    client = _get_client()
-    resp = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-    )
-    return resp.text.strip()
+    return _call_gemini_with_retry(prompt)

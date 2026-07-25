@@ -38,7 +38,12 @@ def _call_gemini_with_retry(contents: str) -> str:
                 model=GEMINI_MODEL,
                 contents=contents,
             )
-            return (response.text or "").strip()
+            result = (response.text or "").strip()
+            if not result:
+                # Respons kosong (mis. safety block tanpa exception) → perlakukan
+                # sebagai error sementara agar ikut jalur retry di bawah
+                raise RuntimeError("Gemini mengembalikan respons kosong")
+            return result
 
         except Exception as e:
             last_exc = e

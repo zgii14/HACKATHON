@@ -6,11 +6,12 @@ from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import CandidateProfile, Job, JobMatch, RoadmapProgress, User
+from app.models import CandidateProfile, Job, RoadmapProgress, User
 from app.schemas import (
     BookmarkedJobOut,
     BioDataOut,
     BioDataPatch,
+    CVDataSchema,
     InterestsPatch,
     ProfileOut,
     RoadmapOut,
@@ -237,13 +238,11 @@ def get_skill_gap(
     gh_strong_norm: set[str] = {normalize_skill(s) for s in gh_strong}
 
     # Skill user yang TIDAK ada di GitHub sama sekali → "cv_only"
-    cv_only_norm: set[str] = set()
-    for s in profile.merged_skills:
-        norm = normalize_skill(s)
-        if norm not in gh_all_norm:
-            cv_only_norm.add(norm)
+    # Hitung dari set ternormalisasi agar duplikat case-variant tidak menggelembungkan angka
+    merged_norm: set[str] = {normalize_skill(s) for s in profile.merged_skills}
+    cv_only_norm: set[str] = {norm for norm in merged_norm if norm not in gh_all_norm}
 
-    github_backed_count = len(profile.merged_skills) - len(cv_only_norm)
+    github_backed_count = len(merged_norm) - len(cv_only_norm)
 
     # ── Missing skills: skill job yang user tidak punya sama sekali ────────
     user_skills = {normalize_skill(s) for s in profile.merged_skills}
@@ -367,7 +366,9 @@ def get_roadmap_step_quiz(
     cached_all = profile.roadmap_cached or {}
     cache_key = str(job_id) if job_id else "_generic"
 
-    if "steps" in cached_all and "_generic" not in cached_all:
+    # Backward compat: format lama (top-level "steps") hanya berlaku untuk
+    # roadmap generic — jangan dipakai saat request per-job walau key job absen
+    if cache_key == "_generic" and "_generic" not in cached_all and "steps" in cached_all:
         raw_steps = cached_all.get("steps") or []
     else:
         entry = cached_all.get(cache_key, {})
@@ -396,11 +397,31 @@ def get_roadmap(
 ):
     """
     Generate roadmap belajar.
-    - Tanpa job_id: roadmap generik berdasarkan gap vs semua lowongan
+    - Tanpa job_id: roadmap generik berdasarkan gap vs lowongan relevan (filter by interests jika ada)
     - Dengan job_id: roadmap spesifik untuk lowongan yang dipilih
     """
+    # Untuk roadmap generik: filter job berdasarkan minat user agar konsisten dengan skill-gap page.
+    # Per-job roadmap tidak perlu filter ini.
+    effective_jobs = None
+    if not job_id:
+        profile_for_interests = db.query(CandidateProfile).filter(
+            CandidateProfile.user_id == user.id
+        ).first()
+        if profile_for_interests:
+            user_interests = list(profile_for_interests.interests or [])
+            if user_interests:
+                all_jobs = db.query(Job).all()
+                interest_skills = _get_interest_skills(user_interests)
+                filtered = [
+                    j for j in all_jobs
+                    if {normalize_skill(s) for s in (j.required_skills or [])} & interest_skills
+                ]
+                effective_jobs = filtered if filtered else all_jobs
+
     try:
-        fp, steps_raw, _cached = roadmap_service.ensure_roadmap_generated(db, user, job_id=job_id)
+        fp, steps_raw, _cached = roadmap_service.ensure_roadmap_generated(
+            db, user, job_id=job_id, effective_jobs=effective_jobs
+        )
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
     except Exception as e:
@@ -469,8 +490,9 @@ def patch_roadmap_step(
     cached_all = profile.roadmap_cached or {}
     cache_key = str(job_id) if job_id else "_generic"
 
-    # Backward compat: jika cache masih format lama (punya key "steps" langsung)
-    if "steps" in cached_all and "_generic" not in cached_all:
+    # Backward compat: format lama (top-level "steps") hanya berlaku untuk
+    # roadmap generic — jangan dipakai saat request per-job walau key job absen
+    if cache_key == "_generic" and "_generic" not in cached_all and "steps" in cached_all:
         raw_steps = cached_all.get("steps") or []
     else:
         entry = cached_all.get(cache_key, {})
@@ -563,14 +585,24 @@ def clear_roadmap_cache(
 
 @router.put("/profile/cv-data")
 def update_cv_data(
-    payload: dict,
+    payload: CVDataSchema,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
     if not profile:
-        raise HTTPException(404, "Candidate profile not found")
-    profile.cv_data = payload
+        profile = CandidateProfile(user_id=user.id)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+
+    # Targeted UPDATE — jangan set via ORM object lalu commit,
+    # agar JSON columns lain (roadmap_cached, dll) tidak ikut ter-flush dari snapshot lama
+    cv_data = payload.model_dump(exclude_none=True)
+    db.execute(
+        sa_update(CandidateProfile)
+        .where(CandidateProfile.user_id == user.id)
+        .values(cv_data=cv_data)
+    )
     db.commit()
-    db.refresh(profile)
-    return {"status": "success", "cv_data": profile.cv_data}
+    return {"status": "success", "cv_data": cv_data}

@@ -9,24 +9,36 @@ from app.services.gemini_service import generate_roadmap
 from app.services.matching import skill_gap
 
 
-def fingerprint_for_roadmap(merged: list[str], gap: list[str], job_id: UUID | None = None) -> str:
-    """Buat fingerprint unik berdasarkan skill + gap + job target (opsional)."""
+def fingerprint_for_roadmap(
+    merged: list[str],
+    gap: list[str],
+    job_id: UUID | None = None,
+    market_version: int | None = None,
+) -> str:
+    """Fingerprint unik berdasarkan skill + gap + job target + ukuran market (untuk roadmap generik)."""
     raw = (
         "|".join(sorted({x.lower() for x in merged}))
         + "::"
         + "|".join(sorted({x.lower() for x in gap}))
         + "::"
         + (str(job_id) if job_id else "_generic")
+        + "::"
+        + (str(market_version) if market_version is not None else "")
     )
     return hashlib.sha256(raw.encode()).hexdigest()[:32]
 
 
-def compute_gap_against_market(db: Session, merged: list[str]) -> list[str]:
-    """Hitung skill gap terhadap SEMUA lowongan (roadmap generik)."""
+def compute_gap_against_jobs(merged: list[str], jobs: list) -> list[str]:
+    """Hitung skill gap terhadap daftar job yang diberikan."""
     all_required: list[str] = []
-    for job in db.query(Job).all():
+    for job in jobs:
         all_required.extend(job.required_skills or [])
     return skill_gap(merged, list(dict.fromkeys(all_required)))
+
+
+def compute_gap_against_market(db: Session, merged: list[str]) -> list[str]:
+    """Hitung skill gap terhadap SEMUA lowongan (roadmap generik, tanpa filter)."""
+    return compute_gap_against_jobs(merged, db.query(Job).all())
 
 
 def compute_gap_against_job(merged: list[str], job: Job) -> list[str]:
@@ -42,6 +54,7 @@ def ensure_roadmap_generated(
     db: Session,
     user: User,
     job_id: UUID | None = None,
+    effective_jobs: list | None = None,
 ) -> tuple[str, list[dict], bool]:
     """
     Pastikan roadmap sudah di-generate. Jika belum atau fingerprint berbeda, generate baru.
@@ -49,8 +62,9 @@ def ensure_roadmap_generated(
     Args:
         db: Database session
         user: User yang sedang login
-        job_id: UUID job target (None = roadmap generik vs semua job)
-
+        job_id: UUID job target (None = roadmap generik)
+        effective_jobs: Subset job untuk roadmap generik (sudah difilter by interests dari caller).
+                        None = pakai semua job di DB.
     Returns:
         (fingerprint, steps, is_cached)
     """
@@ -60,20 +74,23 @@ def ensure_roadmap_generated(
 
     merged = profile.merged_skills or []
 
-    # Tentukan gap berdasarkan job target atau semua job
+    # Tentukan gap berdasarkan job target atau daftar job efektif (dengan filter interests)
     if job_id:
         job = db.query(Job).filter(Job.id == job_id).first()
         if not job:
             raise ValueError("Lowongan tidak ditemukan")
         gap = compute_gap_against_job(merged, job)
-        # Jika gap kosong (semua skill ada), pakai required_skills sebagai bahan roadmap
         roadmap_input_gap = gap if gap else list(job.required_skills or [])
+        market_version = None
     else:
         job = None
-        gap = compute_gap_against_market(db, merged)
+        jobs_for_gap = effective_jobs if effective_jobs is not None else db.query(Job).all()
+        gap = compute_gap_against_jobs(merged, jobs_for_gap)
         roadmap_input_gap = gap
+        # Sertakan ukuran market dalam fingerprint agar roadmap regenerate saat job baru masuk
+        market_version = len(jobs_for_gap)
 
-    fp = fingerprint_for_roadmap(merged, gap, job_id)
+    fp = fingerprint_for_roadmap(merged, gap, job_id, market_version=market_version)
     cache_key = _get_cache_key(job_id)
 
     # roadmap_cached sekarang berformat dict: { "_generic": {steps, fp}, "<job_id>": {steps, fp} }
