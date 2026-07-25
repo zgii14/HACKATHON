@@ -81,15 +81,8 @@ def get_current_user(
         elif isinstance(first, str):
             email = first
 
-    # Tentukan role berdasarkan email khusus (demo/whitelist)
-    import os
-    env_emails = os.getenv("RECRUITER_EMAILS", "")
-    RECRUITER_EMAILS = {"recruiter@githire.com"}
-    if env_emails:
-        RECRUITER_EMAILS.update([e.strip() for e in env_emails.split(",") if e.strip()])
-        
-    auto_role = "recruiter" if email in RECRUITER_EMAILS else "candidate"
-
+    # Role TIDAK ditentukan di sini. User baru dibuat dengan role=None (belum pilih),
+    # lalu dipilih sendiri via POST /me/role (role picker). Lihat routers/me.py.
     user = db.query(User).filter(User.clerk_user_id == clerk_id).first()
     if not user:
         # Coba juga cari berdasarkan email (untuk sync dengan demo seed)
@@ -98,8 +91,6 @@ def get_current_user(
             if user:
                 # Update clerk_user_id jika user ditemukan via email
                 user.clerk_user_id = clerk_id
-                if email in RECRUITER_EMAILS:
-                    user.role = "recruiter"
                 db.commit()
                 db.refresh(user)
                 return user
@@ -107,7 +98,7 @@ def get_current_user(
         from sqlalchemy.exc import IntegrityError
         try:
             with db.begin_nested():
-                user = User(clerk_user_id=clerk_id, email=email, role=auto_role)
+                user = User(clerk_user_id=clerk_id, email=email, role=None)
                 db.add(user)
                 db.flush()
             db.commit()
@@ -121,15 +112,9 @@ def get_current_user(
                     detail="Gagal mensinkronisasikan user ke database",
                 )
     else:
-        # Sync email dan role jika perlu diperbarui
-        needs_update = False
+        # Sync email saja jika berubah. Role tidak disentuh di sini.
         if email and user.email != email:
             user.email = email
-            needs_update = True
-        if email in RECRUITER_EMAILS and user.role != "recruiter":
-            user.role = "recruiter"
-            needs_update = True
-        if needs_update:
             db.commit()
             db.refresh(user)
 

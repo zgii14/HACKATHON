@@ -207,14 +207,14 @@ export default function JobDetailPage() {
             qc.invalidateQueries({ queryKey: ["applications"] });
             qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
 
-            // Buka apply_url di tab baru
-            const applyUrl = job?.apply_url ?? "https://www.linkedin.com/jobs/";
-            if (!job?.apply_url) {
-                toast.info("Link apply tidak tersedia, mengarahkan ke LinkedIn");
+            // Lowongan internal (dibuat recruiter/seed) → lamaran diproses di platform,
+            // tidak ada redirect. Hanya lowongan hasil scraping yang punya apply_url eksternal.
+            if (job?.apply_url) {
+                toast.success(`Lamaran ke ${job.company} tercatat. Membuka halaman lamaran resmi…`);
+                window.open(job.apply_url, "_blank", "noopener,noreferrer");
             } else {
-                toast.success(`Berhasil! Lamaran ke ${job?.company} sudah tercatat.`);
+                toast.success(`Berhasil! Lamaranmu ke ${job?.company} sudah dikirim ke recruiter.`);
             }
-            window.open(applyUrl, "_blank", "noopener,noreferrer");
         },
         onError: () => {
             toast.error("Gagal menyimpan lamaran. Coba lagi.");

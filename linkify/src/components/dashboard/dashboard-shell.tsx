@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
 import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
@@ -42,6 +42,7 @@ function GitHireIcon() {
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
     const { withAuth, authReady } = useApi();
 
     // Desktop: sidebar collapsed ke icon-only
@@ -94,6 +95,20 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     });
     const applicationCount: number = applications.length;
 
+    // Routing berbasis role — satu-satunya tempat redirect role.
+    //   role null      → belum pilih  → paksa ke /dashboard/select-role
+    //   role recruiter → di home kandidat → arahkan ke recruiter jobs
+    const role = profile?.role ?? null;
+    const onSelectRole = pathname === "/dashboard/select-role";
+    useEffect(() => {
+        if (!authReady || !profile) return;
+        if (role == null && !onSelectRole) {
+            router.replace("/dashboard/select-role");
+        } else if (role === "recruiter" && pathname === "/dashboard") {
+            router.replace("/dashboard/recruiter/jobs");
+        }
+    }, [authReady, profile, role, pathname, onSelectRole, router]);
+
     // Tutup mobile drawer saat navigasi
     useEffect(() => {
         setMobileOpen(false);
@@ -109,7 +124,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }, []);
 
     const NavLinks = ({ showLabel = true }: { showLabel?: boolean }) => {
-        const links = profile?.role === "recruiter" ? RECRUITER_LINKS : DASHBOARD_LINKS;
+        // Role belum dipilih → jangan tampilkan menu apa pun (user sedang di role picker)
+        if (role == null) return null;
+        const links = role === "recruiter" ? RECRUITER_LINKS : DASHBOARD_LINKS;
 
         return (
             <nav className="flex flex-col gap-1">

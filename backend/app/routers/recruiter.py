@@ -4,6 +4,7 @@ import re
 import uuid
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -11,6 +12,7 @@ from app.auth import get_current_user
 from app.database import get_db
 from app.models import CandidateProfile, Job, JobApplication, User
 from app.schemas import ApplicationStatus
+from app.services.cv_pdf import render_cv_pdf
 from app.services.gemini_service import _call_gemini_with_retry
 from app.services.matching import jaccard_score, explain_match
 
@@ -178,10 +180,58 @@ def get_job_applications(
                 "github": profile.github_username if profile else None,
                 "cv_skills": profile.cv_skills if profile else [],
                 "merged_skills": profile.merged_skills if profile else [],
-                "cv_data": profile.cv_data if profile else {}
+                "cv_data": profile.cv_data if profile else {},
+                "has_cv": bool(profile and (profile.cv_file or profile.cv_data)),
+                "cv_preference": (profile.cv_preference if profile else "form"),
             }
         })
     return result
+
+
+@router.get("/applications/{application_id}/cv")
+def download_applicant_cv(
+    application_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Download CV pelamar (PDF). Mengikuti preferensi kandidat: 'original' → PDF asli, 'form' → render dari cv_data."""
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang diperbolehkan mengunduh CV pelamar.")
+
+    app = db.query(JobApplication).filter(JobApplication.id == application_id).first()
+    if not app:
+        raise HTTPException(404, "Lamaran tidak ditemukan.")
+
+    # Otorisasi: pastikan lowongan pelamar ini milik recruiter yang login
+    job = db.query(Job).filter(Job.id == app.job_id, Job.recruiter_id == str(user.id)).first()
+    if not job:
+        raise HTTPException(403, "Kamu tidak berhak mengakses CV pelamar pada lowongan ini.")
+
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == app.user_id).first()
+    if not profile:
+        raise HTTPException(404, "Profil pelamar tidak ditemukan.")
+
+    if profile.cv_preference == "original" and profile.cv_file:
+        return Response(
+            content=bytes(profile.cv_file),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'inline; filename="{profile.cv_filename or "cv.pdf"}"'},
+        )
+
+    if not profile.cv_data:
+        raise HTTPException(404, "Pelamar belum memiliki data CV.")
+    bio = {
+        "full_name": profile.bio_full_name,
+        "phone": profile.bio_phone,
+        "address": profile.bio_address,
+        "email": (profile.user.email if profile.user else None),
+    }
+    pdf = render_cv_pdf(profile.cv_data, bio)
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'inline; filename="cv-form.pdf"'},
+    )
 
 @router.put("/applications/{application_id}/status")
 def update_application_status(
@@ -363,7 +413,7 @@ def search_candidates(
     results = query.all()
 
     # Filter Python untuk normalisasi alias skill dan commits (fine-grained setelah SQL pre-filter)
-
+    filtered: list[dict] = []
     for profile, u in results:
         # 1. Filter by skills
         if target_skills:
@@ -390,7 +440,8 @@ def search_candidates(
             "cv_skills": profile.cv_skills or [],
             "merged_skills": profile.merged_skills or [],
             "cv_data": profile.cv_data or {},
-            "github_signals": profile.github_signals or {}
+            "github_signals": profile.github_signals or {},
+            "interests": profile.interests or []
         })
 
     paginated = filtered[offset : offset + limit]

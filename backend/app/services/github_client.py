@@ -101,14 +101,34 @@ async def fetch_github_signals(username: str) -> dict[str, Any]:
 
         user_data = user_r.json()
 
-        # ── Step 2: Fetch daftar repo ──
+        # ── Step 2: Fetch daftar repo (per_page 100 agar hitung stars akurat) ──
         repos_r = await client.get(
             f"https://api.github.com/users/{username}/repos",
-            params={"per_page": 30, "sort": "updated"},
+            params={"per_page": 100, "sort": "updated"},
             headers=_headers(use_auth=use_auth),
         )
         repos_r.raise_for_status()
         repos = repos_r.json()
+
+        # ── Total stars: jumlahkan stargazers_count seluruh repo (exclude fork) ──
+        total_stars = 0
+        for r in repos:
+            if isinstance(r, dict) and not r.get("fork"):
+                total_stars += r.get("stargazers_count", 0) or 0
+
+        # ── Total commits publik: pakai Search API (author:username) ──
+        # Best-effort; kalau gagal/rate-limit → 0, bukan error kritis.
+        total_commits = 0
+        try:
+            commits_r = await client.get(
+                "https://api.github.com/search/commits",
+                params={"q": f"author:{username}", "per_page": 1},
+                headers={**_headers(use_auth=use_auth), "Accept": "application/vnd.github.cloak-preview+json"},
+            )
+            if commits_r.is_success:
+                total_commits = commits_r.json().get("total_count", 0) or 0
+        except Exception:
+            pass
 
         # ── Step 3: Fetch byte count per bahasa per repo (dalam koneksi yang sama) ──
         non_fork_repos = [r for r in repos if isinstance(r, dict) and not r.get("fork")]
@@ -142,12 +162,16 @@ async def fetch_github_signals(username: str) -> dict[str, Any]:
             if isinstance(t, str) and t not in topics:
                 topics.append(t)
 
+    public_repos = user_data.get("public_repos", 0)
     return {
         "username": username,
         "name": user_data.get("name"),
-        "public_repos": user_data.get("public_repos", 0),
+        "public_repos": public_repos,
+        "repos": public_repos,          # alias untuk UI (recruiter candidate card)
+        "stars": total_stars,           # total stargazers seluruh repo non-fork
+        "commits": total_commits,       # total commit publik (Search API)
         "followers": user_data.get("followers", 0),
-        "languages": languages,     # ← byte count, bukan jumlah repo
+        "languages": languages,         # ← byte count, bukan jumlah repo
         "topics": topics[:40],
         "bio": user_data.get("bio"),
     }

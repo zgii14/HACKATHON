@@ -1,12 +1,14 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy import update as sa_update
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
 from app.database import get_db
 from app.models import CandidateProfile, Job, RoadmapProgress, User
+from app.services.cv_pdf import render_cv_pdf
 from app.schemas import (
     BookmarkedJobOut,
     BioDataOut,
@@ -17,6 +19,8 @@ from app.schemas import (
     RoadmapOut,
     RoadmapStepOut,
     RoadmapStepPatch,
+    RoleUpdate,
+    CVPreferenceUpdate,
     SkillGapOut,
     UserOut,
 )
@@ -66,6 +70,82 @@ def read_me(user: User = Depends(get_current_user)) -> User:
     return user
 
 
+VALID_ROLES = {"candidate", "recruiter"}
+
+
+@router.post("/role", response_model=UserOut)
+def set_role(
+    body: RoleUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    """Menetapkan role user (dipanggil dari role picker saat onboarding)."""
+    if body.role not in VALID_ROLES:
+        raise HTTPException(400, f"Role tidak valid. Pilih salah satu: {', '.join(sorted(VALID_ROLES))}")
+    user.role = body.role
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+VALID_CV_PREFS = {"form", "original"}
+
+
+def _profile_bio(p: CandidateProfile) -> dict:
+    return {
+        "full_name": p.bio_full_name,
+        "phone": p.bio_phone,
+        "address": p.bio_address,
+        "email": (p.user.email if p.user else None),
+    }
+
+
+@router.patch("/cv-preference")
+def set_cv_preference(
+    body: CVPreferenceUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Menetapkan versi CV yang dipakai saat melamar: 'form' (ATS terstruktur) | 'original' (PDF asli)."""
+    if body.preference not in VALID_CV_PREFS:
+        raise HTTPException(400, f"Preferensi tidak valid. Pilih: {', '.join(sorted(VALID_CV_PREFS))}")
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    if not profile:
+        raise HTTPException(404, "Profil belum ada. Selesaikan onboarding dulu.")
+    if body.preference == "original" and not profile.cv_file:
+        raise HTTPException(400, "Belum ada PDF asli tersimpan. Upload CV dulu untuk memilih opsi ini.")
+    profile.cv_preference = body.preference
+    db.commit()
+    return {"status": "success", "cv_preference": body.preference}
+
+
+@router.get("/cv/download")
+def download_my_cv(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Download/preview CV kandidat sendiri sesuai preferensi (form → render PDF, original → PDF asli)."""
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    if not profile:
+        raise HTTPException(404, "Profil belum ada.")
+
+    if profile.cv_preference == "original" and profile.cv_file:
+        return Response(
+            content=bytes(profile.cv_file),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'inline; filename="{profile.cv_filename or "cv.pdf"}"'},
+        )
+
+    if not profile.cv_data:
+        raise HTTPException(404, "Belum ada data CV untuk di-render.")
+    pdf = render_cv_pdf(profile.cv_data, _profile_bio(profile))
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'inline; filename="cv-form.pdf"'},
+    )
+
+
 @router.get("/profile", response_model=ProfileOut | None)
 def read_profile(user: User = Depends(get_current_user)):
     p = user.profile
@@ -96,6 +176,9 @@ def read_profile(user: User = Depends(get_current_user)):
         "bio_phone": p.bio_phone,
         "updated_at": p.updated_at,
         "role": user.role,
+        "cv_filename": p.cv_filename,
+        "cv_uploaded_at": p.cv_uploaded_at,
+        "cv_preference": p.cv_preference,
     }
     return ProfileOut(**data)
 

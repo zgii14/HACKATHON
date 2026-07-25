@@ -1,6 +1,6 @@
 "use client";
 
-import { ApiError, apiFetch } from "@/lib/api";
+import { ApiError, apiFetch, apiFetchBlob } from "@/lib/api";
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 
@@ -60,5 +60,15 @@ export function useApi() {
         [authReady, getToken]
     );
 
-    return { withAuth, isLoaded, isSignedIn, authReady };
+    const withAuthBlob = useCallback(
+        async (path: string, init: RequestInit = {}): Promise<Blob> => {
+            if (!authReady) throw new Error("AUTH_NOT_READY");
+            const token = await getToken();
+            if (!token) throw new Error("AUTH_NOT_READY");
+            return apiFetchBlob(path, { ...init, token });
+        },
+        [authReady, getToken]
+    );
+
+    return { withAuth, withAuthBlob, isLoaded, isSignedIn, authReady };
 }

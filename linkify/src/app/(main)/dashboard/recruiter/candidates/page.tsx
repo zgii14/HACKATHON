@@ -37,6 +37,7 @@ type Candidate = {
     cv_skills: string[];
     merged_skills: string[];
     cv_data: any;
+    interests: string[];
     github_signals: {
         commits?: number;
         stars?: number;
@@ -44,6 +45,22 @@ type Candidate = {
         languages?: string[];
         most_active_repo?: string;
     };
+};
+
+// Label bidang minat — selaras dengan onboarding (key → label + emoji)
+const INTEREST_LABELS: Record<string, { label: string; emoji: string }> = {
+    backend: { label: "Backend", emoji: "⚙️" },
+    frontend: { label: "Frontend", emoji: "💻" },
+    fullstack: { label: "Full Stack", emoji: "🌐" },
+    mobile: { label: "Mobile", emoji: "📱" },
+    ai_ml: { label: "AI / ML", emoji: "🤖" },
+    data: { label: "Data Engineering", emoji: "📊" },
+    devops: { label: "DevOps / Cloud", emoji: "☁️" },
+    qa: { label: "QA & Testing", emoji: "🧪" },
+    security: { label: "Cybersecurity", emoji: "🔒" },
+    blockchain: { label: "Blockchain / Web3", emoji: "⛓️" },
+    game: { label: "Game / AR/VR", emoji: "🎮" },
+    iot: { label: "IoT & Embedded", emoji: "🔌" },
 };
 
 type SearchResponse = {
@@ -433,6 +450,25 @@ export default function CandidateSearchPage() {
                                                 Direct Invite
                                             </Button>
                                         </div>
+
+                                        {/* Bidang minat kandidat */}
+                                        {candidate.interests?.length > 0 && (
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Minat:</span>
+                                                {candidate.interests.map((key) => {
+                                                    const it = INTEREST_LABELS[key];
+                                                    return (
+                                                        <span
+                                                            key={key}
+                                                            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-foreground"
+                                                        >
+                                                            <span>{it?.emoji ?? "🎯"}</span>
+                                                            {it?.label ?? key}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
 
                                         {/* Contacts & GitHub Signals Row */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[10px] bg-muted/20 border border-border/20 rounded-xl p-3">

@@ -55,7 +55,7 @@ class UserOut(BaseModel):
     id: UUID
     clerk_user_id: str
     email: str | None
-    role: str | None = "candidate"
+    role: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -75,10 +75,22 @@ class ProfileOut(BaseModel):
     bio_address: str | None = None
     bio_phone: str | None = None
     updated_at: datetime | None
-    # User role — disertakan agar sidebar frontend bisa deteksi recruiter
-    role: str | None = "candidate"
+    # User role — None = belum pilih (tampilkan role picker). candidate | recruiter setelah dipilih.
+    role: str | None = None
+    # CV asli tersimpan + preferensi versi CV (form | original)
+    cv_filename: str | None = None
+    cv_uploaded_at: datetime | None = None
+    cv_preference: str | None = "form"
 
     model_config = {"from_attributes": True}
+
+
+class RoleUpdate(BaseModel):
+    role: str
+
+
+class CVPreferenceUpdate(BaseModel):
+    preference: str  # form | original
 
 
 class BioDataOut(BaseModel):

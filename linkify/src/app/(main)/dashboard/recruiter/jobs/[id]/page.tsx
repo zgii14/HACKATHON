@@ -66,6 +66,8 @@ type JobApplicant = {
         cv_skills: string[];
         merged_skills: string[];
         cv_data: CandidateCV;
+        has_cv?: boolean;
+        cv_preference?: "form" | "original";
     };
 };
 
@@ -79,7 +81,21 @@ type AIScreeningResult = {
 };
 
 export default function JobApplicantsPage({ params }: { params: { id: string } }) {
-    const { withAuth, authReady } = useApi();
+    const { withAuth, withAuthBlob, authReady } = useApi();
+
+    const downloadApplicantCV = async (appId: string, name: string | null) => {
+        try {
+            const blob = await withAuthBlob(`/recruiter/applications/${appId}/cv`);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `CV-${(name || "kandidat").replace(/\s+/g, "_")}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch {
+            toast.error("Gagal mengunduh CV pelamar.");
+        }
+    };
     const qc = useQueryClient();
     const [selectedApp, setSelectedApp] = useState<JobApplicant | null>(null);
 
@@ -814,14 +830,21 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     </div>
                                 </div>
 
-                                <Button
-                                    size="sm"
-                                    onClick={() => downloadATSResume(selectedApp)}
-                                    className="h-8 text-xs gap-1 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
-                                >
-                                    <Download className="w-3.5 h-3.5" />
-                                    Unduh CV
-                                </Button>
+                                <div className="flex flex-col items-end gap-1.5">
+                                    <Button
+                                        size="sm"
+                                        onClick={() => downloadApplicantCV(selectedApp.id, selectedApp.applicant.fullName)}
+                                        className="h-8 text-xs gap-1 px-3 rounded-lg bg-primary hover:brightness-110 text-primary-foreground font-semibold"
+                                    >
+                                        <Download className="w-3.5 h-3.5" />
+                                        Unduh CV (PDF)
+                                    </Button>
+                                    <span className="text-[9px] text-muted-foreground">
+                                        {selectedApp.applicant.cv_preference === "original"
+                                            ? "versi: PDF asli kandidat"
+                                            : "versi: form (ATS)"}
+                                    </span>
+                                </div>
                             </div>
 
                             {/* AI Match Screening Panel */}

@@ -155,6 +155,20 @@ async def lifespan(app: FastAPI):
         """))
         conn.commit()
 
+    # DDL Migration: role boleh NULL (NULL = user belum pilih role → role picker)
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE users ALTER COLUMN role DROP NOT NULL"))
+        conn.execute(text("ALTER TABLE users ALTER COLUMN role DROP DEFAULT"))
+        conn.commit()
+
+    # DDL Migration: simpan CV PDF asli + preferensi versi CV (form | original)
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS cv_file BYTEA NULL"))
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS cv_filename VARCHAR(255) NULL"))
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS cv_uploaded_at TIMESTAMPTZ NULL"))
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS cv_preference VARCHAR(10) NOT NULL DEFAULT 'form'"))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)

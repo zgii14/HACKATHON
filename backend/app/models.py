@@ -8,6 +8,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -27,7 +28,8 @@ class User(Base):
     clerk_user_id: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     email: Mapped[str | None] = mapped_column(String(320), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    role: Mapped[str] = mapped_column(String(20), default="candidate")  # candidate | recruiter
+    # NULL = user belum pilih role (tampilkan role picker). candidate | recruiter setelah dipilih.
+    role: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     profile: Mapped["CandidateProfile | None"] = relationship(
         "CandidateProfile", back_populates="user", uselist=False
@@ -51,6 +53,11 @@ class CandidateProfile(Base):
     roadmap_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     interests: Mapped[list | None] = mapped_column(JSON, nullable=True)  # e.g. ["backend", "ai_ml"]
     cv_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # ── CV asli (PDF yang diupload) + preferensi versi yang dipakai saat melamar ──
+    cv_file: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    cv_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    cv_uploaded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cv_preference: Mapped[str] = mapped_column(String(10), default="form")  # form | original
     # ── Bio data untuk surat lamaran ──────────────────────────────────────────
     bio_full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     bio_birth_place: Mapped[str | None] = mapped_column(String(255), nullable=True)

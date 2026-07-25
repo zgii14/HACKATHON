@@ -20,7 +20,8 @@ import {
     Settings,
     User,
     ArrowLeft,
-    CheckCircle2
+    CheckCircle2,
+    AlertCircle
 } from "lucide-react";
 import {
     Document,
@@ -98,10 +99,13 @@ type Profile = {
     cv_skills: string[] | null;
     merged_skills: string[] | null;
     cv_data: CVData | null;
+    cv_filename: string | null;
+    cv_uploaded_at: string | null;
+    cv_preference: "form" | "original" | null;
 };
 
 export default function CVGeneratorPage() {
-    const { withAuth, authReady } = useApi();
+    const { withAuth, withAuthBlob, authReady } = useApi();
     const qc = useQueryClient();
 
     // ── Form States ──
@@ -203,6 +207,49 @@ export default function CVGeneratorPage() {
             toast.error(err.message || "Gagal menyimpan data.");
         },
     });
+
+    // ── Preferensi versi CV yang dikirim ke recruiter (form | original) ──
+    const cvPref = profile?.cv_preference ?? "form";
+    const prefMutation = useMutation({
+        mutationFn: (preference: "form" | "original") =>
+            withAuth("/me/cv-preference", { method: "PATCH", body: JSON.stringify({ preference }) }),
+        onSuccess: (_d, preference) => {
+            qc.invalidateQueries({ queryKey: ["profile"] });
+            toast.success(
+                preference === "form"
+                    ? "Recruiter akan menerima CV versi form (ATS)."
+                    : "Recruiter akan menerima PDF asli yang kamu upload."
+            );
+        },
+        onError: (err: any) => toast.error(err.message || "Gagal mengubah preferensi."),
+    });
+
+    const previewSentCV = async () => {
+        try {
+            const blob = await withAuthBlob("/me/cv/download");
+            window.open(URL.createObjectURL(blob), "_blank");
+        } catch {
+            toast.error("Gagal membuka preview CV.");
+        }
+    };
+
+    // ── Kelengkapan data diri (dipakai di CV & saat melamar) ──
+    const bioFields: [string, string][] = [
+        ["cv-fullname", fullName],
+        ["cv-phone", phone],
+        ["cv-email", email],
+        ["cv-address", address],
+    ];
+    const bioFilledCount = bioFields.filter(([, v]) => v.trim()).length;
+    const bioComplete = bioFilledCount === bioFields.length;
+
+    const gotoBio = () => {
+        document.getElementById("cv-contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const firstEmpty = bioFields.find(([, v]) => !v.trim());
+        if (firstEmpty) {
+            setTimeout(() => document.getElementById(firstEmpty[0])?.focus(), 420);
+        }
+    };
 
     const getPayload = (): CVData => {
         return {
@@ -883,7 +930,9 @@ export default function CVGeneratorPage() {
                         </button>
                         <button
                             onClick={generateWordCV}
-                            className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            disabled={!bioComplete}
+                            title={!bioComplete ? "Lengkapi data diri dulu" : undefined}
+                            className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
                         >
                             Unduh CV (.docx)
                         </button>
@@ -891,19 +940,129 @@ export default function CVGeneratorPage() {
                 }
             />
 
+            {/* ── Nudge: arahkan lengkapi data diri dulu (dipakai di CV & lamaran) ── */}
+            {!bioComplete && (
+                <div className="mt-5 rounded-md border border-amber-500/40 bg-amber-500/[0.06] p-4">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-2.5">
+                            <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-500" />
+                            <div>
+                                <p className="text-[13px] font-bold tracking-tight">
+                                    Lengkapi data diri dulu
+                                    <span className="ml-2 font-mono text-[11px] font-semibold text-amber-600 dark:text-amber-500">
+                                        {bioFilledCount}/{bioFields.length} terisi
+                                    </span>
+                                </p>
+                                <p className="mt-0.5 text-[12px] text-muted-foreground">
+                                    Nama, telepon, email, dan alamat dipakai di CV dan saat kamu melamar. Isi dulu sebelum mengunduh atau memilih versi CV.
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={gotoBio}
+                            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-[11.5px] font-bold text-primary-foreground transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            Isi sekarang →
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Pilihan versi CV yang dikirim ke recruiter saat melamar ── */}
+            <div className="border-t border-border pt-6 space-y-4">
+                <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                        <Settings className="w-4 h-4 text-violet-400" />
+                        CV yang dikirim saat melamar
+                    </h3>
+                    <button
+                        onClick={previewSentCV}
+                        disabled={!bioComplete}
+                        title={!bioComplete ? "Lengkapi data diri dulu" : undefined}
+                        className="shrink-0 rounded-md border border-border px-3 py-1.5 text-[11.5px] font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        Preview CV terkirim
+                    </button>
+                </div>
+                <p className="-mt-1 text-xs text-muted-foreground">
+                    Pilih versi CV yang akan diterima recruiter ketika kamu melamar lowongan.
+                </p>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                    {/* Opsi form (ATS) */}
+                    <button
+                        type="button"
+                        onClick={() => prefMutation.mutate("form")}
+                        disabled={prefMutation.isPending || !bioComplete}
+                        title={!bioComplete ? "Lengkapi data diri dulu" : undefined}
+                        className={`rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                            cvPref === "form"
+                                ? "border-primary/60 bg-primary/[0.05]"
+                                : "border-border hover:border-muted-foreground"
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <span className="text-[12.5px] font-bold">Versi form (ATS)</span>
+                            <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-primary">
+                                disarankan
+                            </span>
+                        </div>
+                        <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+                            CV terstruktur ramah ATS dari data di bawah. <span className="text-amber-600 dark:text-amber-500">Pastikan sudah kamu cek</span> — hasil ekstraksi AI bisa keliru.
+                        </p>
+                    </button>
+
+                    {/* Opsi PDF asli */}
+                    <button
+                        type="button"
+                        onClick={() => prefMutation.mutate("original")}
+                        disabled={prefMutation.isPending || !profile?.cv_filename || !bioComplete}
+                        title={!bioComplete ? "Lengkapi data diri dulu" : undefined}
+                        className={`rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                            cvPref === "original"
+                                ? "border-primary/60 bg-primary/[0.05]"
+                                : "border-border hover:border-muted-foreground"
+                        }`}
+                    >
+                        <div className="flex items-center justify-between">
+                            <span className="text-[12.5px] font-bold">CV asli saya</span>
+                            {cvPref === "original" && (
+                                <CheckCircle2 className="size-3.5 text-primary" />
+                            )}
+                        </div>
+                        <p className="mt-1 truncate text-[11.5px] leading-relaxed text-muted-foreground">
+                            {profile?.cv_filename
+                                ? `PDF asli: ${profile.cv_filename}`
+                                : "Belum ada PDF asli — upload CV dulu di onboarding."}
+                        </p>
+                    </button>
+                </div>
+            </div>
+
             {/* Main Form container */}
             <div className="space-y-8 pt-2">
                 
                 {/* 1. DATA DIRI (BIO) */}
-                <div className="border-t border-border pt-6 space-y-4">
+                <div
+                    id="cv-contact"
+                    className={`border-t pt-6 space-y-4 scroll-mt-20 ${
+                        bioComplete ? "border-border" : "rounded-b-md border-amber-500/40 bg-amber-500/[0.02] px-4 pb-4"
+                    }`}
+                >
                     <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                         <User className="w-4 h-4 text-violet-400" />
                         1. Informasi Kontak
+                        {!bioComplete && (
+                            <span className="ml-1 rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-500">
+                                wajib
+                            </span>
+                        )}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="text-xs font-semibold text-muted-foreground block mb-1">Nama Lengkap</label>
                             <input
+                                id="cv-fullname"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                                 className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
@@ -913,6 +1072,7 @@ export default function CVGeneratorPage() {
                         <div>
                             <label className="text-xs font-semibold text-muted-foreground block mb-1">Nomor Telepon</label>
                             <input
+                                id="cv-phone"
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
@@ -922,6 +1082,7 @@ export default function CVGeneratorPage() {
                         <div>
                             <label className="text-xs font-semibold text-muted-foreground block mb-1">Email</label>
                             <input
+                                id="cv-email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
@@ -949,6 +1110,7 @@ export default function CVGeneratorPage() {
                         <div className="md:col-span-2">
                             <label className="text-xs font-semibold text-muted-foreground block mb-1">Alamat Domisili</label>
                             <input
+                                id="cv-address"
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
                                 className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"

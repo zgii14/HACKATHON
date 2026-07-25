@@ -48,3 +48,21 @@ export async function apiFetch<T>(
 
     return res.json() as Promise<T>;
 }
+
+/** Sama seperti apiFetch tapi mengembalikan Blob (untuk file: PDF, dsb). */
+export async function apiFetchBlob(
+    path: string,
+    options: FetchOptions = {}
+): Promise<Blob> {
+    const { token, headers, body, ...rest } = options;
+    const h = new Headers(headers);
+    if (token) {
+        h.set("Authorization", `Bearer ${token}`);
+    }
+    const res = await fetch(`${API_BASE.replace(/\/$/, "")}${path}`, { ...rest, body, headers: h });
+    if (!res.ok) {
+        const message = await parseApiError(res);
+        throw new ApiError(message, res.status);
+    }
+    return res.blob();
+}

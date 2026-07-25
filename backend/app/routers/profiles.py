@@ -135,6 +135,11 @@ async def sync_profile(
     profile.cv_data = cv_data
     profile.merged_skills = merged
 
+    # Simpan PDF asli (content sudah dibaca di atas) agar bisa dipakai/di-download saat melamar
+    profile.cv_file = content
+    profile.cv_filename = cv.filename
+    profile.cv_uploaded_at = datetime.utcnow()
+
     profile.updated_at = datetime.utcnow()
 
     # Hanya reset roadmap & progress jika skill benar-benar berubah
