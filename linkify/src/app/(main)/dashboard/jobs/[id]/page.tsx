@@ -28,6 +28,7 @@ type JobDetail = {
     location: string | null;
     is_remote: boolean;
     apply_url: string | null;
+    is_external: boolean;
     match_score: number | null;
     match_reasons: string[];
     missing_skills: string[];
@@ -54,7 +55,13 @@ type ApplicationOut = {
 
 // ── Apply Dialog ─────────────────────────────────────────────────────────────
 
-type DialogKind = "no-roadmap" | "low-score" | "incomplete-roadmap";
+type DialogKind = "incomplete-bio" | "no-roadmap" | "low-score" | "incomplete-roadmap";
+
+type BioProfile = {
+    bio_full_name: string | null;
+    bio_phone: string | null;
+    bio_address: string | null;
+} | null;
 
 function ApplyDialog({
     kind,
@@ -90,6 +97,12 @@ function ApplyDialog({
 
                 {/* Peringatan berdasarkan kondisi */}
                 <div className="mt-4 border-l-2 border-warning/50 pl-3 text-[13px] leading-relaxed text-muted-foreground">
+                    {kind === "incomplete-bio" && (
+                        <>
+                            <p className="font-semibold text-foreground">Lengkapi data diri dulu sebelum melamar.</p>
+                            <p className="mt-0.5 text-[12px]">Nama lengkap, nomor telepon, dan alamat wajib diisi — recruiter memakainya untuk menghubungimu.</p>
+                        </>
+                    )}
                     {kind === "no-roadmap" && (
                         <>
                             <p className="font-semibold text-foreground">Kamu belum membuat roadmap untuk job ini.</p>
@@ -110,23 +123,37 @@ function ApplyDialog({
                     )}
                 </div>
 
-                {/* Note input */}
-                <div className="mt-4">
-                    <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
-                        Catatan (opsional)
-                    </label>
-                    <textarea
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                        placeholder="Contoh: Apply via referral, follow up minggu depan..."
-                        rows={2}
-                        className="w-full resize-none rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                    />
-                </div>
+                {/* Note input — sembunyikan saat gate data diri (belum bisa lanjut) */}
+                {kind !== "incomplete-bio" && (
+                    <div className="mt-4">
+                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                            Catatan (opsional)
+                        </label>
+                        <textarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            placeholder="Contoh: Apply via referral, follow up minggu depan..."
+                            rows={2}
+                            className="w-full resize-none rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
+                        />
+                    </div>
+                )}
 
                 {/* Action buttons */}
                 <div className="mt-5 flex gap-2">
-                    {kind === "no-roadmap" ? (
+                    {kind === "incomplete-bio" ? (
+                        <>
+                            <Button variant="outline" className="flex-1 text-sm" onClick={onClose}>
+                                Nanti
+                            </Button>
+                            <Button className="flex-1 text-sm" asChild>
+                                <Link href="/dashboard/cv-generator">
+                                    Lengkapi data diri
+                                    <Send className="ml-1.5 size-3.5" />
+                                </Link>
+                            </Button>
+                        </>
+                    ) : kind === "no-roadmap" ? (
                         <>
                             <Button variant="outline" className="flex-1 text-sm" asChild>
                                 <Link href={`/dashboard/roadmap?job_id=${job.id}`}>
@@ -187,6 +214,16 @@ export default function JobDetailPage() {
         enabled: authReady && !!id,
     });
 
+    const { data: profile } = useQuery({
+        queryKey: ["profile"],
+        queryFn: () => withAuth<BioProfile>("/me/profile"),
+        enabled: authReady,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Data diri wajib lengkap sebelum melamar (recruiter butuh untuk kontak)
+    const bioComplete = !!(profile?.bio_full_name?.trim() && profile?.bio_phone?.trim() && profile?.bio_address?.trim());
+
     const bookmark = bookmarks.find((b) => b.job_id === id);
     const hasRoadmap = !!bookmark;
     const roadmapCompleted = hasRoadmap && bookmark.completed_steps >= bookmark.total_steps && bookmark.total_steps > 0;
@@ -207,9 +244,9 @@ export default function JobDetailPage() {
             qc.invalidateQueries({ queryKey: ["applications"] });
             qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
 
-            // Lowongan internal (dibuat recruiter/seed) → lamaran diproses di platform,
-            // tidak ada redirect. Hanya lowongan hasil scraping yang punya apply_url eksternal.
-            if (job?.apply_url) {
+            // Lowongan milik recruiter platform (is_external=false) → lamaran diproses in-app,
+            // tidak redirect. Hanya job board eksternal (tanpa recruiter) yang membuka apply_url.
+            if (job?.is_external && job?.apply_url) {
                 toast.success(`Lamaran ke ${job.company} tercatat. Membuka halaman lamaran resmi…`);
                 window.open(job.apply_url, "_blank", "noopener,noreferrer");
             } else {
@@ -225,6 +262,11 @@ export default function JobDetailPage() {
     const handleApplyClick = () => {
         if (alreadyApplied) return;
 
+        // Prioritas 0 (hard gate): data diri belum lengkap → wajib isi dulu, tidak bisa bypass
+        if (!bioComplete) {
+            setDialogKind("incomplete-bio");
+            return;
+        }
         // Prioritas 1: belum punya roadmap
         if (!hasRoadmap) {
             setDialogKind("no-roadmap");

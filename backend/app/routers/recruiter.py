@@ -135,6 +135,8 @@ def get_my_jobs(
             "work_type": job.work_type,
             "applicant_count": app_count
         })
+    # Urutkan: lowongan dengan pelamar terbanyak muncul paling atas
+    result.sort(key=lambda r: r["applicant_count"], reverse=True)
     return result
 
 @router.get("/jobs/my-jobs/{job_id}/applications")

@@ -122,6 +122,12 @@ def apply_to_job(
     if not profile or not profile.merged_skills:
         raise HTTPException(400, "Selesaikan onboarding terlebih dahulu sebelum melamar")
 
+    # Guard: data diri (nama, telepon, alamat) wajib lengkap — dipakai recruiter untuk kontak
+    if not (profile.bio_full_name and profile.bio_full_name.strip()
+            and profile.bio_phone and profile.bio_phone.strip()
+            and profile.bio_address and profile.bio_address.strip()):
+        raise HTTPException(400, "Lengkapi data diri (nama, telepon, alamat) terlebih dahulu sebelum melamar")
+
     existing = db.query(JobApplication).filter(
         JobApplication.user_id == user.id,
         JobApplication.job_id == job_id,

@@ -57,6 +57,7 @@ def list_jobs(
                 min_education=job.min_education,
                 min_experience=job.min_experience,
                 work_type=job.work_type,
+                is_external=job.recruiter_id is None,
             )
         )
     return out
@@ -93,6 +94,7 @@ def recommended_jobs(
             min_education=j.min_education,
             min_experience=j.min_experience,
             work_type=j.work_type,
+            is_external=j.recruiter_id is None,
         )
         for j, s in scored[:10]
     ]
@@ -129,4 +131,5 @@ def job_detail(
         min_education=job.min_education,
         min_experience=job.min_experience,
         work_type=job.work_type,
+        is_external=job.recruiter_id is None,
     )

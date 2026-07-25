@@ -1,7 +1,18 @@
+import os
 import uuid
 from sqlalchemy.orm import Session
 
-from app.models import Job
+from app.models import Job, User
+
+# Email recruiter yang jadi "pemilik" seed job (muncul di Lowongan Saya + terima pelamar).
+# Bisa dioverride via env SEED_RECRUITER_EMAIL. Kalau user-nya belum ada di DB → job dibiarkan netral (null).
+SEED_RECRUITER_EMAIL = os.getenv("SEED_RECRUITER_EMAIL", "rozagi2004@gmail.com")
+
+
+def _seed_owner_id(db: Session) -> str | None:
+    """Cari id recruiter pemilik seed job. Return str(uuid) atau None kalau belum ada."""
+    u = db.query(User).filter(User.email == SEED_RECRUITER_EMAIL).first()
+    return str(u.id) if u else None
 
 
 DUMMY_JOBS: list[dict] = [
@@ -543,6 +554,7 @@ def seed_jobs_if_empty(db: Session) -> None:
     count = db.query(Job).count()
     if count > 0:
         return
+    owner_id = _seed_owner_id(db)
     for row in DUMMY_JOBS:
         db.add(
             Job(
@@ -554,6 +566,7 @@ def seed_jobs_if_empty(db: Session) -> None:
                 location=row.get("location"),
                 is_remote=row.get("is_remote", False),
                 apply_url=row.get("apply_url"),
+                recruiter_id=owner_id,
             )
         )
     db.commit()
@@ -563,6 +576,7 @@ def reseed_jobs(db: Session) -> int:
     """Hapus semua job lama lalu isi ulang dengan data terbaru. Return jumlah job baru."""
     db.query(Job).delete()
     db.commit()
+    owner_id = _seed_owner_id(db)
     for row in DUMMY_JOBS:
         db.add(
             Job(
@@ -574,6 +588,7 @@ def reseed_jobs(db: Session) -> int:
                 location=row.get("location"),
                 is_remote=row.get("is_remote", False),
                 apply_url=row.get("apply_url"),
+                recruiter_id=owner_id,
             )
         )
     db.commit()

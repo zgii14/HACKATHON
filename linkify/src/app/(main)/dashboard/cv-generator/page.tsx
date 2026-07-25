@@ -243,6 +243,15 @@ export default function CVGeneratorPage() {
     const bioFilledCount = bioFields.filter(([, v]) => v.trim()).length;
     const bioComplete = bioFilledCount === bioFields.length;
 
+    // Data diri di form berbeda dari yang tersimpan di DB → perlu klik "Simpan riwayat"
+    const bioDirty = !!profile && (
+        (fullName || "") !== (profile.bio_full_name || "") ||
+        (phone || "") !== (profile.bio_phone || "") ||
+        (address || "") !== (profile.bio_address || "")
+    );
+    // Highlight tombol simpan saat data diri sudah lengkap tapi belum disimpan
+    const highlightSave = bioComplete && bioDirty;
+
     const gotoBio = () => {
         document.getElementById("cv-contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
         const firstEmpty = bioFields.find(([, v]) => !v.trim());
@@ -924,9 +933,23 @@ export default function CVGeneratorPage() {
                         <button
                             onClick={handleSave}
                             disabled={saveMutation.isPending}
-                            className="text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            title={highlightSave ? "Data diri belum disimpan — klik untuk menyimpan" : undefined}
+                            className={
+                                highlightSave
+                                    ? "inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground shadow-sm ring-2 ring-primary/30 transition animate-pulse hover:brightness-110 hover:animate-none active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                                    : "text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            }
                         >
-                            {saveMutation.isPending ? "Menyimpan…" : "Simpan riwayat"}
+                            {saveMutation.isPending ? (
+                                "Menyimpan…"
+                            ) : highlightSave ? (
+                                <>
+                                    <Save className="size-3.5" />
+                                    Simpan data diri
+                                </>
+                            ) : (
+                                "Simpan riwayat"
+                            )}
                         </button>
                         <button
                             onClick={generateWordCV}

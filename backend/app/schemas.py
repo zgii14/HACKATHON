@@ -131,6 +131,9 @@ class JobOut(BaseModel):
     min_experience: str | None = None
     work_type: str | None = None
     recruiter_id: UUID | None = None
+    # True = lowongan board eksternal (tanpa recruiter) → apply mengarah ke apply_url.
+    # False = lowongan milik recruiter platform → lamaran diproses in-app, tidak redirect.
+    is_external: bool = True
 
     model_config = {"from_attributes": True}
 
