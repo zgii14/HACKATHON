@@ -1,24 +1,11 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+// Hallmark · genre: modern-minimal · macrostructure: Workbench (app-surface) · theme: GitHire violet (locked)
+
+import { PageHeader, Reveal, SecTitle } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-    Check,
-    CheckCircle2,
-    Mail,
-    MapPin,
-    Pencil,
-    Phone,
-    User,
-    Calendar,
-    Home,
-    X,
-    ShieldCheck,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -30,12 +17,12 @@ type BioData = {
     bio_phone: string | null;
 };
 
-const FIELDS: { key: keyof BioData; label: string; placeholder: string; icon: React.ElementType }[] = [
-    { key: "bio_full_name",   label: "Nama Lengkap",  placeholder: "Muhammad Fauzan",               icon: User },
-    { key: "bio_birth_place", label: "Tempat Lahir",  placeholder: "Jakarta",                        icon: MapPin },
-    { key: "bio_birth_date",  label: "Tanggal Lahir", placeholder: "12 Agustus 2000",               icon: Calendar },
-    { key: "bio_address",     label: "Alamat",        placeholder: "Jl. Merdeka No.1, Jakarta Sel.", icon: Home },
-    { key: "bio_phone",       label: "No. Telepon",   placeholder: "081234567890",                   icon: Phone },
+const FIELDS: { key: keyof BioData; label: string; placeholder: string; wide?: boolean }[] = [
+    { key: "bio_full_name", label: "Nama lengkap", placeholder: "Muhammad Fauzan" },
+    { key: "bio_birth_place", label: "Tempat lahir", placeholder: "Jakarta" },
+    { key: "bio_birth_date", label: "Tanggal lahir", placeholder: "12 Agustus 2000" },
+    { key: "bio_phone", label: "No. telepon", placeholder: "081234567890" },
+    { key: "bio_address", label: "Alamat", placeholder: "Jl. Merdeka No.1, Jakarta Selatan", wide: true },
 ];
 
 export default function AccountPage() {
@@ -45,8 +32,7 @@ export default function AccountPage() {
 
     const [editing, setEditing] = useState(false);
     const [form, setForm] = useState<BioData>({
-        bio_full_name: null, bio_birth_place: null,
-        bio_birth_date: null, bio_address: null, bio_phone: null,
+        bio_full_name: null, bio_birth_place: null, bio_birth_date: null, bio_address: null, bio_phone: null,
     });
 
     const { data: bio, isLoading } = useQuery({
@@ -56,17 +42,12 @@ export default function AccountPage() {
         staleTime: 10 * 60 * 1000,
     });
 
-    // Sync form saat bio data tersedia
     useEffect(() => {
         if (bio) setForm(bio);
     }, [bio]);
 
     const saveMutation = useMutation({
-        mutationFn: (payload: BioData) =>
-            withAuth<BioData>("/me/biodata", {
-                method: "PATCH",
-                body: JSON.stringify(payload),
-            }),
+        mutationFn: (payload: BioData) => withAuth<BioData>("/me/biodata", { method: "PATCH", body: JSON.stringify(payload) }),
         onSuccess: (data) => {
             qc.setQueryData(["biodata"], data);
             setEditing(false);
@@ -77,227 +58,139 @@ export default function AccountPage() {
 
     const hasData = bio && (bio.bio_full_name || bio.bio_phone || bio.bio_address);
     const filledCount = FIELDS.filter(({ key }) => !!bio?.[key]).length;
+    const joined = user?.createdAt
+        ? new Date(user.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+        : "—";
 
     return (
-        <div className="space-y-6 max-w-2xl">
-            {/* ── Header ── */}
-            <div>
-                <h1 className="text-2xl font-bold">Kelola Akun</h1>
-                <p className="text-muted-foreground text-sm mt-1">
-                    Informasi akun Clerk dan data diri untuk keperluan lamaran kerja.
+        <div className="w-full">
+            <PageHeader
+                crumb="dasbor / kelola akun"
+                title="Kelola akun"
+                sub="Informasi akun dan data diri untuk keperluan lamaran kerja."
+            />
+
+            {/* Akun (read-only, dikelola Clerk) */}
+            <Reveal delay={0.05} className="pt-6">
+                <SecTitle title="Akun GitHire" meta="dikelola Clerk" />
+                <div className="flex items-center gap-4 py-4">
+                    {user?.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={user.imageUrl} alt={user.fullName ?? "User"} className="size-14 rounded-full object-cover ring-1 ring-border" />
+                    ) : (
+                        <div className="grid size-14 place-items-center rounded-full bg-muted font-mono text-lg font-semibold">
+                            {(user?.fullName ?? user?.username ?? "U").charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                    <div className="min-w-0">
+                        <p className="flex items-center gap-2 text-[15px] font-semibold">
+                            {user?.fullName ?? user?.username ?? "—"}
+                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-[10px] font-semibold text-success">VERIFIED</span>
+                        </p>
+                        <p className="mt-0.5 font-mono text-[12px] text-muted-foreground">{user?.primaryEmailAddress?.emailAddress ?? "—"}</p>
+                    </div>
+                </div>
+                <dl className="grid grid-cols-2 border-y border-border">
+                    <div className="px-5 py-3">
+                        <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Username</dt>
+                        <dd className="mt-0.5 truncate text-[13.5px] font-medium">{user?.username ?? "—"}</dd>
+                    </div>
+                    <div className="border-l border-border px-5 py-3">
+                        <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Bergabung</dt>
+                        <dd className="mt-0.5 font-mono text-[13.5px] tabular-nums">{joined}</dd>
+                    </div>
+                </dl>
+                <p className="mt-2.5 text-[11.5px] text-muted-foreground">
+                    Untuk mengubah email, password, atau foto profil, gunakan menu akun di pojok kanan bawah sidebar.
                 </p>
-            </div>
+            </Reveal>
 
-            {/* ── Clerk Account Card ── */}
-            <Card>
-                <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <ShieldCheck className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                            <CardTitle className="text-base">Akun GitHire</CardTitle>
-                            <CardDescription className="text-xs">Dikelola oleh Clerk — login & keamanan</CardDescription>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                    {/* Avatar + info */}
-                    <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/40 border border-border">
-                        {user?.imageUrl ? (
-                            <img
-                                src={user.imageUrl}
-                                alt={user.fullName ?? "User"}
-                                className="w-14 h-14 rounded-full object-cover ring-2 ring-primary/20"
-                            />
-                        ) : (
-                            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                                <User className="w-7 h-7 text-primary" />
-                            </div>
-                        )}
-                        <div className="min-w-0">
-                            <p className="font-semibold text-sm truncate">
-                                {user?.fullName ?? user?.username ?? "—"}
-                            </p>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                                <Mail className="w-3 h-3 shrink-0" />
-                                {user?.primaryEmailAddress?.emailAddress ?? "—"}
-                            </p>
-                            <Badge
-                                variant="outline"
-                                className="mt-1.5 text-[10px] px-1.5 py-0 border-emerald-500/40 text-emerald-500 bg-emerald-500/5"
-                            >
-                                <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
-                                Terverifikasi
-                            </Badge>
-                        </div>
-                    </div>
-
-                    {/* Info tambahan */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                            <p className="text-muted-foreground mb-0.5">Username</p>
-                            <p className="font-medium truncate">{user?.username ?? "—"}</p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                            <p className="text-muted-foreground mb-0.5">Bergabung</p>
-                            <p className="font-medium">
-                                {user?.createdAt
-                                    ? new Date(user.createdAt).toLocaleDateString("id-ID", {
-                                          day: "numeric",
-                                          month: "short",
-                                          year: "numeric",
-                                      })
-                                    : "—"}
-                            </p>
-                        </div>
-                    </div>
-
-                    <p className="text-[11px] text-muted-foreground">
-                        Untuk mengubah email, password, atau foto profil, gunakan menu akun di pojok kanan atas.
-                    </p>
-                </CardContent>
-            </Card>
-
-            {/* ── Bio Data Card ── */}
-            <Card className={hasData ? "border-primary/20" : "border-dashed border-amber-500/40 bg-amber-500/5"}>
-                <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                                <User className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <CardTitle className="text-base">Data Diri</CardTitle>
-                                <CardDescription className="text-xs">
-                                    {hasData
-                                        ? `${filledCount}/${FIELDS.length} field terisi · Dipakai untuk generate surat lamaran`
-                                        : "Lengkapi agar surat lamaran lebih profesional"}
-                                </CardDescription>
-                            </div>
-                        </div>
-                        {!editing && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
+            {/* Data diri (editable) */}
+            <Reveal delay={0.12} className="pt-9">
+                <SecTitle
+                    title="Data diri"
+                    meta={
+                        !editing ? (
+                            <button
+                                type="button"
                                 onClick={() => setEditing(true)}
-                                className="shrink-0"
+                                className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                                <Pencil className="w-3.5 h-3.5 mr-1.5" />
-                                {hasData ? "Edit" : "Isi Sekarang"}
-                            </Button>
-                        )}
-                    </div>
-                </CardHeader>
+                                {hasData ? "edit" : "isi sekarang"} →
+                            </button>
+                        ) : (
+                            `${filledCount}/${FIELDS.length} terisi`
+                        )
+                    }
+                />
 
-                <CardContent>
-                    {/* Loading */}
-                    {isLoading && (
-                        <div className="space-y-2">
-                            {[...Array(3)].map((_, i) => (
-                                <div key={i} className="h-8 bg-muted/30 animate-pulse rounded-lg" />
+                {isLoading ? (
+                    <div className="space-y-2 pt-4">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-9 animate-pulse rounded bg-muted/30" />
+                        ))}
+                    </div>
+                ) : editing ? (
+                    <div className="pt-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {FIELDS.map(({ key, label, placeholder, wide }) => (
+                                <div key={key} className={wide ? "sm:col-span-2" : ""}>
+                                    <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{label}</label>
+                                    <input
+                                        value={form[key] ?? ""}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value || null }))}
+                                        placeholder={placeholder}
+                                        className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
+                                    />
+                                </div>
                             ))}
                         </div>
-                    )}
-
-                    {/* View mode */}
-                    {!editing && !isLoading && (
-                        hasData ? (
-                            <div className="space-y-2">
-                                {FIELDS.map(({ key, label, icon: Icon }) =>
-                                    bio?.[key] ? (
-                                        <div
-                                            key={key}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/30 border border-border/50"
-                                        >
-                                            <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                                            <span className="text-xs text-muted-foreground min-w-[90px]">{label}</span>
-                                            <span className="text-sm font-medium">{bio[key]}</span>
-                                        </div>
-                                    ) : null
-                                )}
-                                {/* Fields yang belum diisi */}
-                                {FIELDS.filter(({ key }) => !bio?.[key]).length > 0 && (
-                                    <p className="text-[11px] text-muted-foreground pt-1">
-                                        {FIELDS.filter(({ key }) => !bio?.[key]).length} field belum diisi ·{" "}
-                                        <button
-                                            onClick={() => setEditing(true)}
-                                            className="text-primary hover:underline"
-                                        >
-                                            Lengkapi sekarang
-                                        </button>
-                                    </p>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="flex items-start gap-3 py-1">
-                                <div className="w-1 h-full min-h-[40px] rounded-full bg-amber-500/40 shrink-0" />
-                                <p className="text-xs text-amber-600 dark:text-amber-400 leading-relaxed">
-                                    Data diri belum diisi. Surat lamaran yang di-generate hanya akan berisi nama saja
-                                    dan kurang profesional. Isi sekarang untuk hasil yang lebih baik.
-                                </p>
-                            </div>
-                        )
-                    )}
-
-                    {/* Edit mode */}
-                    {editing && (
-                        <div className="space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {FIELDS.map(({ key, label, placeholder, icon: Icon }) => (
-                                    <div key={key} className={key === "bio_address" ? "sm:col-span-2" : ""}>
-                                        <label className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                                            <Icon className="w-3 h-3" />
-                                            {label}
-                                        </label>
-                                        <input
-                                            value={form[key] ?? ""}
-                                            onChange={(e) =>
-                                                setForm((prev) => ({ ...prev, [key]: e.target.value || null }))
-                                            }
-                                            placeholder={placeholder}
-                                            className="w-full text-sm rounded-lg border border-border bg-muted/50 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex gap-2 pt-1">
-                                <Button
-                                    size="sm"
-                                    onClick={() => saveMutation.mutate(form)}
-                                    disabled={saveMutation.isPending}
-                                >
-                                    {saveMutation.isPending ? (
-                                        <>
-                                            <span className="w-3.5 h-3.5 mr-1.5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-                                            Menyimpan...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Check className="w-3.5 h-3.5 mr-1.5" />
-                                            Simpan Data Diri
-                                        </>
-                                    )}
-                                </Button>
-                                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
-                                    <X className="w-3.5 h-3.5 mr-1.5" />
-                                    Batal
-                                </Button>
-                            </div>
+                        <div className="mt-4 flex items-center gap-4">
+                            <button
+                                onClick={() => saveMutation.mutate(form)}
+                                disabled={saveMutation.isPending}
+                                className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            >
+                                {saveMutation.isPending ? "Menyimpan…" : "Simpan data diri"}
+                            </button>
+                            <button
+                                onClick={() => setEditing(false)}
+                                className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                Batal
+                            </button>
                         </div>
-                    )}
-                </CardContent>
-            </Card>
+                    </div>
+                ) : hasData ? (
+                    <dl className="pt-1">
+                        {FIELDS.filter(({ key }) => !!bio?.[key]).map(({ key, label }) => (
+                            <div key={key} className="flex items-baseline gap-4 border-b border-border/60 py-3">
+                                <dt className="w-32 shrink-0 font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{label}</dt>
+                                <dd className="text-[13.5px] font-medium">{bio?.[key]}</dd>
+                            </div>
+                        ))}
+                        {FIELDS.filter(({ key }) => !bio?.[key]).length > 0 && (
+                            <p className="pt-3 text-[11.5px] text-muted-foreground">
+                                {FIELDS.filter(({ key }) => !bio?.[key]).length} field belum diisi ·{" "}
+                                <button onClick={() => setEditing(true)} className="font-semibold text-primary hover:underline">
+                                    lengkapi sekarang
+                                </button>
+                            </p>
+                        )}
+                    </dl>
+                ) : (
+                    <p className="mt-4 border-l-2 border-warning/50 pl-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                        Data diri belum diisi. Surat lamaran yang di-generate hanya akan berisi nama saja. Isi sekarang untuk hasil yang lebih profesional.
+                    </p>
+                )}
+            </Reveal>
 
-            {/* ── Info tip ── */}
-            <div className="flex items-start gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
-                <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                    <span className="font-medium text-foreground">Data diri digunakan untuk generate surat lamaran.</span>{" "}
-                    Nama, tempat/tanggal lahir, alamat, dan nomor telepon akan otomatis terisi di surat lamaran
-                    yang dibuat oleh AI. Semakin lengkap, semakin profesional hasilnya.
+            <Reveal delay={0.19} className="pt-9">
+                <p className="border-l-2 border-primary bg-primary/[0.04] px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                    <span className="font-semibold text-foreground">Data diri dipakai untuk generate surat lamaran.</span> Nama, tempat/tanggal lahir,
+                    alamat, dan nomor telepon otomatis terisi di surat yang dibuat AI. Semakin lengkap, semakin profesional hasilnya.
                 </p>
-            </div>
+            </Reveal>
         </div>
     );
 }

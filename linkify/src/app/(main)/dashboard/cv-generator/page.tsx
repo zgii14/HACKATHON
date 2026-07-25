@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -865,55 +866,36 @@ export default function CVGeneratorPage() {
     }
 
     return (
-        <div className="space-y-6 max-w-3xl pb-16">
-            
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-5">
-                <div>
-                    <div className="flex items-center gap-2 text-muted-foreground text-xs font-semibold mb-1">
-                        <Link href="/dashboard/profile" className="hover:text-primary transition-colors flex items-center gap-1">
-                            <ArrowLeft className="w-3.5 h-3.5" /> Profil
-                        </Link>
-                        <span>/</span>
-                        <span className="text-foreground">CV Generator</span>
-                    </div>
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <FileText className="w-6 h-6 text-primary" />
-                        AI CV Generator
-                    </h1>
-                    <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
-                        Tinjau, lengkapi, dan unduh CV profesional Anda dengan layout yang ATS-friendly (Harvard CV Style).
-                    </p>
-                </div>
+        <div className="w-full max-w-3xl pb-16">
 
-                <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleSave}
-                        disabled={saveMutation.isPending}
-                        className="h-8 text-xs gap-1.5 rounded-lg border-muted-foreground/20 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
-                    >
-                        <Save className="w-3.5 h-3.5" />
-                        {saveMutation.isPending ? "Menyimpan..." : "Simpan Riwayat"}
-                    </Button>
-                    
-                    <Button
-                        size="sm"
-                        onClick={generateWordCV}
-                        className="h-8 text-xs gap-1.5 rounded-lg bg-primary hover:bg-primary/95 text-primary-foreground shadow-md shadow-primary/20"
-                    >
-                        <Download className="w-3.5 h-3.5" />
-                        Unduh CV (.docx)
-                    </Button>
-                </div>
-            </div>
+            <PageHeader
+                crumb="dasbor / profil / cv generator"
+                title="AI CV Generator"
+                sub="Tinjau, lengkapi, dan unduh CV profesional yang ATS-friendly (Harvard CV Style)."
+                right={
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleSave}
+                            disabled={saveMutation.isPending}
+                            className="text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            {saveMutation.isPending ? "Menyimpan…" : "Simpan riwayat"}
+                        </button>
+                        <button
+                            onClick={generateWordCV}
+                            className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                            Unduh CV (.docx)
+                        </button>
+                    </div>
+                }
+            />
 
             {/* Main Form container */}
-            <div className="space-y-6">
+            <div className="space-y-8 pt-2">
                 
                 {/* 1. DATA DIRI (BIO) */}
-                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <div className="border-t border-border pt-6 space-y-4">
                     <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                         <User className="w-4 h-4 text-violet-400" />
                         1. Informasi Kontak
@@ -924,7 +906,7 @@ export default function CVGeneratorPage() {
                             <input
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="Masukkan nama..."
                             />
                         </div>
@@ -933,7 +915,7 @@ export default function CVGeneratorPage() {
                             <input
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="Contoh: +628..."
                             />
                         </div>
@@ -942,7 +924,7 @@ export default function CVGeneratorPage() {
                             <input
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="nama@email.com"
                             />
                         </div>
@@ -951,7 +933,7 @@ export default function CVGeneratorPage() {
                             <input
                                 value={linkedin}
                                 onChange={(e) => setLinkedin(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="www.linkedin.com/in/username"
                             />
                         </div>
@@ -960,7 +942,7 @@ export default function CVGeneratorPage() {
                             <input
                                 value={github}
                                 onChange={(e) => setGithub(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="https://github.com/username"
                             />
                         </div>
@@ -969,7 +951,7 @@ export default function CVGeneratorPage() {
                             <input
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="Tulis alamat singkat..."
                             />
                         </div>
@@ -977,7 +959,7 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 2. RINGKASAN PROFIL */}
-                <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
+                <div className="border-t border-border pt-6 space-y-3">
                     <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                         <Sparkles className="w-4 h-4 text-amber-400" />
                         2. Ringkasan Profesional (Summary)
@@ -992,7 +974,7 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 3. PENDIDIKAN */}
-                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <div className="border-t border-border pt-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                             <GraduationCap className="w-4 h-4 text-emerald-400" />
@@ -1010,7 +992,7 @@ export default function CVGeneratorPage() {
 
                     <div className="space-y-4">
                         {education.map((edu, idx) => (
-                            <div key={idx} className="relative rounded-xl border border-border bg-muted/10 p-4 space-y-3">
+                            <div key={idx} className="relative rounded-md border border-border bg-muted/20 p-4 space-y-3">
                                 <button
                                     onClick={() => removeEducation(idx)}
                                     className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500 transition-colors"
@@ -1028,7 +1010,7 @@ export default function CVGeneratorPage() {
                                                 u[idx].institution = e.target.value;
                                                 setEducation(u);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 focus:outline-none"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Universitas Bengkulu"
                                         />
                                     </div>
@@ -1107,7 +1089,7 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 4. PENGALAMAN KERJA */}
-                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <div className="border-t border-border pt-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                             <Briefcase className="w-4 h-4 text-blue-400" />
@@ -1125,7 +1107,7 @@ export default function CVGeneratorPage() {
 
                     <div className="space-y-4">
                         {workExperience.map((work, idx) => (
-                            <div key={idx} className="relative rounded-xl border border-border bg-muted/10 p-4 space-y-3">
+                            <div key={idx} className="relative rounded-md border border-border bg-muted/20 p-4 space-y-3">
                                 <button
                                     onClick={() => removeWork(idx)}
                                     className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500 transition-colors"
@@ -1227,7 +1209,7 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 5. PENGALAMAN ORGANISASI */}
-                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <div className="border-t border-border pt-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                             <Users className="w-4 h-4 text-violet-400" />
@@ -1245,7 +1227,7 @@ export default function CVGeneratorPage() {
 
                     <div className="space-y-4">
                         {orgExperience.map((org, idx) => (
-                            <div key={idx} className="relative rounded-xl border border-border bg-muted/10 p-4 space-y-3">
+                            <div key={idx} className="relative rounded-md border border-border bg-muted/20 p-4 space-y-3">
                                 <button
                                     onClick={() => removeOrg(idx)}
                                     className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500 transition-colors"
@@ -1347,7 +1329,7 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 6. PELATIHAN / TRAINING */}
-                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <div className="border-t border-border pt-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                             <Award className="w-4 h-4 text-amber-400" />
@@ -1365,7 +1347,7 @@ export default function CVGeneratorPage() {
 
                     <div className="space-y-4">
                         {training.map((t, idx) => (
-                            <div key={idx} className="relative rounded-xl border border-border bg-muted/10 p-4 space-y-3">
+                            <div key={idx} className="relative rounded-md border border-border bg-muted/20 p-4 space-y-3">
                                 <button
                                     onClick={() => removeTraining(idx)}
                                     className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500 transition-colors"
@@ -1467,7 +1449,7 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 7. KEAHLIAN / SKILLS */}
-                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <div className="border-t border-border pt-6 space-y-4">
                     <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                         <Settings className="w-4 h-4 text-violet-400" />
                         7. Keahlian & Bahasa
@@ -1504,7 +1486,7 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 8. SERTIFIKAT */}
-                <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                <div className="border-t border-border pt-6 space-y-4">
                     <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                             <Award className="w-4 h-4 text-emerald-400" />

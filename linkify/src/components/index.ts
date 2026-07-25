@@ -20,10 +20,6 @@ import DashboardNavbar from "./dashboard/dashboard-navbar";
 // pricing
 import PricingCards from "./pricing-cards";
 
-// blog
-import Blogs from "./blog/blogs";
-
-
 export {
     SignInForm,
     SignUpForm,
@@ -40,6 +36,4 @@ export {
     DashboardNavbar,
 
     PricingCards,
-
-    Blogs,
 };

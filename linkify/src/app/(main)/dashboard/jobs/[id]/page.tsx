@@ -1,15 +1,12 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+// Hallmark · genre: modern-minimal · macrostructure: Workbench (app-surface) · theme: GitHire violet (locked)
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarFill, CountUp, Crumb, EmptyState, Reveal, SecTitle } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-    AlertCircle, BookOpen, Briefcase, CheckCircle2, Clock,
-    FileText, GraduationCap, Loader2, MapPin, MoveLeft,
-    Send, Wallet, Wifi, X,
-} from "lucide-react";
+import { AlertCircle, BookOpen, Loader2, MoveLeft, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -55,33 +52,6 @@ type ApplicationOut = {
     roadmap_completed: boolean;
 };
 
-function MatchScoreBar({ score }: { score: number | null }) {
-    if (score == null) return null;
-    const pct = Math.round(score * 100);
-    const color =
-        pct >= 60
-            ? { bar: "bg-green-500", text: "text-green-500", bg: "bg-green-500/10 border-green-500/20", label: "Cocok" }
-            : pct >= 30
-            ? { bar: "bg-amber-500", text: "text-amber-500", bg: "bg-amber-500/10 border-amber-500/20", label: "Cukup Cocok" }
-            : { bar: "bg-rose-500", text: "text-rose-500", bg: "bg-rose-500/10 border-rose-500/20", label: "Kurang Cocok" };
-
-    return (
-        <div className={`rounded-xl border p-4 ${color.bg}`}>
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Match Score</span>
-                <span className={`text-2xl font-bold ${color.text}`}>{pct}%</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
-                <div
-                    className={`h-2.5 rounded-full transition-all duration-700 ${color.bar}`}
-                    style={{ width: `${pct}%` }}
-                />
-            </div>
-            <p className={`text-xs mt-1.5 ${color.text}`}>{color.label}</p>
-        </div>
-    );
-}
-
 // ── Apply Dialog ─────────────────────────────────────────────────────────────
 
 type DialogKind = "no-roadmap" | "low-score" | "incomplete-roadmap";
@@ -105,48 +75,44 @@ function ApplyDialog({
     const totalSteps = bookmark?.total_steps ?? 0;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
-                            <AlertCircle className="w-5 h-5 text-amber-500" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold">Yakin ingin apply?</h3>
-                            <p className="text-xs text-muted-foreground">{job.title} · {job.company}</p>
-                        </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-2xl">
+                <div className="flex items-start justify-between border-b border-border pb-4">
+                    <div>
+                        <p className="font-mono text-[11px] uppercase tracking-[0.07em] text-warning">konfirmasi</p>
+                        <h3 className="mt-1 text-[15px] font-bold tracking-tight">Yakin ingin apply?</h3>
+                        <p className="mt-0.5 font-mono text-[12px] text-muted-foreground">{job.title} · {job.company}</p>
                     </div>
-                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-                        <X className="w-4 h-4" />
+                    <button onClick={onClose} className="text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        <X className="size-4" />
                     </button>
                 </div>
 
-                {/* Warning message berdasarkan kondisi */}
-                <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-sm text-amber-700 dark:text-amber-400 space-y-1">
+                {/* Peringatan berdasarkan kondisi */}
+                <div className="mt-4 border-l-2 border-warning/50 pl-3 text-[13px] leading-relaxed text-muted-foreground">
                     {kind === "no-roadmap" && (
                         <>
-                            <p className="font-medium">Kamu belum membuat roadmap untuk job ini.</p>
-                            <p className="text-xs opacity-80">Roadmap membantu kamu mempersiapkan skill yang diperlukan sebelum apply.</p>
+                            <p className="font-semibold text-foreground">Kamu belum membuat roadmap untuk job ini.</p>
+                            <p className="mt-0.5 text-[12px]">Roadmap membantu kamu mempersiapkan skill yang diperlukan sebelum apply.</p>
                         </>
                     )}
                     {kind === "low-score" && (
                         <>
-                            <p className="font-medium">Match score kamu masih {pct}% untuk posisi ini.</p>
-                            <p className="text-xs opacity-80">Kamu mungkin perlu tingkatkan skill terlebih dahulu agar peluang lebih besar.</p>
+                            <p className="font-semibold text-foreground">Match score kamu masih {pct}% untuk posisi ini.</p>
+                            <p className="mt-0.5 text-[12px]">Kamu mungkin perlu tingkatkan skill terlebih dahulu agar peluang lebih besar.</p>
                         </>
                     )}
                     {kind === "incomplete-roadmap" && (
                         <>
-                            <p className="font-medium">Roadmap kamu baru {completedSteps}/{totalSteps} langkah selesai.</p>
-                            <p className="text-xs opacity-80">Menyelesaikan roadmap akan meningkatkan kesiapanmu untuk posisi ini.</p>
+                            <p className="font-semibold text-foreground">Roadmap kamu baru {completedSteps}/{totalSteps} langkah selesai.</p>
+                            <p className="mt-0.5 text-[12px]">Menyelesaikan roadmap akan meningkatkan kesiapanmu untuk posisi ini.</p>
                         </>
                     )}
                 </div>
 
                 {/* Note input */}
-                <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                <div className="mt-4">
+                    <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
                         Catatan (opsional)
                     </label>
                     <textarea
@@ -154,25 +120,22 @@ function ApplyDialog({
                         onChange={(e) => setNote(e.target.value)}
                         placeholder="Contoh: Apply via referral, follow up minggu depan..."
                         rows={2}
-                        className="w-full text-sm rounded-lg border border-border bg-muted/50 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-full resize-none rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                     />
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex gap-2">
+                <div className="mt-5 flex gap-2">
                     {kind === "no-roadmap" ? (
                         <>
                             <Button variant="outline" className="flex-1 text-sm" asChild>
                                 <Link href={`/dashboard/roadmap?job_id=${job.id}`}>
-                                    <BookOpen className="w-3.5 h-3.5 mr-1.5" />
+                                    <BookOpen className="mr-1.5 size-3.5" />
                                     Buat Roadmap Dulu
                                 </Link>
                             </Button>
-                            <Button
-                                className="flex-1 text-sm"
-                                onClick={() => onConfirm(note)}
-                            >
-                                <Send className="w-3.5 h-3.5 mr-1.5" />
+                            <Button className="flex-1 text-sm" onClick={() => onConfirm(note)}>
+                                <Send className="mr-1.5 size-3.5" />
                                 Tetap Apply
                             </Button>
                         </>
@@ -181,11 +144,8 @@ function ApplyDialog({
                             <Button variant="outline" className="flex-1 text-sm" onClick={onClose}>
                                 Batal
                             </Button>
-                            <Button
-                                className="flex-1 text-sm"
-                                onClick={() => onConfirm(note)}
-                            >
-                                <Send className="w-3.5 h-3.5 mr-1.5" />
+                            <Button className="flex-1 text-sm" onClick={() => onConfirm(note)}>
+                                <Send className="mr-1.5 size-3.5" />
                                 Ya, Apply Sekarang
                             </Button>
                         </>
@@ -312,28 +272,32 @@ export default function JobDetailPage() {
         const is404 = (error as Error).message?.includes("404") ||
                       (error as Error).message?.toLowerCase().includes("tidak ditemukan");
         return (
-            <div className="max-w-md py-16 mx-auto text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
-                    <AlertCircle className="w-8 h-8 text-muted-foreground" />
+            <div className="w-full">
+                <Reveal>
+                    <Crumb path="dasbor / browse jobs / detail" />
+                </Reveal>
+                <div className="pt-8">
+                    <EmptyState title={is404 ? "Lowongan tidak ditemukan" : "Gagal memuat lowongan"}>
+                        {is404
+                            ? "Lowongan ini mungkin sudah dihapus atau URL-nya tidak valid."
+                            : "Terjadi kesalahan saat memuat data. Coba refresh halaman."}
+                        <span className="mt-4 block">
+                            <Link
+                                href="/dashboard/jobs"
+                                className="inline-flex items-center gap-1.5 font-semibold text-primary hover:underline"
+                            >
+                                <MoveLeft className="size-3.5" />
+                                Kembali ke Browse
+                            </Link>
+                        </span>
+                    </EmptyState>
                 </div>
-                <h1 className="text-xl font-semibold">
-                    {is404 ? "Lowongan tidak ditemukan" : "Gagal memuat lowongan"}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                    {is404
-                        ? "Lowongan ini mungkin sudah dihapus atau URL-nya tidak valid."
-                        : "Terjadi kesalahan saat memuat data. Coba refresh halaman."
-                    }
-                </p>
-                <Button asChild variant="outline" size="sm">
-                    <Link href="/dashboard/jobs">
-                        <MoveLeft className="w-3.5 h-3.5 mr-1.5" />
-                        Kembali ke Browse
-                    </Link>
-                </Button>
             </div>
         );
     }
+
+    const scoreTone = matchPct == null ? "primary" : matchPct >= 60 ? "success" : "warning";
+    const scoreLabel = matchPct == null ? "" : matchPct >= 60 ? "Cocok" : matchPct >= 30 ? "Cukup cocok" : "Kurang cocok";
 
     return (
         <>
@@ -348,286 +312,240 @@ export default function JobDetailPage() {
                 />
             )}
 
-            <div className="space-y-6 max-w-3xl">
+            <div className="w-full">
                 {/* Loading skeleton */}
                 {isLoading && (
-                    <div className="space-y-4 animate-pulse">
-                        <div className="h-8 w-2/3 bg-muted rounded-lg" />
-                        <div className="h-4 w-1/3 bg-muted rounded" />
-                        <div className="h-16 bg-muted rounded-xl" />
-                        <div className="h-24 bg-muted rounded-xl" />
-                        <div className="h-32 bg-muted rounded-xl" />
+                    <div className="animate-pulse space-y-4">
+                        <div className="h-4 w-40 rounded bg-muted/50" />
+                        <div className="h-8 w-2/3 rounded bg-muted/50" />
+                        <div className="h-16 rounded bg-muted/30" />
+                        <div className="h-24 rounded bg-muted/30" />
                     </div>
                 )}
 
                 {!isLoading && !job && !error && (
-                    <p className="text-sm text-muted-foreground py-8 text-center">Lowongan tidak ditemukan.</p>
+                    <p className="py-8 text-center text-sm text-muted-foreground">Lowongan tidak ditemukan.</p>
                 )}
 
                 {job && (
                     <>
                         {/* ── Header ── */}
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <h1 className="text-2xl font-semibold">{job.title}</h1>
-                                    {hasRoadmap && (
-                                        <Badge className="text-xs bg-violet-500/15 text-violet-500 border-violet-500/30 border">
-                                            Roadmap Aktif
-                                        </Badge>
-                                    )}
-                                    {alreadyApplied && (
-                                        <Badge className="text-xs bg-emerald-500/15 text-emerald-500 border-emerald-500/30 border">
-                                            ✓ Sudah Dilamar
-                                        </Badge>
-                                    )}
-                                </div>
-                                <p className="text-muted-foreground flex items-center gap-1 mt-1 text-sm">
-                                    {job.company}
-                                    {job.location && (
-                                        <span className="flex items-center gap-0.5">
-                                            · <MapPin className="w-3 h-3" /> {job.location}
-                                        </span>
-                                    )}
-                                    {job.is_remote && (
-                                        <span className="flex items-center gap-0.5">
-                                            · <Wifi className="w-3 h-3" /> Remote OK
-                                        </span>
-                                    )}
-                                </p>
-                            </div>
-
-                            {/* ── Action buttons ── */}
-                            <div className="flex flex-col gap-2 sm:items-end shrink-0">
-                                {/* Apply button */}
-                                {alreadyApplied ? (
-                                    <div className="flex items-center gap-2">
-                                        <Badge className="text-sm px-3 py-1.5 bg-emerald-500/15 text-emerald-600 border-emerald-500/30 border">
-                                            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                                            Sudah Dilamar · {STATUS_LABELS[application?.status ?? ""] ?? application?.status}
-                                        </Badge>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            asChild
-                                        >
-                                            <Link href="/dashboard/applications">
-                                                <FileText className="w-3.5 h-3.5 mr-1.5" />
-                                                Kelola Lamaran
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <Button
-                                        id="apply-button"
-                                        onClick={handleApplyClick}
-                                        disabled={applyMutation.isPending}
-                                        className={`shrink-0 transition-all duration-300 ${
-                                            roadmapCompleted
-                                                ? "bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-500/40"
-                                                : ""
-                                        }`}
-                                    >
-                                        {applyMutation.isPending ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Memproses...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Send className="w-4 h-4 mr-2" />
-                                                Apply Sekarang
-                                                {roadmapCompleted && (
-                                                    <span className="ml-2 text-xs opacity-80">🎯</span>
-                                                )}
-                                            </>
+                        <Reveal>
+                            <div className="flex flex-col gap-5 border-b border-border pb-6 pt-1 md:flex-row md:items-end md:justify-between">
+                                <div className="min-w-0">
+                                    <Crumb path="dasbor / browse jobs / detail" />
+                                    <div className="mt-2 flex flex-wrap items-center gap-2.5">
+                                        <h1 className="text-[22px] font-bold tracking-tight">{job.title}</h1>
+                                        {hasRoadmap && (
+                                            <span className="rounded-[3px] border border-primary/40 px-1.5 py-px font-mono text-[10px] font-semibold text-primary">
+                                                ROADMAP AKTIF
+                                            </span>
                                         )}
+                                        {alreadyApplied && (
+                                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-[10px] font-semibold text-success">
+                                                ✓ DILAMAR
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="mt-1.5 font-mono text-[12.5px] text-muted-foreground">
+                                        {job.company}
+                                        {job.location ? ` · ${job.location}` : ""}
+                                        {job.is_remote ? " · remote" : ""}
+                                    </p>
+                                </div>
+
+                                {/* ── Action buttons ── */}
+                                <div className="flex shrink-0 flex-col items-start gap-2 md:items-end">
+                                    {alreadyApplied ? (
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="font-mono text-[12px] text-success">
+                                                Status · {STATUS_LABELS[application?.status ?? ""] ?? application?.status}
+                                            </span>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href="/dashboard/applications">Kelola Lamaran</Link>
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            id="apply-button"
+                                            onClick={handleApplyClick}
+                                            disabled={applyMutation.isPending}
+                                            className={roadmapCompleted ? "ring-2 ring-primary/40" : ""}
+                                        >
+                                            {applyMutation.isPending ? (
+                                                <>
+                                                    <Loader2 className="mr-2 size-4 animate-spin" />
+                                                    Memproses...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Send className="mr-2 size-4" />
+                                                    Apply Sekarang
+                                                    {roadmapCompleted && <span className="ml-2 text-xs opacity-80">🎯</span>}
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
+
+                                    <Button asChild variant="outline" size="sm">
+                                        <Link href={`/dashboard/roadmap?job_id=${job.id}`}>
+                                            <BookOpen className="mr-2 size-4" />
+                                            {hasRoadmap ? "Lanjutkan Roadmap" : "Buat Roadmap"}
+                                        </Link>
                                     </Button>
-                                )}
-
-                                {/* Roadmap button */}
-                                <Button asChild variant="outline" size="sm" className="shrink-0">
-                                    <Link href={`/dashboard/roadmap?job_id=${job.id}`}>
-                                        <BookOpen className="w-4 h-4 mr-2" />
-                                        {hasRoadmap ? "Lanjutkan Roadmap" : "Buat Roadmap"}
-                                    </Link>
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* ── Roadmap progress bar (jika ada) ── */}
-                        {hasRoadmap && bookmark && (
-                            <div className="rounded-xl border bg-card p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium">Progress Roadmap</span>
-                                    <span className={`text-sm font-bold ${roadmapCompleted ? "text-emerald-500" : "text-primary"}`}>
-                                        {bookmark.completed_steps}/{bookmark.total_steps} langkah
-                                        {roadmapCompleted && " ✓"}
-                                    </span>
-                                </div>
-                                <div className="w-full bg-muted rounded-full h-2">
-                                    <div
-                                        className={`h-2 rounded-full transition-all duration-700 ${roadmapCompleted ? "bg-emerald-500" : "bg-primary"}`}
-                                        style={{ width: `${bookmark.total_steps > 0 ? (bookmark.completed_steps / bookmark.total_steps) * 100 : 0}%` }}
-                                    />
                                 </div>
                             </div>
+                        </Reveal>
+
+                        {/* ── Match score ── */}
+                        {job.match_score != null && matchPct != null && (
+                            <Reveal delay={0.05} className="pt-6">
+                                <div className="flex items-end justify-between">
+                                    <div>
+                                        <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Match score</p>
+                                        <p className="mt-1 font-mono text-[36px] font-semibold leading-none tabular-nums tracking-tight">
+                                            <CountUp value={matchPct} /><span className="text-lg text-muted-foreground">%</span>
+                                        </p>
+                                    </div>
+                                    <span className={`font-mono text-[12px] ${matchPct >= 60 ? "text-success" : "text-warning"}`}>{scoreLabel}</span>
+                                </div>
+                                <BarFill pct={matchPct} tone={scoreTone} className="mt-3 w-full" />
+                            </Reveal>
                         )}
 
-                        {/* ── Match Score Bar visual ── */}
-                        <MatchScoreBar score={job.match_score} />
-
-                        {/* ── Ringkasan skill (3 stat cards) ── */}
+                        {/* ── Ringkasan skill (stat strip) ── */}
                         {job.match_score != null && (
-                            <div className="grid grid-cols-3 gap-3">
-                                <Card className="text-center">
-                                    <CardContent className="pt-4 pb-3">
-                                        <p className="text-2xl font-bold text-primary">{totalRequired}</p>
-                                        <p className="text-xs text-muted-foreground mt-0.5">Skill dibutuhkan</p>
-                                    </CardContent>
-                                </Card>
-                                <Card className="text-center">
-                                    <CardContent className="pt-4 pb-3">
-                                        <p className="text-2xl font-bold text-green-500">{ownedCount}</p>
-                                        <p className="text-xs text-muted-foreground mt-0.5">Sudah kamu miliki</p>
-                                    </CardContent>
-                                </Card>
-                                <Card className="text-center">
-                                    <CardContent className="pt-4 pb-3">
-                                        <p className="text-2xl font-bold text-amber-500">{job.missing_skills.length}</p>
-                                        <p className="text-xs text-muted-foreground mt-0.5">Perlu dipelajari</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
+                            <Reveal delay={0.1} className="pt-8">
+                                <div className="grid grid-cols-3 divide-x divide-border border-y border-border">
+                                    <div className="px-4 py-4 text-center">
+                                        <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight">{totalRequired}</p>
+                                        <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.05em] text-muted-foreground">Skill dibutuhkan</p>
+                                    </div>
+                                    <div className="px-4 py-4 text-center">
+                                        <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight text-success">{ownedCount}</p>
+                                        <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.05em] text-muted-foreground">Sudah dimiliki</p>
+                                    </div>
+                                    <div className="px-4 py-4 text-center">
+                                        <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight text-warning">{job.missing_skills.length}</p>
+                                        <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.05em] text-muted-foreground">Perlu dipelajari</p>
+                                    </div>
+                                </div>
+                            </Reveal>
                         )}
 
-                        {/* ── Skill Gap ── */}
+                        {/* ── Roadmap progress ── */}
+                        {hasRoadmap && bookmark && (
+                            <Reveal delay={0.14} className="pt-8">
+                                <SecTitle
+                                    title="Progress roadmap"
+                                    meta={
+                                        <span className={roadmapCompleted ? "text-success" : "text-primary"}>
+                                            {bookmark.completed_steps}/{bookmark.total_steps} langkah{roadmapCompleted ? " ✓" : ""}
+                                        </span>
+                                    }
+                                />
+                                <BarFill
+                                    pct={bookmark.total_steps > 0 ? (bookmark.completed_steps / bookmark.total_steps) * 100 : 0}
+                                    tone={roadmapCompleted ? "success" : "primary"}
+                                    className="mt-3 w-full"
+                                />
+                            </Reveal>
+                        )}
+
+                        {/* ── Skill gap ── */}
                         {job.missing_skills.length > 0 && (
-                            <Card className="border-amber-500/30 bg-amber-500/5">
-                                <CardHeader className="pb-2">
-                                    <CardTitle className="text-amber-500 text-base">
-                                        Skill yang perlu dikuasai untuk job ini
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="flex flex-wrap gap-2">
-                                    {job.missing_skills.map((s) => (
-                                        <Badge key={s} variant="outline" className="border-amber-500/50 text-amber-600">
-                                            {s}
-                                        </Badge>
+                            <Reveal delay={0.18} className="pt-8">
+                                <SecTitle title="Skill yang perlu dikuasai" meta={`${job.missing_skills.length} skill`} />
+                                <p className="pt-3 text-[13px] leading-relaxed">
+                                    {job.missing_skills.map((s, i) => (
+                                        <span key={s}>
+                                            {i > 0 && <span className="mx-1.5 text-border">·</span>}
+                                            <span className="font-medium text-warning">{s}</span>
+                                        </span>
                                     ))}
-                                </CardContent>
-                            </Card>
+                                </p>
+                            </Reveal>
                         )}
 
                         {job.missing_skills.length === 0 && job.match_score != null && (
-                            <Card className="border-green-500/30 bg-green-500/5">
-                                <CardContent className="pt-4 text-sm text-green-600 flex items-center gap-2">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Kamu sudah memiliki semua skill yang dibutuhkan job ini.
-                                </CardContent>
-                            </Card>
+                            <Reveal delay={0.18} className="pt-6">
+                                <p className="border-l-2 border-success/60 pl-3 text-[13px] text-muted-foreground">
+                                    <span className="font-semibold text-success">✓ Lengkap.</span> Kamu sudah memiliki semua skill yang dibutuhkan job ini.
+                                </p>
+                            </Reveal>
                         )}
 
-                        {/* ── Why this score ── */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Kenapa skor ini?</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2 text-sm text-muted-foreground">
+                        {/* ── Kenapa skor ini ── */}
+                        <Reveal delay={0.22} className="pt-8">
+                            <SecTitle title="Kenapa skor ini?" />
+                            <div className="space-y-1.5 pt-3 text-[13px] leading-relaxed text-muted-foreground">
                                 {job.match_reasons.length > 0
                                     ? job.match_reasons.map((r) => <p key={r}>{r}</p>)
-                                    : <p>Sync profilmu terlebih dahulu untuk melihat alasan skor.</p>
-                                }
-                            </CardContent>
-                        </Card>
+                                    : <p>Sync profilmu terlebih dahulu untuk melihat alasan skor.</p>}
+                            </div>
+                        </Reveal>
 
-                        {/* ── Persyaratan Pekerjaan ── */}
+                        {/* ── Persyaratan pekerjaan ── */}
                         {(job.salary || job.min_experience || job.min_education || job.work_type) && (
-                            <Card>
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="text-base">Persyaratan Pekerjaan</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                                        {job.salary && (
-                                            <div className="flex flex-col gap-1 p-3 rounded-lg bg-emerald-500/8 border border-emerald-500/20">
-                                                <div className="flex items-center gap-1.5 text-emerald-600">
-                                                    <Wallet className="w-3.5 h-3.5" />
-                                                    <span className="text-xs font-medium">Gaji</span>
-                                                </div>
-                                                <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{job.salary}</p>
-                                            </div>
-                                        )}
-                                        {job.min_experience && (
-                                            <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted border border-border">
-                                                <div className="flex items-center gap-1.5 text-muted-foreground">
-                                                    <Clock className="w-3.5 h-3.5" />
-                                                    <span className="text-xs font-medium">Pengalaman</span>
-                                                </div>
-                                                <p className="text-sm font-semibold">{job.min_experience}</p>
-                                            </div>
-                                        )}
-                                        {job.min_education && (
-                                            <div className="flex flex-col gap-1 p-3 rounded-lg bg-muted border border-border">
-                                                <div className="flex items-center gap-1.5 text-muted-foreground">
-                                                    <GraduationCap className="w-3.5 h-3.5" />
-                                                    <span className="text-xs font-medium">Pendidikan</span>
-                                                </div>
-                                                <p className="text-sm font-semibold">{job.min_education}</p>
-                                            </div>
-                                        )}
-                                        {job.work_type && (
-                                            <div className="flex flex-col gap-1 p-3 rounded-lg bg-blue-500/8 border border-blue-500/20">
-                                                <div className="flex items-center gap-1.5 text-blue-500">
-                                                    <Briefcase className="w-3.5 h-3.5" />
-                                                    <span className="text-xs font-medium">Tipe Kerja</span>
-                                                </div>
-                                                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">{job.work_type}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <Reveal delay={0.26} className="pt-8">
+                                <SecTitle title="Persyaratan pekerjaan" />
+                                <dl className="grid grid-cols-2 gap-x-6 gap-y-4 pt-4 sm:grid-cols-4">
+                                    {job.salary && (
+                                        <div>
+                                            <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Gaji</dt>
+                                            <dd className="mt-1 text-[13.5px] font-semibold text-success">{job.salary}</dd>
+                                        </div>
+                                    )}
+                                    {job.min_experience && (
+                                        <div>
+                                            <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Pengalaman</dt>
+                                            <dd className="mt-1 text-[13.5px] font-semibold">{job.min_experience}</dd>
+                                        </div>
+                                    )}
+                                    {job.min_education && (
+                                        <div>
+                                            <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Pendidikan</dt>
+                                            <dd className="mt-1 text-[13.5px] font-semibold">{job.min_education}</dd>
+                                        </div>
+                                    )}
+                                    {job.work_type && (
+                                        <div>
+                                            <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Tipe kerja</dt>
+                                            <dd className="mt-1 text-[13.5px] font-semibold">{job.work_type}</dd>
+                                        </div>
+                                    )}
+                                </dl>
+                            </Reveal>
                         )}
 
-                        {/* ── Description ── */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Deskripsi</CardTitle>
-                            </CardHeader>
-                            <CardContent className="whitespace-pre-wrap text-sm">{job.description}</CardContent>
-                        </Card>
+                        {/* ── Deskripsi ── */}
+                        <Reveal delay={0.3} className="pt-8">
+                            <SecTitle title="Deskripsi" />
+                            <p className="max-w-prose whitespace-pre-wrap pt-3 text-[13px] leading-relaxed text-muted-foreground">{job.description}</p>
+                        </Reveal>
 
-                        {/* ── Required Skills ── */}
-                        <div>
-                            <h2 className="font-medium mb-2">Skill yang dibutuhkan</h2>
-                            <div className="flex flex-wrap gap-1">
+                        {/* ── Required skills ── */}
+                        <Reveal delay={0.34} className="pt-8">
+                            <SecTitle title="Skill yang dibutuhkan" />
+                            <div className="flex flex-wrap gap-x-4 gap-y-2 pt-4">
                                 {job.required_skills.map((s) => {
                                     const isMissing = job.missing_skills
                                         .map((m) => m.toLowerCase())
                                         .includes(s.toLowerCase());
                                     return (
-                                        <Badge
-                                            key={s}
-                                            variant={isMissing ? "secondary" : "outline"}
-                                            className={
-                                                isMissing
-                                                    ? "opacity-60"
-                                                    : "border-green-500/50 text-green-600"
-                                            }
-                                        >
-                                            {isMissing ? "✗ " : "✓ "}
-                                            {s}
-                                        </Badge>
+                                        <span key={s} className="inline-flex items-center gap-1.5 text-[13px]">
+                                            <span className={`size-1.5 rounded-full ${isMissing ? "bg-muted-foreground/40" : "bg-success"}`} />
+                                            <span className={isMissing ? "text-muted-foreground line-through" : "font-medium text-foreground"}>{s}</span>
+                                        </span>
                                     );
                                 })}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-2">
-                                <span className="text-green-600">✓ sudah kamu miliki</span>
-                                {" · "}
-                                <span className="opacity-60">✗ belum kamu miliki</span>
+                            <p className="pt-3 font-mono text-[11px] text-muted-foreground">
+                                <span className="text-success">● dimiliki</span>
+                                <span className="mx-2 text-border">·</span>
+                                <span>● belum dimiliki</span>
                             </p>
-                        </div>
+                        </Reveal>
                     </>
                 )}
             </div>

@@ -64,6 +64,8 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -73,6 +75,7 @@ const config = {
       fontFamily: {
         "heading": ["var(--font-aeonik)"],
         "default": ["var(--font-inter)"],
+        "mono": ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       keyframes: {
         "accordion-down": {

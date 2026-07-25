@@ -1,15 +1,15 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+// Hallmark · genre: modern-minimal · macrostructure: Workbench (app-surface) · theme: GitHire violet (locked)
+
+import { BarFill, EASE_OUT } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BookOpen, Check, ExternalLink, FileText, Send, Target, Sparkles, Trophy, XCircle, RotateCcw, Award } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 
 type Step = {
     index: number;
@@ -27,7 +27,7 @@ type Roadmap = {
     job_company: string | null;
 };
 
-// ── Apply CTA at finish marker ────────────────────────────────────────────────
+// ── Apply CTA di akhir roadmap ──
 function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitle: string; jobCompany: string }) {
     const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
@@ -39,11 +39,7 @@ function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitl
     });
 
     const applyMutation = useMutation({
-        mutationFn: () =>
-            withAuth(`/applications/${jobId}`, {
-                method: "POST",
-                body: JSON.stringify({ note: null }),
-            }),
+        mutationFn: () => withAuth(`/applications/${jobId}`, { method: "POST", body: JSON.stringify({ note: null }) }),
         onSuccess: (data) => {
             qc.setQueryData(["applications", jobId], data);
             qc.invalidateQueries({ queryKey: ["applications"] });
@@ -54,37 +50,29 @@ function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitl
 
     if (application) {
         return (
-            <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
-                    <Check className="w-4 h-4" />
-                    Sudah dilamar · <span className="capitalize">{application.status}</span>
-                </div>
-                <Button variant="outline" size="sm" asChild>
-                    <Link href="/dashboard/applications">
-                        <FileText className="w-3.5 h-3.5 mr-1.5" />
-                        Kelola Lamaran
-                    </Link>
-                </Button>
+            <div className="flex flex-wrap items-center gap-4">
+                <span className="font-mono text-[12.5px] font-semibold text-success">
+                    ✓ sudah dilamar · <span className="capitalize">{application.status}</span>
+                </span>
+                <Link href="/dashboard/applications" className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    Kelola lamaran →
+                </Link>
             </div>
         );
     }
 
     return (
-        <div className="flex items-center gap-2 flex-wrap">
-            <Button
+        <div className="flex flex-wrap items-center gap-4">
+            <button
                 onClick={() => applyMutation.mutate()}
                 disabled={applyMutation.isPending}
-                className="bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-500/30"
+                className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-                {applyMutation.isPending ? (
-                    <><span className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />Memproses...</>
-                ) : (
-                    <><Send className="w-4 h-4 mr-2" />Apply ke {jobTitle || jobCompany} →</>
-                )}
-            </Button>
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground text-xs">
-                <Link href={`/dashboard/jobs/${jobId}`} prefetch={false}>Lihat detail job</Link>
-            </Button>
+                {applyMutation.isPending ? "Memproses…" : `Apply ke ${jobTitle || jobCompany} →`}
+            </button>
+            <Link href={`/dashboard/jobs/${jobId}`} prefetch={false} className="text-[12px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                Lihat detail job
+            </Link>
         </div>
     );
 }
@@ -94,7 +82,6 @@ function RoadmapContent() {
     const qc = useQueryClient();
     const searchParams = useSearchParams();
     const jobId = searchParams.get("job_id");
-
     const roadmapUrl = jobId ? `/me/roadmap?job_id=${jobId}` : "/me/roadmap";
 
     const LOADING_MESSAGES = [
@@ -106,7 +93,6 @@ function RoadmapContent() {
     ];
     const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
-    // ── Kuis AI State ──
     const [activeQuizIdx, setActiveQuizIdx] = useState<number | null>(null);
     const [quizQuestions, setQuizQuestions] = useState<{ question: string; options: string[]; correct_index: number }[] | null>(null);
     const [loadingQuiz, setLoadingQuiz] = useState(false);
@@ -121,11 +107,8 @@ function RoadmapContent() {
         setCurrentQuestionIdx(0);
         setUserAnswers([]);
         setQuizResult(null);
-
         try {
-            const url = jobId
-                ? `/me/roadmap/quiz?step_index=${index}&job_id=${jobId}`
-                : `/me/roadmap/quiz?step_index=${index}`;
+            const url = jobId ? `/me/roadmap/quiz?step_index=${index}&job_id=${jobId}` : `/me/roadmap/quiz?step_index=${index}`;
             const data = await withAuth<{ quiz: any[] }>(url);
             if (data?.quiz && data.quiz.length > 0) {
                 setQuizQuestions(data.quiz);
@@ -144,27 +127,16 @@ function RoadmapContent() {
     const handleAnswerSelect = (optionIdx: number) => {
         const nextAnswers = [...userAnswers, optionIdx];
         setUserAnswers(nextAnswers);
-
         if (currentQuestionIdx + 1 < (quizQuestions?.length ?? 0)) {
             setCurrentQuestionIdx((prev) => prev + 1);
         } else {
-            // Hitung skor kelulusan kuis
             let correctCount = 0;
             quizQuestions?.forEach((q, i) => {
-                if (nextAnswers[i] === q.correct_index) {
-                    correctCount++;
-                }
+                if (nextAnswers[i] === q.correct_index) correctCount++;
             });
-
             const passed = correctCount === (quizQuestions?.length ?? 0);
-            setQuizResult({
-                finished: true,
-                passed,
-                score: correctCount,
-            });
-
+            setQuizResult({ finished: true, passed, score: correctCount });
             if (passed) {
-                // Selesaikan langkah otomatis ke DB
                 patch.mutate({ index: activeQuizIdx!, completed: true });
                 toast.success("Hebat! Jawabanmu 100% benar.");
             }
@@ -178,8 +150,6 @@ function RoadmapContent() {
         retry: false,
     });
 
-    // Saat roadmap job pertama kali berhasil dimuat, invalidate bookmarks
-    // sehingga dashboard & my-roadmaps langsung detect bookmark baru
     const bookmarkInvalidatedRef = useRef<string | null>(null);
     useEffect(() => {
         if (data?.job_id && bookmarkInvalidatedRef.current !== data.job_id) {
@@ -190,40 +160,25 @@ function RoadmapContent() {
 
     useEffect(() => {
         if (!isLoading) return;
-        const interval = setInterval(() => {
-            setLoadingMsgIdx((prev) => (prev + 1) % LOADING_MESSAGES.length);
-        }, 2000);
+        const interval = setInterval(() => setLoadingMsgIdx((prev) => (prev + 1) % LOADING_MESSAGES.length), 2000);
         return () => clearInterval(interval);
     }, [isLoading]);
 
     const patch = useMutation({
         mutationFn: async ({ index, completed }: { index: number; completed: boolean }) => {
-            const stepUrl = jobId
-                ? `/me/roadmap/steps/${index}?job_id=${jobId}`
-                : `/me/roadmap/steps/${index}`;
-            return withAuth<Step>(stepUrl, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ completed }),
-            });
+            const stepUrl = jobId ? `/me/roadmap/steps/${index}?job_id=${jobId}` : `/me/roadmap/steps/${index}`;
+            return withAuth<Step>(stepUrl, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completed }) });
         },
         onSuccess: (updated) => {
             qc.setQueryData(["roadmap", jobId ?? "generic"], (old: Roadmap | undefined) => {
                 if (!old) return old;
-                const newSteps = old.steps.map((s) =>
-                    s.index === updated.index ? { ...s, completed: updated.completed } : s
-                );
-                // 🎉 Notifikasi saat semua step selesai
+                const newSteps = old.steps.map((s) => (s.index === updated.index ? { ...s, completed: updated.completed } : s));
                 if (updated.completed && newSteps.every((s) => s.completed)) {
                     const jobLabel = old.job_title ? ` ke ${old.job_title}` : "";
-                    toast.success(
-                        `Semua langkah selesai. Kamu siap apply${jobLabel}!`,
-                        { duration: 6000 }
-                    );
+                    toast.success(`Semua langkah selesai. Kamu siap apply${jobLabel}!`, { duration: 6000 });
                 }
                 return { ...old, steps: newSteps };
             });
-            // Invalidate bookmarks agar dashboard & my-roadmaps reflect progress terbaru
             qc.invalidateQueries({ queryKey: ["bookmarks"] });
         },
         onError: (e: Error) => toast.error(`Gagal menyimpan: ${e.message}`),
@@ -231,9 +186,7 @@ function RoadmapContent() {
 
     const reset = useMutation({
         mutationFn: async () => {
-            const url = jobId
-                ? `/me/roadmap/cache?job_id=${jobId}`
-                : "/me/roadmap/cache";
+            const url = jobId ? `/me/roadmap/cache?job_id=${jobId}` : "/me/roadmap/cache";
             return withAuth(url, { method: "DELETE" });
         },
         onSuccess: () => {
@@ -249,500 +202,238 @@ function RoadmapContent() {
     const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
     return (
-        <div className="max-w-2xl space-y-6">
-            {/* ── Mode Switcher (toggle Umum vs Job) ── */}
-            {jobId ? (
-                <div className="flex items-center gap-2 p-1 bg-muted rounded-xl w-fit">
-                    <Link
-                        href="/dashboard/roadmap"
-                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-background/60 transition-all"
-                    >
-                        Roadmap Umum
-                    </Link>
-                    <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium bg-background shadow-sm text-foreground">
+        <div className="w-full max-w-2xl">
+            {/* Mode tabs */}
+            <div className="flex items-center gap-1 border-b border-border">
+                {jobId ? (
+                    <>
+                        <Link href="/dashboard/roadmap" className="-mb-px border-b-2 border-transparent px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+                            Roadmap umum
+                        </Link>
+                        <span className="-mb-px border-b-2 border-primary px-3 py-2 text-[13px] font-semibold text-foreground">
+                            {data?.job_title ? (data.job_title.length > 22 ? data.job_title.slice(0, 22) + "…" : data.job_title) : "Job spesifik"}
+                        </span>
+                    </>
+                ) : (
+                    <>
+                        <span className="-mb-px border-b-2 border-primary px-3 py-2 text-[13px] font-semibold text-foreground">Roadmap umum</span>
+                        <Link href="/dashboard/my-roadmaps" prefetch={false} className="-mb-px border-b-2 border-transparent px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+                            Pilih job target
+                        </Link>
+                    </>
+                )}
+            </div>
+
+            {/* Header */}
+            <div className="flex flex-col gap-4 pb-6 pt-5 md:flex-row md:items-end md:justify-between">
+                <div className="min-w-0">
+                    <p className="font-mono text-[11px] text-muted-foreground">
+                        dasbor / roadmap / <span className="font-medium text-foreground">{data?.job_title ? "job" : "umum"}</span>
+                    </p>
+                    <h1 className="mt-2 text-[22px] font-bold tracking-tight">Roadmap belajar</h1>
+                    <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
                         {data?.job_title
-                            ? (data.job_title.length > 22 ? data.job_title.slice(0, 22) + "…" : data.job_title)
-                            : "Job Spesifik"}
-                    </div>
+                            ? `Untuk posisi ${data.job_title} di ${data.job_company ?? ""}. Centang lingkaran atau lulus kuis AI untuk menyelesaikan langkah.`
+                            : "Berdasarkan skill gap vs semua lowongan. Centang lingkaran atau lulus kuis AI untuk menyelesaikan langkah."}
+                    </p>
                 </div>
-            ) : (
-                <div className="flex items-center gap-2 p-1 bg-muted rounded-xl w-fit">
-                    <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium bg-background shadow-sm text-foreground">
-                        Roadmap Umum
+                <button
+                    onClick={() => reset.mutate()}
+                    disabled={reset.isPending || isLoading}
+                    className="shrink-0 self-start font-mono text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:self-auto"
+                >
+                    {reset.isPending ? "mereset…" : "↺ generate ulang"}
+                </button>
+            </div>
+
+            {/* Progress */}
+            {totalCount > 0 && (
+                <div className="border-y border-border py-4">
+                    <div className="mb-2 flex items-baseline justify-between font-mono text-[11.5px] text-muted-foreground">
+                        <span>
+                            <span className="text-foreground">{completedCount}</span>/{totalCount} langkah selesai
+                        </span>
+                        <span className="text-[13px] font-semibold text-foreground">{progressPct}%</span>
                     </div>
-                    <Link
-                        href="/dashboard/my-roadmaps"
-                        prefetch={false}
-                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-background/60 transition-all"
-                    >
-                        Pilih Job Target
-                    </Link>
+                    <BarFill pct={progressPct} tone={progressPct === 100 ? "success" : "primary"} className="w-full" />
                 </div>
             )}
 
-            {/* ── Header ── */}
-            <div className="flex items-start gap-3">
-                {jobId && (
-                    <Button variant="ghost" size="icon" asChild className="mt-1 shrink-0">
-                        <Link href={`/dashboard/jobs/${jobId}`} prefetch={false}>
-                            <ArrowLeft className="w-4 h-4" />
-                        </Link>
-                    </Button>
-                )}
-                <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <h1 className="text-2xl font-semibold">Roadmap Belajar</h1>
-                        {data?.job_title
-                            ? <Badge variant="secondary">{data.job_title}</Badge>
-                            : <Badge variant="outline">Generik</Badge>
-                        }
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs text-muted-foreground ml-auto"
-                            disabled={reset.isPending || isLoading}
-                            onClick={() => reset.mutate()}
-                        >
-                            {reset.isPending ? "Mereset…" : "↺ Generate Ulang"}
-                        </Button>
-                    </div>
-                    <p className="text-muted-foreground text-sm mt-1">
-                        {data?.job_title
-                            ? `Roadmap untuk posisi ${data.job_title} di ${data.job_company ?? ""}. Klik lingkaran untuk mencentang.`
-                            : "Roadmap berdasarkan skill gap vs semua lowongan. Klik lingkaran untuk mencentang."
-                        }
-                    </p>
+            {!jobId && !isLoading && data && (
+                <p className="mt-5 border-l-2 border-primary bg-primary/[0.04] px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                    <span className="font-semibold text-foreground">Ini roadmap generik</span> — dari keseluruhan skill gap.{" "}
+                    <Link href="/dashboard/jobs/recommended" className="font-semibold text-primary hover:underline">
+                        Pilih job target
+                    </Link>{" "}
+                    untuk roadmap yang lebih fokus.
+                </p>
+            )}
 
-                    {/* Info box: hanya tampil untuk roadmap generik */}
-                    {!jobId && !isLoading && data && (
-                        <div className="mt-3 flex items-start gap-3 p-3 rounded-xl border border-primary/20 bg-primary/5">
-                            <BookOpen className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                            <div className="text-xs text-muted-foreground">
-                                <span className="font-medium text-foreground">Ini adalah roadmap generik</span>{" "}
-                                — dibuat berdasarkan keseluruhan skill gap kamu.{" "}
-                                Untuk roadmap yang lebih fokus dan spesifik,{" "}
-                                <Link
-                                    href="/dashboard/jobs/recommended"
-                                    className="text-primary underline underline-offset-2 hover:no-underline"
-                                >
-                                    pilih job yang ingin ditarget
-                                </Link>
-                                {" "}lalu buat roadmap khusus dari halaman detail job.
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Progress bar */}
-                    {totalCount > 0 && (
-                        <div className="mt-3">
-                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                                <span>{completedCount} dari {totalCount} langkah selesai</span>
-                                <span className="font-medium">{progressPct}%</span>
-                            </div>
-                            <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                                <div
-                                    className="h-2 rounded-full transition-all duration-700"
-                                    style={{
-                                        width: `${progressPct}%`,
-                                        background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* ── Loading / Error ── */}
             {isLoading && (
-                <div className="space-y-2 py-4">
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0" />
-                        <span className="animate-pulse font-medium">
-                            {LOADING_MESSAGES[loadingMsgIdx]}
-                        </span>
+                <div className="py-6">
+                    <div className="flex items-center gap-3">
+                        <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        <span className="font-mono text-[13px] font-medium text-muted-foreground">{LOADING_MESSAGES[loadingMsgIdx]}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground pl-8">
-                        Biasanya membutuhkan 10–20 detik. Harap tunggu sebentar.
-                    </p>
+                    <p className="mt-1 pl-7 font-mono text-[11px] text-muted-foreground">biasanya 10–20 detik</p>
                 </div>
             )}
             {error && (
-                <p className="text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+                <p className="mt-5 border-l-2 border-destructive bg-destructive/[0.06] px-4 py-3 text-[13px] text-destructive">
                     {(error as Error).message || "Gagal memuat roadmap. Selesaikan onboarding terlebih dahulu."}
                 </p>
             )}
 
-            {/* ── Timeline ── */}
+            {/* Timeline */}
             {data && data.steps.length > 0 && (
-                <div className="relative">
-                    {/* Vertical line */}
-                    <div className="absolute left-5 top-6 bottom-6 w-0.5 bg-gradient-to-b from-primary via-purple-500/40 to-muted" />
-
-                    <div className="space-y-4">
+                <div className="relative pt-6">
+                    <div className="absolute bottom-6 left-[15px] top-8 w-px bg-border" />
+                    <div className="space-y-5">
                         {data.steps.map((step, idx) => {
-                            const isLast = idx === data.steps.length - 1;
                             const isCompleted = step.completed;
                             const isCurrent = !isCompleted && (idx === 0 || data.steps[idx - 1]?.completed);
-
                             return (
-                                <div key={step.index} className="relative flex gap-4 items-start">
-                                    {/* Node */}
+                                <div key={step.index} className="relative flex items-start gap-4">
                                     <button
                                         onClick={() => patch.mutate({ index: step.index, completed: !isCompleted })}
                                         disabled={patch.isPending}
-                                        className={`
-                                            relative z-10 w-10 h-10 rounded-full flex items-center justify-center
-                                            text-sm font-bold shrink-0 border-2 transition-all duration-300
-                                            ${isCompleted
-                                                ? "bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/30"
-                                                : isCurrent
-                                                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/30 ring-4 ring-primary/20"
-                                                    : "bg-background border-muted-foreground/30 text-muted-foreground hover:border-primary/50"
-                                            }
-                                        `}
                                         title={isCompleted ? "Klik untuk batalkan" : "Klik untuk selesaikan"}
+                                        className={`relative z-10 grid size-8 shrink-0 place-items-center rounded-full border-2 font-mono text-[12px] font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                                            isCompleted
+                                                ? "border-success bg-success text-primary-foreground"
+                                                : isCurrent
+                                                  ? "border-primary bg-primary text-primary-foreground"
+                                                  : "border-muted-foreground/40 bg-background text-muted-foreground hover:border-primary/50"
+                                        }`}
                                     >
-                                        {isCompleted ? <Check className="w-4 h-4" /> : idx + 1}
+                                        {isCompleted ? "✓" : idx + 1}
                                     </button>
 
-                                    {/* Card */}
-                                    <div className={`
-                                        flex-1 rounded-xl border p-4 mb-2 transition-all duration-300
-                                        ${isCompleted
-                                            ? "bg-muted/30 border-green-500/20 opacity-70"
-                                            : isCurrent
-                                                ? "bg-primary/5 border-primary/30 shadow-sm"
-                                                : "bg-card border-border"
-                                        }
-                                    `}>
-                                        {/* Title row */}
-                                        <div className="flex items-start justify-between gap-2 mb-2">
-                                            <h3 className={`font-semibold leading-snug ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
+                                    <div className="min-w-0 flex-1 pb-1">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <h3 className={`text-[14px] font-semibold leading-snug ${isCompleted ? "text-muted-foreground line-through" : ""}`}>
                                                 {step.title}
                                             </h3>
-                                            {isCompleted && (
-                                                <Badge variant="outline" className="text-green-500 border-green-500/40 text-xs shrink-0">
-                                                    ✓ Selesai
-                                                </Badge>
-                                            )}
                                             {isCurrent && !isCompleted && (
-                                                <Badge className="text-xs shrink-0 bg-primary/20 text-primary border-0">
-                                                    Sekarang
-                                                </Badge>
+                                                <span className="shrink-0 rounded-[3px] border border-primary/40 px-1.5 py-px font-mono text-[10px] font-semibold text-primary">SEKARANG</span>
                                             )}
                                         </div>
 
-                                        {/* Description */}
-                                        {step.description && (
-                                            <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                                                {step.description}
+                                        {step.description && <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{step.description}</p>}
+
+                                        {step.resources && step.resources.length > 0 && (
+                                            <p className="mt-2 text-xs leading-relaxed">
+                                                <span className="font-mono uppercase tracking-[0.06em] text-muted-foreground">resource · </span>
+                                                {step.resources.map((r, i) => (
+                                                    <span key={i}>
+                                                        {i > 0 && <span className="mx-1.5 text-border">·</span>}
+                                                        <span className="font-medium text-foreground">{r}</span>
+                                                    </span>
+                                                ))}
                                             </p>
                                         )}
 
-                                        {/* Resources */}
-                                        {step.resources && step.resources.length > 0 && (
-                                            <div className="flex flex-wrap gap-1.5 mb-3">
-                                                <span className="text-xs text-muted-foreground flex items-center gap-1 mr-1">
-                                                    <BookOpen className="w-3 h-3" /> Resource:
-                                                </span>
-                                                {step.resources.map((r, i) => (
-                                                    <Badge
-                                                        key={i}
-                                                        variant="secondary"
-                                                        className="text-xs font-normal flex items-center gap-1"
-                                                    >
-                                                        {r}
-                                                        <ExternalLink className="w-2.5 h-2.5 opacity-60" />
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* Target */}
                                         {step.target && (
-                                            <div className="flex items-start gap-2 bg-primary/5 rounded-lg px-3 py-2">
-                                                <Target className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                                                <p className="text-xs text-primary/80 leading-relaxed">
-                                                    <span className="font-medium">Target:</span> {step.target}
-                                                </p>
-                                            </div>
+                                            <p className="mt-2 border-l-2 border-primary/50 pl-3 text-[12.5px] text-muted-foreground">
+                                                <span className="font-mono uppercase tracking-[0.06em]">target</span> — {step.target}
+                                            </p>
                                         )}
 
-                                        {/* Quiz Section */}
+                                        {/* Quiz */}
                                         {!isCompleted && (
-                                            <div className="mt-4 pt-4 border-t border-dashed border-border">
+                                            <div className="mt-4 border-t border-dashed border-border pt-4">
                                                 {activeQuizIdx !== step.index ? (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
+                                                    <button
                                                         onClick={() => startQuiz(step.index)}
-                                                        className="text-xs border-primary/30 text-primary hover:bg-primary/10 gap-1.5 rounded-lg transition-transform active:scale-95 animate-pulse"
+                                                        className="rounded-md border border-primary/40 px-3 py-1.5 text-[12px] font-semibold text-primary transition-colors hover:bg-primary/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                     >
-                                                        <Sparkles className="w-3.5 h-3.5" />
-                                                        Uji Pemahaman Saya (AI Quiz)
-                                                    </Button>
+                                                        ✦ Uji pemahaman (AI quiz)
+                                                    </button>
                                                 ) : (
                                                     <motion.div
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: "auto" }}
-                                                        transition={{ duration: 0.3, ease: "easeOut" }}
-                                                        className={`border rounded-xl p-4 space-y-4 shadow-sm overflow-hidden ${
-                                                            quizQuestions && quizResult?.finished
-                                                                ? quizResult.passed
-                                                                    ? "bg-green-500/5 border-green-500/20"
-                                                                    : "bg-red-500/5 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.05)]"
-                                                                : "bg-muted/40 border-border"
+                                                        transition={{ duration: 0.3, ease: EASE_OUT }}
+                                                        className={`overflow-hidden border-l-2 pl-4 ${
+                                                            quizResult?.finished ? (quizResult.passed ? "border-success" : "border-destructive") : "border-border"
                                                         }`}
                                                     >
                                                         {loadingQuiz ? (
                                                             <div className="flex items-center gap-2 py-2">
-                                                                <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin shrink-0" />
-                                                                <p className="text-xs font-medium text-muted-foreground animate-pulse">
-                                                                    Gemini sedang menyusun 3 pertanyaan interaktif...
-                                                                </p>
+                                                                <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                                                <p className="font-mono text-[12px] text-muted-foreground">Gemini menyusun 3 pertanyaan…</p>
                                                             </div>
                                                         ) : quizQuestions && quizResult?.finished ? (
                                                             <motion.div
-                                                                initial={{ 
-                                                                    scale: 0.95, 
-                                                                    opacity: 0,
-                                                                    x: 0
-                                                                }}
-                                                                animate={{ 
-                                                                    scale: 1, 
-                                                                    opacity: 1,
-                                                                    x: quizResult.passed ? 0 : [0, -10, 10, -8, 8, -5, 5, 0]
-                                                                }}
-                                                                transition={{ 
-                                                                    x: { duration: 0.5, ease: "easeInOut" },
-                                                                    scale: { type: "spring", stiffness: 200, damping: 15 }
-                                                                }}
-                                                                className="space-y-4 relative overflow-hidden p-1"
+                                                                initial={{ opacity: 0, y: 6 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                transition={{ duration: 0.3, ease: EASE_OUT }}
+                                                                className="space-y-3"
                                                             >
-                                                                {/* ── BACKGROUND PARTICLES EFFECT ── */}
-                                                                {quizResult.passed ? (
-                                                                    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
-                                                                        {[...Array(16)].map((_, i) => {
-                                                                            const randomX = Math.random() * 100;
-                                                                            const randomDelay = Math.random() * 1.5;
-                                                                            const randomDuration = 1.5 + Math.random() * 2;
-                                                                            const size = 5 + Math.random() * 7;
-                                                                            const colors = ["#6366F1", "#10B981", "#F59E0B", "#EC4899", "#3B82F6"];
-                                                                            const color = colors[i % colors.length];
-                                                                            return (
-                                                                                <motion.div
-                                                                                    key={i}
-                                                                                    className="absolute rounded-full"
-                                                                                    style={{
-                                                                                        top: "-15px",
-                                                                                        left: `${randomX}%`,
-                                                                                        width: size,
-                                                                                        height: size,
-                                                                                        backgroundColor: color,
-                                                                                        opacity: 0.6,
-                                                                                    }}
-                                                                                    animate={{
-                                                                                        y: ["0px", "260px"],
-                                                                                        x: [0, Math.random() * 30 - 15],
-                                                                                        rotate: [0, Math.random() * 360],
-                                                                                    }}
-                                                                                    transition={{
-                                                                                        duration: randomDuration,
-                                                                                        repeat: Infinity,
-                                                                                        delay: randomDelay,
-                                                                                        ease: "easeOut",
-                                                                                    }}
-                                                                                />
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none bg-red-500/[0.005]">
-                                                                        {[...Array(8)].map((_, i) => {
-                                                                            const randomX = Math.random() * 100;
-                                                                            const randomDelay = Math.random() * 1;
-                                                                            const size = 3 + Math.random() * 5;
-                                                                            return (
-                                                                                <motion.div
-                                                                                    key={i}
-                                                                                    className="absolute rounded-full bg-red-500/20"
-                                                                                    style={{
-                                                                                        bottom: "-10px",
-                                                                                        left: `${randomX}%`,
-                                                                                        width: size,
-                                                                                        height: size,
-                                                                                    }}
-                                                                                    animate={{
-                                                                                        y: ["0px", "-160px"],
-                                                                                        x: [0, Math.random() * 20 - 10],
-                                                                                        opacity: [0.2, 0.5, 0],
-                                                                                    }}
-                                                                                    transition={{
-                                                                                        duration: 2 + Math.random() * 2,
-                                                                                        repeat: Infinity,
-                                                                                        delay: randomDelay,
-                                                                                        ease: "easeOut",
-                                                                                    }}
-                                                                                />
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                )}
-
-                                                                <div className="flex flex-col sm:flex-row items-center gap-4 relative z-10 text-center sm:text-left">
-                                                                    {quizResult.passed ? (
-                                                                        <motion.div
-                                                                            initial={{ scale: 0, rotate: -45 }}
-                                                                            animate={{ 
-                                                                                scale: [0, 1.25, 0.95, 1.05, 1], 
-                                                                                rotate: [0, 15, -10, 5, 0],
-                                                                                y: [0, -4, 0]
-                                                                            }}
-                                                                            transition={{ 
-                                                                                scale: { type: "spring", stiffness: 260, damping: 15 },
-                                                                                y: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                                                                            }}
-                                                                            className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-4xl shadow-[0_0_20px_rgba(16,185,129,0.15)] shrink-0 select-none"
-                                                                        >
-                                                                            🏆
-                                                                        </motion.div>
-                                                                    ) : (
-                                                                        <motion.div
-                                                                            animate={{ 
-                                                                                x: [0, -6, 6, -6, 6, 0],
-                                                                                rotate: [0, -3, 3, -3, 3, 0]
-                                                                            }}
-                                                                            transition={{ duration: 0.5, ease: "easeInOut" }}
-                                                                            className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20 text-4xl shadow-[0_0_20px_rgba(239,68,68,0.1)] shrink-0 select-none"
-                                                                        >
-                                                                            ❌
-                                                                        </motion.div>
-                                                                    )}
-                                                                    
-                                                                    <div className="space-y-1 flex-1">
-                                                                        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                                                                            <h4 className="text-base font-bold text-foreground tracking-tight">
-                                                                                {quizResult.passed 
-                                                                                    ? "Verifikasi Berhasil!" 
-                                                                                    : "Verifikasi Belum Lulus"
-                                                                                }
-                                                                            </h4>
-                                                                            {quizResult.passed ? (
-                                                                                <Badge className="bg-emerald-500/20 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-full shadow-[0_0_10px_rgba(16,185,129,0.05)]">
-                                                                                    AI Verified
-                                                                                </Badge>
-                                                                            ) : (
-                                                                                <Badge className="bg-red-500/20 hover:bg-red-500/20 text-red-500 border border-red-500/30 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded-full">
-                                                                                    Uji Ulang
-                                                                                </Badge>
-                                                                            )}
-                                                                        </div>
-
-                                                                        <p className="text-sm font-medium text-foreground/80">
-                                                                            {quizResult.passed 
-                                                                                ? "Jawabanmu 100% Benar (3 dari 3)" 
-                                                                                : `Skor Kamu: ${quizResult.score} dari 3 Benar`
-                                                                            }
-                                                                        </p>
-
-                                                                        <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
-                                                                            {quizResult.passed
-                                                                                ? "Luar biasa! Pemahamanmu terhadap materi ini telah divalidasi oleh Gemini AI. Langkah belajar ini otomatis ditandai sebagai selesai!"
-                                                                                : "Jangan berkecil hati! Ini adalah kesempatan emas untuk mengulas kembali materinya. Cukup baca kembali keterangan di atas dan kamu pasti bisa melaluinya!"
-                                                                            }
-                                                                        </p>
-                                                                    </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`font-mono text-[11px] font-semibold ${quizResult.passed ? "text-success" : "text-destructive"}`}>
+                                                                        {quizResult.passed ? "✓ VERIFIKASI BERHASIL" : "✗ BELUM LULUS"}
+                                                                    </span>
+                                                                    <span className="font-mono text-[11px] text-muted-foreground">skor {quizResult.score}/3</span>
                                                                 </div>
-
-                                                                <div className="flex flex-wrap justify-center sm:justify-start gap-2 pt-3 border-t border-border/40 relative z-10">
+                                                                <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                                                                    {quizResult.passed
+                                                                        ? "Pemahamanmu tervalidasi Gemini AI. Langkah ini otomatis ditandai selesai."
+                                                                        : "Baca kembali keterangan di atas, lalu coba uji lagi. Kamu pasti bisa."}
+                                                                </p>
+                                                                <div className="flex flex-wrap gap-4 pt-1">
                                                                     {!quizResult.passed ? (
-                                                                        <Button
-                                                                            size="sm"
+                                                                        <button
                                                                             onClick={() => startQuiz(step.index)}
-                                                                            className="text-xs bg-red-500 hover:bg-red-600 text-white rounded-lg px-4 shadow-md transition-all active:scale-95 duration-200 animate-pulse font-semibold"
+                                                                            className="rounded-md bg-primary px-3.5 py-1.5 text-[12px] font-bold text-primary-foreground transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                                         >
-                                                                            <RotateCcw className="w-3.5 h-3.5 mr-1.5 animate-spin-slow" />
-                                                                            Coba Uji Lagi
-                                                                        </Button>
+                                                                            ↺ Coba uji lagi
+                                                                        </button>
                                                                     ) : (
-                                                                        <Button
-                                                                            size="sm"
+                                                                        <button
                                                                             onClick={() => setActiveQuizIdx(null)}
-                                                                            className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 shadow-md shadow-emerald-500/10 transition-all active:scale-95 duration-200 font-semibold"
+                                                                            className="rounded-md bg-success px-3.5 py-1.5 text-[12px] font-bold text-primary-foreground transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                                         >
-                                                                            Lanjutkan Belajar
-                                                                        </Button>
+                                                                            Lanjutkan belajar
+                                                                        </button>
                                                                     )}
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="ghost"
-                                                                        onClick={() => setActiveQuizIdx(null)}
-                                                                        className="text-xs text-muted-foreground hover:text-foreground rounded-lg px-3"
-                                                                    >
-                                                                        Tutup Kuis
-                                                                    </Button>
+                                                                    <button onClick={() => setActiveQuizIdx(null)} className="text-[12px] font-semibold text-muted-foreground hover:text-foreground">
+                                                                        Tutup kuis
+                                                                    </button>
                                                                 </div>
                                                             </motion.div>
                                                         ) : quizQuestions ? (
                                                             <AnimatePresence mode="wait">
                                                                 <motion.div
                                                                     key={currentQuestionIdx}
-                                                                    initial={{ opacity: 0, x: 30 }}
+                                                                    initial={{ opacity: 0, x: 24 }}
                                                                     animate={{ opacity: 1, x: 0 }}
-                                                                    exit={{ opacity: 0, x: -30 }}
-                                                                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                                                                    className="space-y-4"
+                                                                    exit={{ opacity: 0, x: -24 }}
+                                                                    transition={{ duration: 0.25, ease: EASE_OUT }}
+                                                                    className="space-y-3"
                                                                 >
-                                                                    <div className="space-y-2">
-                                                                        <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                                                                            <span className="text-primary font-bold flex items-center gap-1">
-                                                                                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-                                                                                AI Verification Quiz
-                                                                            </span>
-                                                                            <span>Soal {currentQuestionIdx + 1} dari {quizQuestions.length}</span>
-                                                                        </div>
-                                                                        
-                                                                        {/* Progress bar */}
-                                                                        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                                                                            <motion.div 
-                                                                                className="h-full bg-primary"
-                                                                                initial={{ width: `${(currentQuestionIdx / quizQuestions.length) * 100}%` }}
-                                                                                animate={{ width: `${((currentQuestionIdx + 1) / quizQuestions.length) * 100}%` }}
-                                                                                transition={{ duration: 0.3 }}
-                                                                            />
-                                                                        </div>
+                                                                    <div className="flex items-center justify-between font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
+                                                                        <span className="font-semibold text-primary">AI verification quiz</span>
+                                                                        <span>soal {currentQuestionIdx + 1}/{quizQuestions.length}</span>
                                                                     </div>
-                                                                    
-                                                                    <p className="text-sm font-semibold leading-snug text-foreground">
-                                                                        {quizQuestions[currentQuestionIdx].question}
-                                                                    </p>
-
-                                                                    <div className="grid grid-cols-1 gap-2 pt-1">
+                                                                    <BarFill pct={((currentQuestionIdx + 1) / quizQuestions.length) * 100} className="w-full" />
+                                                                    <p className="text-[13.5px] font-semibold leading-snug">{quizQuestions[currentQuestionIdx].question}</p>
+                                                                    <div className="grid gap-2 pt-1">
                                                                         {quizQuestions[currentQuestionIdx].options.map((opt, oIdx) => (
-                                                                            <motion.button
+                                                                            <button
                                                                                 key={oIdx}
-                                                                                initial={{ opacity: 0, y: 8 }}
-                                                                                animate={{ opacity: 1, y: 0 }}
-                                                                                transition={{ delay: oIdx * 0.05, duration: 0.2 }}
-                                                                                whileHover={{ scale: 1.01, x: 4 }}
-                                                                                whileTap={{ scale: 0.99 }}
                                                                                 onClick={() => handleAnswerSelect(oIdx)}
-                                                                                className="w-full text-left text-xs p-3 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/[0.02] hover:shadow-md transition-all cursor-pointer shadow-sm font-medium flex items-center gap-2 group text-foreground"
+                                                                                className="group flex items-center gap-2.5 rounded-md border border-border px-3 py-2.5 text-left text-[13px] font-medium transition-colors hover:border-primary/50 hover:bg-primary/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                                             >
-                                                                                <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+                                                                                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted font-mono text-[10px] font-bold text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
                                                                                     {String.fromCharCode(65 + oIdx)}
                                                                                 </span>
                                                                                 <span className="flex-1">{opt}</span>
-                                                                            </motion.button>
+                                                                            </button>
                                                                         ))}
                                                                     </div>
-
-                                                                    <button
-                                                                        onClick={() => setActiveQuizIdx(null)}
-                                                                        className="text-[10px] text-muted-foreground hover:text-foreground transition-colors pt-2 block font-medium"
-                                                                    >
-                                                                        Batal & Keluar Kuis
+                                                                    <button onClick={() => setActiveQuizIdx(null)} className="pt-1 font-mono text-[10.5px] text-muted-foreground hover:text-foreground">
+                                                                        batal & keluar kuis
                                                                     </button>
                                                                 </motion.div>
                                                             </AnimatePresence>
@@ -757,35 +448,28 @@ function RoadmapContent() {
                         })}
                     </div>
 
-                    {/* Finish marker */}
+                    {/* Finish */}
                     {progressPct === 100 && (
-                        <div className="mt-6 rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/5 p-5">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/40 shrink-0 text-lg">
-                                    🎉
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-emerald-600">Selamat, semua langkah selesai!</p>
-                                    <p className="text-xs text-muted-foreground">Kamu sudah siap untuk melamar posisi ini.</p>
-                                </div>
-                            </div>
-
-                            {/* Apply CTA */}
-                            {data?.job_id && (
-                                <ApplyAtFinish jobId={data.job_id} jobTitle={data.job_title ?? ""} jobCompany={data.job_company ?? ""} />
-                            )}
-                        </div>
+                        <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, ease: EASE_OUT }}
+                            className="mt-8 border-l-2 border-success bg-success/[0.05] px-5 py-4"
+                        >
+                            <p className="text-[14px] font-bold text-success">✓ Semua langkah selesai</p>
+                            <p className="mt-0.5 mb-4 text-xs text-muted-foreground">Kamu sudah siap untuk melamar posisi ini.</p>
+                            {data?.job_id && <ApplyAtFinish jobId={data.job_id} jobTitle={data.job_title ?? ""} jobCompany={data.job_company ?? ""} />}
+                        </motion.div>
                     )}
                 </div>
             )}
-
         </div>
     );
 }
 
 export default function RoadmapPage() {
     return (
-        <Suspense fallback={<p className="text-sm text-muted-foreground animate-pulse">Loading roadmap…</p>}>
+        <Suspense fallback={<p className="font-mono text-sm text-muted-foreground">Loading roadmap…</p>}>
             <RoadmapContent />
         </Suspense>
     );

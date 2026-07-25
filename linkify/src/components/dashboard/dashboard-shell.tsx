@@ -270,7 +270,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 </header>
 
                 {/* Page content */}
-                <main className="flex-1 p-4 md:p-8 max-w-5xl w-full mx-auto">
+                <main className="flex-1 w-full max-w-[1240px] p-4 md:px-8 md:py-7">
                     {children}
                 </main>
             </div>

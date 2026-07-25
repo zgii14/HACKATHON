@@ -30,6 +30,7 @@ const CopyButton = ({ text, className, icon }: Props) => {
 
     return (
         <button
+            onClick={handleClick}
             className={cn(
                 "flex items-center justify-center group bg-foreground/10 p-2 transition-all duration-100 hover:scale-105 hover:bg-foreground/20 rounded-md active:scale-95",
                 className

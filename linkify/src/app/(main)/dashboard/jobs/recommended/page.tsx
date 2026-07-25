@@ -1,19 +1,10 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+// Hallmark · genre: modern-minimal · macrostructure: Workbench (app-surface) · theme: GitHire violet (locked)
+
+import { ActionLink, BarFill, CountUp, EmptyState, JobListRow, PageHeader, Reveal, Spotlight } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
 import { useQuery } from "@tanstack/react-query";
-import {
-    ArrowRight,
-    ArrowUpRight,
-    BookOpen,
-    Briefcase,
-    ChevronRight,
-    MapPin,
-    Sparkles,
-    Target,
-    Wifi,
-} from "lucide-react";
 import Link from "next/link";
 
 type Job = {
@@ -27,182 +18,6 @@ type Job = {
     match_score: number | null;
 };
 
-/* ── Score Ring ── */
-function ScoreRing({ score, size = 48 }: { score: number; size?: number }) {
-    const pct = Math.round(score * 100);
-    const r = (size - 6) / 2;
-    const circ = 2 * Math.PI * r;
-    const offset = circ - (pct / 100) * circ;
-    const color = pct >= 60 ? "#22c55e" : pct >= 30 ? "#f59e0b" : "#ef4444";
-    return (
-        <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
-            <svg width={size} height={size} className="-rotate-90">
-                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth="3" className="text-black/[0.06] dark:text-white/[0.06]" />
-                <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} className="transition-all duration-700" />
-            </svg>
-            <span className="absolute text-xs font-bold" style={{ color }}>{pct}%</span>
-        </div>
-    );
-}
-
-/* ── Company Avatar ── */
-function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
-    const g = [
-        "from-violet-500 to-fuchsia-500", "from-blue-500 to-cyan-400",
-        "from-emerald-500 to-teal-400", "from-orange-500 to-amber-400",
-        "from-pink-500 to-rose-400", "from-indigo-500 to-violet-400",
-        "from-teal-500 to-green-400", "from-red-500 to-orange-400",
-    ];
-    const sz = size === "sm" ? "w-9 h-9 text-xs rounded-lg" : "w-11 h-11 text-sm rounded-xl";
-    return (
-        <div className={`${sz} bg-gradient-to-br ${g[name.charCodeAt(0) % g.length]} flex items-center justify-center text-white font-bold shrink-0`}>
-            {name.charAt(0).toUpperCase()}
-        </div>
-    );
-}
-
-/* ── Rank badge ── */
-function RankBadge({ rank }: { rank: number }) {
-    const styles = rank === 1
-        ? "from-amber-300 to-orange-500 text-white shadow-lg shadow-amber-500/25"
-        : rank === 2
-        ? "from-slate-300 to-slate-500 text-white"
-        : rank === 3
-        ? "from-amber-700 to-amber-900 text-amber-200"
-        : "from-black/[0.04] to-black/[0.08] dark:from-white/[0.06] dark:to-white/[0.1] text-muted-foreground";
-    return (
-        <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${styles} flex items-center justify-center text-xs font-bold shrink-0`}>
-            {rank}
-        </div>
-    );
-}
-
-/* ── Hero Card (Rank 1) ── */
-function HeroCard({ job }: { job: Job }) {
-    return (
-        <Link href={`/dashboard/jobs/${job.id}`} prefetch={false} className="block group">
-            <div className="relative rounded-2xl border glass-border glass overflow-hidden transition-all duration-300 hover:glass-border-hover hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1">
-                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
-                <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-amber-500/[0.06] to-transparent rounded-bl-full pointer-events-none" />
-
-                <div className="relative p-6">
-                    <div className="flex items-center gap-1.5 text-[10px] text-amber-500 dark:text-amber-400 font-semibold uppercase tracking-wider mb-4">
-                        <Sparkles className="w-3 h-3" /> Best match
-                    </div>
-
-                    <div className="flex items-start gap-4">
-                        <Avatar name={job.company} />
-                        <div className="min-w-0 flex-1">
-                            <h2 className="text-lg font-bold leading-snug group-hover:text-primary transition-colors">{job.title}</h2>
-                            <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground flex-wrap">
-                                <span className="font-medium">{job.company}</span>
-                                {job.location && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{job.location}</span>}
-                                {job.is_remote && <span className="flex items-center gap-0.5 text-emerald-500"><Wifi className="w-3 h-3" />Remote</span>}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-3 line-clamp-2 leading-relaxed">{job.description}</p>
-
-                            <div className="flex flex-wrap gap-1.5 mt-3">
-                                {job.required_skills.slice(0, 6).map((s) => (
-                                    <span key={s} className="text-[10px] px-2 py-0.5 rounded-md glass-md border glass-border text-muted-foreground">{s}</span>
-                                ))}
-                                {job.required_skills.length > 6 && (
-                                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-primary/[0.06] text-primary/70 font-medium">+{job.required_skills.length - 6}</span>
-                                )}
-                            </div>
-
-                            <div className="flex gap-2 mt-4">
-                                <Button size="sm" variant="outline" className="text-xs h-8" asChild>
-                                    <Link href={`/dashboard/roadmap?job_id=${job.id}`} prefetch={false} onClick={(e) => e.stopPropagation()}>
-                                        <BookOpen className="w-3 h-3 mr-1.5" /> Buat Roadmap
-                                    </Link>
-                                </Button>
-                                <Button size="sm" className="text-xs h-8" asChild>
-                                    <Link href={`/dashboard/jobs/${job.id}`} prefetch={false} onClick={(e) => e.stopPropagation()}>
-                                        Lihat Detail <ArrowRight className="w-3 h-3 ml-1.5" />
-                                    </Link>
-                                </Button>
-                            </div>
-                        </div>
-
-                        {job.match_score != null && <ScoreRing score={job.match_score} size={56} />}
-                    </div>
-                </div>
-            </div>
-        </Link>
-    );
-}
-
-/* ── Grid Card (Rank 2-3) ── */
-function PodiumCard({ job, rank }: { job: Job; rank: number }) {
-    return (
-        <Link href={`/dashboard/jobs/${job.id}`} prefetch={false} className="block group">
-            <div className="h-full rounded-2xl border glass-border glass p-4 transition-all duration-300 hover:glass-border-hover hover:shadow-xl hover:shadow-black/10 hover:-translate-y-0.5 flex flex-col">
-                <div className="flex items-start gap-3 mb-3">
-                    <RankBadge rank={rank} />
-                    <Avatar name={job.company} size="sm" />
-                    <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">{job.title}</h3>
-                        <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-muted-foreground">
-                            <span>{job.company}</span>
-                            {job.is_remote && <span className="text-emerald-500 flex items-center gap-0.5"><Wifi className="w-2.5 h-2.5" />Remote</span>}
-                        </div>
-                    </div>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
-                </div>
-
-                <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed mb-3">{job.description}</p>
-
-                <div className="flex flex-wrap gap-1 mb-3">
-                    {job.required_skills.slice(0, 4).map((s) => (
-                        <span key={s} className="text-[10px] px-1.5 py-0.5 rounded-md glass-md border glass-border text-muted-foreground">{s}</span>
-                    ))}
-                </div>
-
-                {job.match_score != null && (
-                    <div className="mt-auto pt-3 border-t glass-divider flex items-center justify-between">
-                        <span className="text-[11px] text-muted-foreground">Match</span>
-                        <ScoreRing score={job.match_score} size={36} />
-                    </div>
-                )}
-            </div>
-        </Link>
-    );
-}
-
-/* ── List Card (Rank 4+) ── */
-function ListCard({ job, rank }: { job: Job; rank: number }) {
-    const pct = job.match_score != null ? Math.round(job.match_score * 100) : null;
-    const barColor = pct != null ? (pct >= 60 ? "from-emerald-400 to-green-500" : pct >= 30 ? "from-amber-400 to-orange-500" : "from-rose-400 to-red-500") : "";
-    const textColor = pct != null ? (pct >= 60 ? "text-emerald-500" : pct >= 30 ? "text-amber-500" : "text-rose-500") : "";
-
-    return (
-        <Link href={`/dashboard/jobs/${job.id}`} prefetch={false} className="block group">
-            <div className="flex items-center gap-3 p-3 rounded-xl border glass-border glass transition-all duration-200 hover:glass-border-hover hover:shadow-md hover:-translate-y-0.5">
-                <RankBadge rank={rank} />
-                <Avatar name={job.company} size="sm" />
-                <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-medium truncate group-hover:text-primary transition-colors">{job.title}</h3>
-                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
-                        <span>{job.company}</span>
-                        {job.location && <span className="flex items-center gap-0.5"><MapPin className="w-2.5 h-2.5" />{job.location}</span>}
-                        {job.is_remote && <span className="text-emerald-500 flex items-center gap-0.5"><Wifi className="w-2.5 h-2.5" />Remote</span>}
-                    </div>
-                </div>
-                {pct != null && (
-                    <div className="shrink-0 flex items-center gap-2">
-                        <div className="w-16 h-1.5 rounded-full bg-black/[0.06] dark:bg-white/[0.06] overflow-hidden">
-                            <div className={`h-full rounded-full bg-gradient-to-r ${barColor}`} style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className={`text-xs font-bold tabular-nums ${textColor}`}>{pct}%</span>
-                    </div>
-                )}
-                <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0" />
-            </div>
-        </Link>
-    );
-}
-
-/* ── Main Page ── */
 export default function RecommendedJobsPage() {
     const { withAuth, authReady } = useApi();
 
@@ -213,82 +28,145 @@ export default function RecommendedJobsPage() {
         staleTime: 5 * 60 * 1000,
     });
 
-    // Loading
     if (isLoading) {
         return (
-            <div className="space-y-4 max-w-[880px]">
-                <div className="h-7 w-52 glass-md rounded-lg animate-pulse" />
-                <div className="h-[200px] rounded-2xl border glass-border glass animate-pulse" />
-                <div className="grid md:grid-cols-2 gap-3">
-                    {[1, 2].map((i) => <div key={i} className="h-[220px] rounded-2xl border glass-border glass animate-pulse" />)}
+            <div className="w-full space-y-4">
+                <div className="h-6 w-48 animate-pulse rounded bg-muted/50" />
+                <div className="space-y-2 border-t border-border pt-4">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="h-12 animate-pulse rounded bg-muted/30" />
+                    ))}
                 </div>
             </div>
         );
     }
 
-    // Empty
     if (jobs.length === 0) {
         return (
-            <div className="max-w-md mx-auto py-16 text-center space-y-5">
-                <div className="w-16 h-16 rounded-2xl glass-lg border glass-border mx-auto flex items-center justify-center">
-                    <Target className="w-7 h-7 text-muted-foreground/60" />
+            <div className="w-full">
+                <PageHeader crumb="dasbor / rekomendasi" title="Rekomendasi lowongan" />
+                <div className="pt-8">
+                    <EmptyState title="Belum ada rekomendasi">
+                        Selesaikan{" "}
+                        <Link href="/dashboard/onboarding" className="font-semibold text-primary hover:underline">
+                            onboarding
+                        </Link>{" "}
+                        agar kami bisa mencocokkan skill-mu dengan lowongan.
+                    </EmptyState>
                 </div>
-                <div className="space-y-1.5">
-                    <h2 className="font-semibold text-lg">Belum ada rekomendasi</h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                        Selesaikan onboarding agar kami bisa mencocokkan skill-mu dengan lowongan.
-                    </p>
-                </div>
-                <Button asChild>
-                    <Link href="/dashboard/onboarding">Mulai Onboarding</Link>
-                </Button>
             </div>
         );
     }
 
-    const hero = jobs[0];
-    const podium = jobs.slice(1, 3);
-    const rest = jobs.slice(3);
     const avgScore = jobs.slice(0, 5).reduce((s, j) => s + (j.match_score ?? 0), 0) / Math.min(5, jobs.length);
+    const [top, ...rest] = jobs;
+    const topPct = top.match_score == null ? null : Math.round(top.match_score * 100);
 
     return (
-        <div className="space-y-5 max-w-[880px]">
+        <div className="w-full">
+            <PageHeader
+                crumb="dasbor / rekomendasi"
+                title="Rekomendasi lowongan"
+                sub="Diurutkan dari match score tertinggi. Klik baris untuk lihat deskripsi lengkap."
+                right={
+                    <div className="flex flex-col items-start gap-1 md:items-end">
+                        <div className="flex items-baseline gap-2">
+                            <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">rata-rata top-5</span>
+                            <CountUp value={Math.round(avgScore * 100)} className="font-mono text-[24px] font-semibold tabular-nums tracking-tight" />
+                            <span className="font-mono text-xs text-muted-foreground">%</span>
+                        </div>
+                        <Link
+                            href="/dashboard/jobs"
+                            className="font-mono text-[11.5px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            browse semua lowongan →
+                        </Link>
+                    </div>
+                }
+            />
 
-            {/* Header */}
-            <div className="flex items-end justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Rekomendasi</h1>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        {jobs.length} lowongan · Rata-rata match top-5: <span className="font-medium text-foreground">{Math.round(avgScore * 100)}%</span>
-                    </p>
-                </div>
-                <Button variant="outline" size="sm" asChild className="shrink-0">
-                    <Link href="/dashboard/jobs">
-                        <Briefcase className="w-3.5 h-3.5 mr-1.5" /> Browse Semua
-                    </Link>
-                </Button>
-            </div>
+            {/* ── Top pick: satu-satunya blok yang menonjol, jadi jangkar mata ── */}
+            <Reveal delay={0.07}>
+                <Spotlight className="mt-6 overflow-hidden rounded-lg border border-border border-l-2 border-l-primary bg-primary/[0.035] p-5 md:p-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                            <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.09em] text-primary">
+                                Top match · pilihan teratas
+                            </span>
+                            <h2 className="mt-2 truncate text-[19px] font-bold leading-tight tracking-tight">{top.title}</h2>
+                            <p className="mt-1 truncate text-[13px] text-muted-foreground">
+                                {top.company}
+                                {top.location ? ` · ${top.location}` : ""}
+                                {top.is_remote ? " · remote" : ""}
+                            </p>
+                        </div>
+                        {topPct != null && (
+                            <div className="shrink-0 text-right">
+                                <div className="flex items-baseline justify-end gap-0.5">
+                                    <CountUp value={topPct} className="font-mono text-[30px] font-semibold leading-none tabular-nums tracking-tight" />
+                                    <span className="font-mono text-sm text-muted-foreground">%</span>
+                                </div>
+                                <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">match</span>
+                            </div>
+                        )}
+                    </div>
 
-            {/* Hero — #1 */}
-            <HeroCard job={hero} />
+                    {topPct != null && <BarFill pct={topPct} className="mt-4 w-full" />}
 
-            {/* Podium — #2 & #3 */}
-            {podium.length > 0 && (
-                <div className="grid md:grid-cols-2 gap-3">
-                    {podium.map((job, i) => (
-                        <PodiumCard key={job.id} job={job} rank={i + 2} />
-                    ))}
-                </div>
-            )}
+                    {top.description && (
+                        <p className="mt-4 max-w-prose text-[13px] leading-relaxed text-muted-foreground line-clamp-2">{top.description}</p>
+                    )}
 
-            {/* Rest — #4+ */}
+                    {top.required_skills.length > 0 && (
+                        <p className="mt-3 text-xs leading-relaxed">
+                            <span className="font-mono uppercase tracking-[0.06em] text-muted-foreground">skill · </span>
+                            {top.required_skills.slice(0, 8).map((skill, i) => (
+                                <span key={skill}>
+                                    {i > 0 && <span className="mx-1.5 text-border">·</span>}
+                                    <span className="font-medium text-foreground">{skill}</span>
+                                </span>
+                            ))}
+                        </p>
+                    )}
+
+                    <div className="mt-5 flex flex-wrap items-center gap-4">
+                        <ActionLink href={`/dashboard/jobs/${top.id}`}>
+                            Lihat detail
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5">
+                                <path d="M5 12h14M13 5l7 7-7 7" />
+                            </svg>
+                        </ActionLink>
+                        <Link
+                            href={`/dashboard/roadmap?job_id=${top.id}`}
+                            prefetch={false}
+                            className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            Buat roadmap
+                        </Link>
+                    </div>
+                </Spotlight>
+            </Reveal>
+
+            {/* ── Sisanya: list ringkas, mulai dari peringkat 2 ── */}
             {rest.length > 0 && (
-                <div className="space-y-2">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Lowongan Lainnya</p>
-                    {rest.map((job, i) => (
-                        <ListCard key={job.id} job={job} rank={i + 4} />
-                    ))}
-                </div>
+                <Reveal delay={0.13}>
+                    <div className="mt-9 flex items-baseline justify-between border-b border-border pb-2.5">
+                        <h3 className="text-[13px] font-bold tracking-tight">Rekomendasi lainnya</h3>
+                        <span className="font-mono text-[11px] text-muted-foreground">{rest.length} lowongan</span>
+                    </div>
+                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] gap-4 pb-2 pt-4">
+                        <span className="w-6 font-mono text-[10.5px] font-medium uppercase tracking-[0.07em] text-muted-foreground">#</span>
+                        <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.07em] text-muted-foreground">Posisi</span>
+                        <span className="text-right font-mono text-[10.5px] font-medium uppercase tracking-[0.07em] text-muted-foreground">Match</span>
+                        <span className="w-4" aria-hidden="true" />
+                    </div>
+                    <ul>
+                        {rest.map((job, i) => (
+                            <JobListRow key={job.id} job={job} rank={i + 2} index={i} />
+                        ))}
+                    </ul>
+                    <p className="pt-3 font-mono text-[11.5px] text-muted-foreground">{jobs.length} lowongan cocok dengan profilmu</p>
+                </Reveal>
             )}
         </div>
     );
