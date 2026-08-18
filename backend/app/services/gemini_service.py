@@ -6,10 +6,7 @@ from google import genai
 from app.config import settings
 
 
-if not settings.gemini_api_key:
-    raise RuntimeError("GEMINI_API_KEY belum diset di environment")
-
-client = genai.Client(api_key=settings.gemini_api_key)
+client = genai.Client(api_key=settings.gemini_api_key) if settings.gemini_api_key else None
 
 # Model GA yang stabil (bukan preview)
 GEMINI_MODEL = "gemini-3.1-flash-lite"
@@ -30,6 +27,9 @@ def _call_gemini_with_retry(contents: str) -> str:
     - Hanya retry untuk error sementara (timeout, overload, network)
     - Langsung raise untuk error permanen (invalid API key, quota habis)
     """
+    if client is None:
+        raise RuntimeError("GEMINI_API_KEY belum diset di environment")
+
     last_exc: Exception | None = None
 
     for attempt in range(MAX_RETRIES):

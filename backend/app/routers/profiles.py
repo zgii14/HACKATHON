@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
@@ -51,6 +51,10 @@ def _merge_skills(gh: list[str], cv: list[str]) -> list[str]:
             seen.add(low)
             out.append(s.strip())
     return out
+
+
+def has_usable_cv_data(data: dict | None) -> bool:
+    return isinstance(data, dict) and any(bool(value) for value in data.values())
 
 
 @router.post("/sync")
@@ -115,6 +119,8 @@ async def sync_profile(
         cv_data = extract_cv_data_from_text(text)
     except Exception as e:
         raise HTTPException(502, f"Gagal mengekstrak data dari CV menggunakan Gemini AI: {e!s}") from e
+    if not has_usable_cv_data(cv_data):
+        raise HTTPException(502, "AI tidak berhasil membaca struktur CV. Silakan coba PDF lain.")
 
     gh_skills = _skills_from_github(gh_signals)
     merged = _merge_skills(gh_skills, cv_skills)

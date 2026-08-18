@@ -20,6 +20,10 @@ router = APIRouter(prefix="/recruiter", tags=["recruiter"])
 
 VALID_RECOMMENDATIONS = {"interview", "consider", "reject"}
 
+
+def _escape_like(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
 # ── Pydantic Request Schemas ───────────────────────────────────────────────
 class JobCreate(BaseModel):
     title: str
@@ -73,6 +77,33 @@ def _extract_json_data(text: str) -> dict | None:
     except Exception:
         return None
 
+
+def normalize_screening_result(data: dict | None) -> dict | None:
+    if not isinstance(data, dict):
+        return None
+    score = data.get("match_score")
+    if isinstance(score, bool) or not isinstance(score, (int, float)) or not 0 <= score <= 100:
+        return None
+
+    recommendation = data.get("recommendation")
+    if recommendation not in VALID_RECOMMENDATIONS:
+        recommendation = "consider"
+    reasoning = data.get("reasoning")
+    if not isinstance(reasoning, str):
+        reasoning = ""
+    strengths = data.get("strengths")
+    weaknesses = data.get("weaknesses")
+    if not isinstance(strengths, list) or not all(isinstance(item, str) for item in strengths):
+        strengths = []
+    if not isinstance(weaknesses, list) or not all(isinstance(item, str) for item in weaknesses):
+        weaknesses = []
+    return {
+        "match_score": score,
+        "recommendation": recommendation,
+        "reasoning": reasoning,
+        "strengths": strengths,
+        "weaknesses": weaknesses,
+    }
 # ── Endpoints ───────────────────────────────────────────────────────────────
 
 @router.post("/jobs")
@@ -285,21 +316,26 @@ def ai_candidate_screening(
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == app.user_id).first()
     if not profile or not profile.cv_data:
         # Fallback jika CV belum di-upload/sync
+        score = round(
+            jaccard_score(profile.merged_skills if profile else [], job.required_skills or []) * 100
+        )
         return {
-            "match_score": 10,
+            "match_score": score,
             "recommendation": "consider",
             "reasoning": "Profil kandidat belum lengkap sehingga penilaian terbatas.",
             "strengths": ["Profil kandidat belum disinkronkan sepenuhnya."],
             "weaknesses": ["Kandidat belum mengunggah CV / portofolio."],
-            "score_source": "ai",
+            "score_source": "fallback",
             "cached": False,
         }
 
     fingerprint = _screening_fingerprint(job, profile)
     if not refresh and app.ai_screening and app.screening_fingerprint == fingerprint:
-        cached = dict(app.ai_screening)
-        cached["cached"] = True
-        return cached
+        cached = normalize_screening_result(app.ai_screening)
+        if cached is not None:
+            cached["score_source"] = "ai"
+            cached["cached"] = True
+            return cached
 
     # Anchor deterministik dari skor algoritmik + skill matched/missing
     algo_score = round(jaccard_score(profile.merged_skills or [], job.required_skills or []) * 100)
@@ -354,15 +390,9 @@ def ai_candidate_screening(
     except Exception:
         raise HTTPException(502, "Layanan AI sedang tidak tersedia. Silakan coba lagi.")
 
-    res_json = _extract_json_data(text)
-    if not res_json or "match_score" not in res_json:
+    res_json = normalize_screening_result(_extract_json_data(text))
+    if res_json is None:
         raise HTTPException(502, "Hasil analisis AI tidak valid. Silakan coba lagi.")
-    if res_json.get("recommendation") not in VALID_RECOMMENDATIONS:
-        res_json["recommendation"] = "consider"
-    if not isinstance(res_json.get("reasoning"), str):
-        res_json["reasoning"] = ""
-    res_json.setdefault("strengths", [])
-    res_json.setdefault("weaknesses", [])
     # Tandai bahwa skor ini dari AI (berbeda metodologi dari skor algoritma di job list)
     res_json["score_source"] = "ai"
     res_json["cached"] = False
@@ -389,14 +419,17 @@ def search_candidates(
     query = db.query(CandidateProfile, User).join(User, CandidateProfile.user_id == User.id)
 
     if q:
+        search = _escape_like(q)
         query = query.filter(
-            (CandidateProfile.bio_full_name.ilike(f"%{q}%")) |
-            (CandidateProfile.bio_address.ilike(f"%{q}%")) |
-            (CandidateProfile.github_username.ilike(f"%{q}%"))
+            (CandidateProfile.bio_full_name.ilike(f"%{search}%", escape="\\")) |
+            (CandidateProfile.bio_address.ilike(f"%{search}%", escape="\\")) |
+            (CandidateProfile.github_username.ilike(f"%{search}%", escape="\\"))
         )
 
     if location:
-        query = query.filter(CandidateProfile.bio_address.ilike(f"%{location}%"))
+        query = query.filter(
+            CandidateProfile.bio_address.ilike(f"%{_escape_like(location)}%", escape="\\")
+        )
 
     from app.services.matching import normalize_skill_set
     from sqlalchemy import String, cast
@@ -410,7 +443,9 @@ def search_candidates(
     if clean_skills:
         merged_text = cast(CandidateProfile.merged_skills, String)
         for skill in clean_skills[:5]:
-            query = query.filter(merged_text.ilike(f'%{skill}%'))
+            query = query.filter(
+                merged_text.ilike(f"%{_escape_like(skill)}%", escape="\\")
+            )
 
     results = query.all()
 

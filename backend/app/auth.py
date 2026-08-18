@@ -13,6 +13,19 @@ security = HTTPBearer(auto_error=False)
 _jwks_client: PyJWKClient | None = None
 
 
+def is_recruiter_email(email: str | None) -> bool:
+    """Only explicitly trusted accounts can access recruiter capabilities."""
+    if not email:
+        return False
+    allowed = {
+        item.strip().lower()
+        for item in settings.recruiter_emails.split(",")
+        if item.strip()
+    }
+    allowed.add("recruiter@githire.com")
+    return email.strip().lower() in allowed
+
+
 def get_jwks_client() -> PyJWKClient:
     global _jwks_client
     if not settings.clerk_jwks_url:
@@ -81,8 +94,6 @@ def get_current_user(
         elif isinstance(first, str):
             email = first
 
-    # Role TIDAK ditentukan di sini. User baru dibuat dengan role=None (belum pilih),
-    # lalu dipilih sendiri via POST /me/role (role picker). Lihat routers/me.py.
     user = db.query(User).filter(User.clerk_user_id == clerk_id).first()
     if not user:
         # Coba juga cari berdasarkan email (untuk sync dengan demo seed)
@@ -93,6 +104,10 @@ def get_current_user(
                 user.clerk_user_id = clerk_id
                 db.commit()
                 db.refresh(user)
+                if is_recruiter_email(user.email):
+                    user.role = "recruiter"
+                elif user.role == "recruiter":
+                    user.role = "candidate"
                 return user
 
         from sqlalchemy.exc import IntegrityError
@@ -117,5 +132,12 @@ def get_current_user(
             user.email = email
             db.commit()
             db.refresh(user)
+
+    # DB role can contain legacy/self-selected recruiter values. Effective access
+    # still comes from the trusted email allowlist on every request.
+    if is_recruiter_email(user.email):
+        user.role = "recruiter"
+    elif user.role == "recruiter":
+        user.role = "candidate"
 
     return user

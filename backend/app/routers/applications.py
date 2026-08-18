@@ -57,6 +57,16 @@ def _match_score(db: Session, user: User, job: Job) -> float | None:
     return jaccard_score(merged_norm, required_norm)
 
 
+def can_confirm_interview(current_status: str, requested_status: str) -> bool:
+    return (
+        requested_status == ApplicationStatus.interview_confirmed.value
+        and current_status in {
+            ApplicationStatus.interview.value,
+            ApplicationStatus.interview_confirmed.value,
+        }
+    )
+
+
 def _detect_invite(note: str | None) -> tuple[bool, dict | None]:
     """Deteksi apakah note adalah undangan dari recruiter (format JSON invite)."""
     if not note:
@@ -214,7 +224,7 @@ def update_status(
 
     # Kandidat hanya boleh konfirmasi kehadiran wawancara.
     # Status lain (interview, rejected, offer) hanya recruiter yang bisa set.
-    if body.status != ApplicationStatus.interview_confirmed:
+    if not can_confirm_interview(app.status, body.status.value):
         raise HTTPException(
             403,
             "Kamu hanya bisa mengkonfirmasi kehadiran wawancara. "

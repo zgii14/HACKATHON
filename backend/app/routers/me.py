@@ -5,7 +5,7 @@ from fastapi.responses import Response
 from sqlalchemy import update as sa_update
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_user
+from app.auth import get_current_user, is_recruiter_email
 from app.database import get_db
 from app.models import CandidateProfile, Job, RoadmapProgress, User
 from app.services.cv_pdf import render_cv_pdf
@@ -25,7 +25,7 @@ from app.schemas import (
     UserOut,
 )
 from app.services import roadmap_service
-from app.services.matching import jaccard_score, normalize_skill, skill_gap
+from app.services.matching import jaccard_score, normalize_skill
 
 router = APIRouter(prefix="/me", tags=["me"])
 
@@ -82,6 +82,8 @@ def set_role(
     """Menetapkan role user (dipanggil dari role picker saat onboarding)."""
     if body.role not in VALID_ROLES:
         raise HTTPException(400, f"Role tidak valid. Pilih salah satu: {', '.join(sorted(VALID_ROLES))}")
+    if body.role == "recruiter" and not is_recruiter_email(user.email):
+        raise HTTPException(403, "Akun ini belum terdaftar sebagai recruiter.")
     user.role = body.role
     db.commit()
     db.refresh(user)
@@ -318,7 +320,6 @@ def get_skill_gap(
 
     # Set skill yang ada bukti GitHub (normalized)
     gh_all_norm: set[str] = {normalize_skill(s) for s in gh_all}
-    gh_strong_norm: set[str] = {normalize_skill(s) for s in gh_strong}
 
     # Skill user yang TIDAK ada di GitHub sama sekali → "cv_only"
     # Hitung dari set ternormalisasi agar duplikat case-variant tidak menggelembungkan angka
@@ -424,6 +425,10 @@ def get_bookmarks(
                 total_steps=total_steps,
                 completed_steps=completed_steps,
                 match_score=score,
+                salary=job.salary,
+                min_education=job.min_education,
+                min_experience=job.min_experience,
+                work_type=job.work_type,
             )
         )
 

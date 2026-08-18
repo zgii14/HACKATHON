@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     cors_origin_regex: str | None = None  # regex origin CORS (mis. semua *.vercel.app)
     admin_secret: str | None = None  # Set di .env: ADMIN_SECRET=your_secret
+    recruiter_emails: str = ""
 
 
 settings = Settings()

@@ -551,8 +551,9 @@ DUMMY_JOBS: list[dict] = [
 
 
 def seed_jobs_if_empty(db: Session) -> None:
-    count = db.query(Job).count()
-    if count > 0:
+    # Demo recruiter job may already exist on a fresh database; use a static
+    # seed title as the idempotency marker instead of total job count.
+    if db.query(Job).filter(Job.title == DUMMY_JOBS[0]["title"]).first():
         return
     owner_id = _seed_owner_id(db)
     for row in DUMMY_JOBS:

@@ -139,8 +139,8 @@ def jaccard_score(candidate: list[str], required: list[str]) -> float:
     ca = normalize_skill_set(candidate)
     rq = normalize_skill_set(required)
     if not rq:
-        # Job tanpa required skills → tidak ada kebutuhan yang gagal dipenuhi
-        return 1.0
+        # Job tanpa requirements has no meaningful match signal.
+        return 0.0
     inter = ca & rq
     return len(inter) / len(rq)
 
