@@ -1,25 +1,13 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/dashboard/ui";
+import { PageHeader, SecTitle } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-    FileText,
     Plus,
     Trash2,
-    Download,
     Save,
-    RotateCcw,
-    Sparkles,
-    GraduationCap,
-    Briefcase,
-    Users,
-    Award,
-    Settings,
-    User,
-    ArrowLeft,
     CheckCircle2,
     AlertCircle
 } from "lucide-react";
@@ -37,9 +25,8 @@ import {
     BorderStyle
 } from "docx";
 import { saveAs } from "file-saver";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 // ── Types ──
 type EducationItem = {
@@ -915,8 +902,8 @@ export default function CVGeneratorPage() {
     if (isLoading) {
         return (
             <div className="space-y-4 max-w-3xl">
-                <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
-                <div className="h-64 rounded-2xl border bg-card animate-pulse" />
+                <div className="h-8 w-48 rounded-md bg-muted animate-pulse" />
+                <div className="h-64 rounded-md border bg-muted/20 animate-pulse" />
             </div>
         );
     }
@@ -992,12 +979,8 @@ export default function CVGeneratorPage() {
             )}
 
             {/* ── Pilihan versi CV yang dikirim ke recruiter saat melamar ── */}
-            <div className="border-t border-border pt-6 space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                        <Settings className="w-4 h-4 text-violet-400" />
-                        CV yang dikirim saat melamar
-                    </h3>
+            <div className="pt-8 space-y-4">
+                <SecTitle title="CV yang dikirim saat melamar" meta={
                     <button
                         onClick={previewSentCV}
                         disabled={!bioComplete}
@@ -1006,7 +989,7 @@ export default function CVGeneratorPage() {
                     >
                         Preview CV terkirim
                     </button>
-                </div>
+                } />
                 <p className="-mt-1 text-xs text-muted-foreground">
                     Pilih versi CV yang akan diterima recruiter ketika kamu melamar lowongan.
                 </p>
@@ -1068,19 +1051,18 @@ export default function CVGeneratorPage() {
                 {/* 1. DATA DIRI (BIO) */}
                 <div
                     id="cv-contact"
-                    className={`border-t pt-6 space-y-4 scroll-mt-20 ${
-                        bioComplete ? "border-border" : "rounded-b-md border-amber-500/40 bg-amber-500/[0.02] px-4 pb-4"
+                    className={`space-y-4 scroll-mt-20 ${
+                        bioComplete ? "" : "rounded-md border border-amber-500/40 bg-amber-500/[0.02] px-4 py-4"
                     }`}
                 >
-                    <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                        <User className="w-4 h-4 text-violet-400" />
-                        1. Informasi Kontak
-                        {!bioComplete && (
-                            <span className="ml-1 rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-500">
+                    <SecTitle
+                        title="1. Informasi Kontak"
+                        meta={!bioComplete ? (
+                            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-500">
                                 wajib
                             </span>
-                        )}
-                    </h3>
+                        ) : undefined}
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="text-xs font-semibold text-muted-foreground block mb-1">Nama Lengkap</label>
@@ -1144,27 +1126,20 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 2. RINGKASAN PROFIL */}
-                <div className="border-t border-border pt-6 space-y-3">
-                    <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                        <Sparkles className="w-4 h-4 text-amber-400" />
-                        2. Ringkasan Profesional (Summary)
-                    </h3>
+                <div className="space-y-3">
+                    <SecTitle title="2. Ringkasan Profesional (Summary)" />
                     <textarea
                         value={summary}
                         onChange={(e) => setSummary(e.target.value)}
                         rows={4}
-                        className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 leading-relaxed focus:outline-none focus:ring-2 focus:ring-primary/25"
+                        className="w-full text-sm rounded-md border border-border bg-background px-3 py-2.5 leading-relaxed transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                         placeholder="Tulis ringkasan singkat profil Anda..."
                     />
                 </div>
 
                 {/* 3. PENDIDIKAN */}
-                <div className="border-t border-border pt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                            <GraduationCap className="w-4 h-4 text-emerald-400" />
-                            3. Riwayat Pendidikan
-                        </h3>
+                <div className="space-y-4">
+                    <SecTitle title="3. Riwayat Pendidikan" meta={
                         <Button
                             variant="outline"
                             size="sm"
@@ -1173,7 +1148,7 @@ export default function CVGeneratorPage() {
                         >
                             <Plus className="w-3 h-3" /> Tambah Sekolah
                         </Button>
-                    </div>
+                    } />
 
                     <div className="space-y-4">
                         {education.map((edu, idx) => (
@@ -1208,7 +1183,7 @@ export default function CVGeneratorPage() {
                                                 u[idx].location = e.target.value;
                                                 setEducation(u);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Bengkulu, Indonesia"
                                         />
                                     </div>
@@ -1221,7 +1196,7 @@ export default function CVGeneratorPage() {
                                                 u[idx].degree = e.target.value;
                                                 setEducation(u);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Mahasiswa, Informatika"
                                         />
                                     </div>
@@ -1234,7 +1209,7 @@ export default function CVGeneratorPage() {
                                                 u[idx].major = e.target.value;
                                                 setEducation(u);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Rekayasa Perangkat Lunak"
                                         />
                                     </div>
@@ -1247,7 +1222,7 @@ export default function CVGeneratorPage() {
                                                 u[idx].period = e.target.value;
                                                 setEducation(u);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Agu 2022 - Sekarang"
                                         />
                                     </div>
@@ -1260,7 +1235,7 @@ export default function CVGeneratorPage() {
                                                 u[idx].gpa = e.target.value;
                                                 setEducation(u);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: 3.86/4.00"
                                         />
                                     </div>
@@ -1274,12 +1249,8 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 4. PENGALAMAN KERJA */}
-                <div className="border-t border-border pt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                            <Briefcase className="w-4 h-4 text-blue-400" />
-                            4. Pengalaman Kerja
-                        </h3>
+                <div className="space-y-4">
+                    <SecTitle title="4. Pengalaman Kerja" meta={
                         <Button
                             variant="outline"
                             size="sm"
@@ -1288,7 +1259,7 @@ export default function CVGeneratorPage() {
                         >
                             <Plus className="w-3 h-3" /> Tambah Kerja
                         </Button>
-                    </div>
+                    } />
 
                     <div className="space-y-4">
                         {workExperience.map((work, idx) => (
@@ -1310,7 +1281,7 @@ export default function CVGeneratorPage() {
                                                 w[idx].company = e.target.value;
                                                 setWorkExperience(w);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Coding Camp 2026"
                                         />
                                     </div>
@@ -1323,7 +1294,7 @@ export default function CVGeneratorPage() {
                                                 w[idx].location = e.target.value;
                                                 setWorkExperience(w);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Bengkulu, Indonesia"
                                         />
                                     </div>
@@ -1336,7 +1307,7 @@ export default function CVGeneratorPage() {
                                                 w[idx].role = e.target.value;
                                                 setWorkExperience(w);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: AI Engineer"
                                         />
                                     </div>
@@ -1349,7 +1320,7 @@ export default function CVGeneratorPage() {
                                                 w[idx].period = e.target.value;
                                                 setWorkExperience(w);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Jan 2026 - Sekarang"
                                         />
                                     </div>
@@ -1373,7 +1344,7 @@ export default function CVGeneratorPage() {
                                             <input
                                                 value={b}
                                                 onChange={(e) => handleWorkBulletChange(idx, bIdx, e.target.value)}
-                                                className="flex-1 text-xs rounded-lg border border-border bg-background px-3 py-1.5"
+                                                className="flex-1 text-xs rounded-md border border-border bg-background px-3 py-1.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                                 placeholder="Tulis kontribusi..."
                                             />
                                             <button
@@ -1394,12 +1365,8 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 5. PENGALAMAN ORGANISASI */}
-                <div className="border-t border-border pt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                            <Users className="w-4 h-4 text-violet-400" />
-                            5. Pengalaman Organisasi
-                        </h3>
+                <div className="space-y-4">
+                    <SecTitle title="5. Pengalaman Organisasi" meta={
                         <Button
                             variant="outline"
                             size="sm"
@@ -1408,7 +1375,7 @@ export default function CVGeneratorPage() {
                         >
                             <Plus className="w-3 h-3" /> Tambah Organisasi
                         </Button>
-                    </div>
+                    } />
 
                     <div className="space-y-4">
                         {orgExperience.map((org, idx) => (
@@ -1430,7 +1397,7 @@ export default function CVGeneratorPage() {
                                                 o[idx].organization = e.target.value;
                                                 setOrgExperience(o);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: MOSTANEER"
                                         />
                                     </div>
@@ -1443,7 +1410,7 @@ export default function CVGeneratorPage() {
                                                 o[idx].location = e.target.value;
                                                 setOrgExperience(o);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Universitas Bengkulu"
                                         />
                                     </div>
@@ -1456,7 +1423,7 @@ export default function CVGeneratorPage() {
                                                 o[idx].role = e.target.value;
                                                 setOrgExperience(o);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Anggota Keuangan"
                                         />
                                     </div>
@@ -1469,7 +1436,7 @@ export default function CVGeneratorPage() {
                                                 o[idx].period = e.target.value;
                                                 setOrgExperience(o);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Jan 2023 - Des 2023"
                                         />
                                     </div>
@@ -1493,7 +1460,7 @@ export default function CVGeneratorPage() {
                                             <input
                                                 value={b}
                                                 onChange={(e) => handleOrgBulletChange(idx, bIdx, e.target.value)}
-                                                className="flex-1 text-xs rounded-lg border border-border bg-background px-3 py-1.5"
+                                                className="flex-1 text-xs rounded-md border border-border bg-background px-3 py-1.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                                 placeholder="Tulis kontribusi..."
                                             />
                                             <button
@@ -1514,12 +1481,8 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 6. PELATIHAN / TRAINING */}
-                <div className="border-t border-border pt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                            <Award className="w-4 h-4 text-amber-400" />
-                            6. Pelatihan & Bootcamp
-                        </h3>
+                <div className="space-y-4">
+                    <SecTitle title="6. Pelatihan & Bootcamp" meta={
                         <Button
                             variant="outline"
                             size="sm"
@@ -1528,7 +1491,7 @@ export default function CVGeneratorPage() {
                         >
                             <Plus className="w-3 h-3" /> Tambah Pelatihan
                         </Button>
-                    </div>
+                    } />
 
                     <div className="space-y-4">
                         {training.map((t, idx) => (
@@ -1550,7 +1513,7 @@ export default function CVGeneratorPage() {
                                                 tr[idx].title = e.target.value;
                                                 setTraining(tr);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Coding Camp 2025"
                                         />
                                     </div>
@@ -1563,7 +1526,7 @@ export default function CVGeneratorPage() {
                                                 tr[idx].provider = e.target.value;
                                                 setTraining(tr);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: DBS Foundation"
                                         />
                                     </div>
@@ -1576,7 +1539,7 @@ export default function CVGeneratorPage() {
                                                 tr[idx].location = e.target.value;
                                                 setTraining(tr);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Bengkulu (Remote)"
                                         />
                                     </div>
@@ -1589,7 +1552,7 @@ export default function CVGeneratorPage() {
                                                 tr[idx].period = e.target.value;
                                                 setTraining(tr);
                                             }}
-                                            className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2"
+                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                             placeholder="Contoh: Feb 2025 - Juni 2025"
                                         />
                                     </div>
@@ -1613,7 +1576,7 @@ export default function CVGeneratorPage() {
                                             <input
                                                 value={b}
                                                 onChange={(e) => handleTrainingBulletChange(idx, bIdx, e.target.value)}
-                                                className="flex-1 text-xs rounded-lg border border-border bg-background px-3 py-1.5"
+                                                className="flex-1 text-xs rounded-md border border-border bg-background px-3 py-1.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                                 placeholder="Tulis detail..."
                                             />
                                             <button
@@ -1634,18 +1597,15 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 7. KEAHLIAN / SKILLS */}
-                <div className="border-t border-border pt-6 space-y-4">
-                    <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                        <Settings className="w-4 h-4 text-violet-400" />
-                        7. Keahlian & Bahasa
-                    </h3>
+                <div className="space-y-4">
+                    <SecTitle title="7. Keahlian & Bahasa" />
                     <div className="space-y-3">
                         <div>
                             <label className="text-xs font-semibold text-muted-foreground block mb-1">Soft Skills (Pisahkan dengan koma)</label>
                             <input
                                 value={softSkills}
                                 onChange={(e) => setSoftSkills(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none"
+                                className="w-full text-sm rounded-md border border-border bg-background px-3 py-2.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="Contoh: Manajemen Waktu, Berpikir Kritis, Komunikasi"
                             />
                         </div>
@@ -1654,7 +1614,7 @@ export default function CVGeneratorPage() {
                             <input
                                 value={hardSkills}
                                 onChange={(e) => setHardSkills(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none"
+                                className="w-full text-sm rounded-md border border-border bg-background px-3 py-2.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="Contoh: Python, Machine Learning, Figma"
                             />
                         </div>
@@ -1663,7 +1623,7 @@ export default function CVGeneratorPage() {
                             <input
                                 value={languages}
                                 onChange={(e) => setLanguages(e.target.value)}
-                                className="w-full text-xs rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 focus:outline-none"
+                                className="w-full text-sm rounded-md border border-border bg-background px-3 py-2.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                 placeholder="Contoh: Bahasa Indonesia (Native), English (Intermediate)"
                             />
                         </div>
@@ -1671,12 +1631,8 @@ export default function CVGeneratorPage() {
                 </div>
 
                 {/* 8. SERTIFIKAT */}
-                <div className="border-t border-border pt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                            <Award className="w-4 h-4 text-emerald-400" />
-                            8. Sertifikat Penghargaan
-                        </h3>
+                <div className="space-y-4">
+                    <SecTitle title="8. Sertifikat Penghargaan" meta={
                         <Button
                             variant="outline"
                             size="sm"
@@ -1685,7 +1641,7 @@ export default function CVGeneratorPage() {
                         >
                             <Plus className="w-3 h-3" /> Tambah Sertifikat
                         </Button>
-                    </div>
+                    } />
 
                     <div className="space-y-2">
                         {certifications.map((cert, idx) => (
@@ -1693,7 +1649,7 @@ export default function CVGeneratorPage() {
                                 <input
                                     value={cert}
                                     onChange={(e) => handleCertChange(idx, e.target.value)}
-                                    className="flex-1 text-xs rounded-lg border border-border bg-muted/10 px-3.5 py-2"
+                                    className="flex-1 text-xs rounded-md border border-border bg-background px-3.5 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                                     placeholder="Contoh: Introduction to Git and GitHub (Dicoding) - 2024"
                                 />
                                 <button
@@ -1712,7 +1668,7 @@ export default function CVGeneratorPage() {
 
                 {/* Dynamic warning if profile has not synced */}
                 {(!profile?.cv_data) && (
-                    <div className="rounded-2xl border border-dashed border-violet-500/30 bg-violet-500/[0.03] p-4 flex items-start gap-3">
+                    <div className="rounded-md border border-dashed border-violet-500/30 bg-violet-500/[0.03] p-4 flex items-start gap-3">
                         <CheckCircle2 className="w-5 h-5 text-violet-400 mt-0.5 shrink-0" />
                         <div>
                             <p className="text-xs font-semibold text-violet-300">CV Ter-auto fill!</p>

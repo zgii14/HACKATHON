@@ -21,7 +21,7 @@ export const Icons = {
                 fill="black" />
         </svg>
     ),
-    bolt: (props: LucideProps) => (
+    bolt: (_props: LucideProps) => (
         <svg viewBox="-2.4 -2.4 28.80 28.80" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000" strokeWidth="0.00024000000000000003" transform="rotate(0)">
             <g id="SVGRepo_bgCarrier" strokeWidth="0">
             </g>

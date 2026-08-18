@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { BarFill, CountUp, Crumb, EmptyState, Reveal, SecTitle } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, BookOpen, Loader2, MoveLeft, Send, X } from "lucide-react";
+import { BookOpen, Loader2, MoveLeft, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 const STATUS_LABELS: Record<string, string> = {
     applied:   "Dilamar",

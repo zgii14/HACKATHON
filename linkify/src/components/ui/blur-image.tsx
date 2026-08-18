@@ -13,7 +13,7 @@ interface Props {
 const BlurImage = ({ src, alt, className, ...props }: Props) => {
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [url, setUrl] = useState<string>(src);
+    const [_url, setUrl] = useState<string>(src);
 
     const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         setIsLoading(false);

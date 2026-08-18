@@ -8,7 +8,6 @@ import {
     CodeIcon,
     BrainCircuitIcon,
     RocketIcon,
-    UsersIcon,
 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";

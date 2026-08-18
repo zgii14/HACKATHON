@@ -7,7 +7,7 @@ import { Eye, EyeOff, LoaderIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Label } from "../ui/label";
 
@@ -54,8 +54,6 @@ const SignUpForm = () => {
 
             setIsVerifying(true);
         } catch (error: any) {
-            console.log(JSON.stringify(error, null, 2));
-
             switch (error.errors[0]?.code) {
                 case "form_identifier_exists":
                     toast.error("This email is already registered. Please sign in.");
@@ -101,7 +99,6 @@ const SignUpForm = () => {
                 });
                 router.push("/auth/auth-callback");
             } else {
-                console.log(JSON.stringify(completeSignUp, null, 2));
                 toast.error("Invalid verification code");
                 setIsLoading(false);
             }

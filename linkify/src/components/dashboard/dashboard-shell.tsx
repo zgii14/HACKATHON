@@ -1,6 +1,6 @@
 "use client";
 
-import { APP_NAME, cn, DASHBOARD_LINKS } from "@/utils";
+import { cn, DASHBOARD_LINKS } from "@/utils";
 import { useApi } from "@/hooks/use-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
@@ -17,12 +17,12 @@ function GitHireLogo() {
             {/* Git branch icon */}
             <circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground" />
             <circle cx="16" cy="44" r="6" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground" />
-            <circle cx="34" cy="30" r="6" fill="#3b82f6" />
+            <circle cx="34" cy="30" r="6" fill="#7c3aed" />
             <line x1="16" y1="22" x2="16" y2="38" stroke="currentColor" strokeWidth="2" className="text-foreground" />
             <line x1="20" y1="18" x2="30" y2="26" stroke="currentColor" strokeWidth="2" className="text-foreground" />
             {/* Wordmark */}
-            <text x="50" y="22" fontFamily="system-ui,sans-serif" fontSize="20" fontWeight="600" fill="currentColor" dominantBaseline="central" className="text-foreground">Git<tspan fill="#3b82f6">Hire</tspan></text>
-            <text x="50" y="44" fontFamily="system-ui,sans-serif" fontSize="9" fill="#3b82f6" dominantBaseline="central" letterSpacing="0.1em">FROM CODE TO CAREER</text>
+            <text x="50" y="22" fontFamily="system-ui,sans-serif" fontSize="20" fontWeight="600" fill="currentColor" dominantBaseline="central" className="text-foreground">Git<tspan fill="#7c3aed">Hire</tspan></text>
+            <text x="50" y="44" fontFamily="system-ui,sans-serif" fontSize="9" fill="#7c3aed" dominantBaseline="central" letterSpacing="0.1em">FROM CODE TO CAREER</text>
         </svg>
     );
 }
@@ -33,7 +33,7 @@ function GitHireIcon() {
             <title>GitHire</title>
             <circle cx="10" cy="8" r="4" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground" />
             <circle cx="10" cy="28" r="4" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground" />
-            <circle cx="28" cy="18" r="5" fill="#3b82f6" />
+            <circle cx="28" cy="18" r="5" fill="#7c3aed" />
             <line x1="10" y1="12" x2="10" y2="24" stroke="currentColor" strokeWidth="2" className="text-foreground" />
             <line x1="13" y1="10" x2="24" y2="16" stroke="currentColor" strokeWidth="2" className="text-foreground" />
         </svg>
@@ -143,10 +143,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                             prefetch={false}
                             title={!showLabel ? item.title : undefined}
                             className={cn(
-                                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-150",
+                                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-all duration-150",
                                 showLabel ? "justify-start" : "justify-center",
                                 active
-                                    ? "bg-primary/15 text-foreground font-medium"
+                                    ? "bg-primary/10 text-foreground font-medium"
                                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                         >
@@ -155,12 +155,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                                 <span className="truncate flex-1">{item.title}</span>
                             )}
                             {showLabel && isMyRoadmaps && bookmarkCount > 0 && (
-                                <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-primary/20 text-primary text-[10px] font-semibold flex items-center justify-center px-1">
+                                <span className="ml-auto rounded-[3px] border border-primary/40 bg-primary/10 px-1.5 py-px font-mono text-[10px] font-semibold text-primary">
                                     {bookmarkCount > 9 ? "9+" : bookmarkCount}
                                 </span>
                             )}
                             {showLabel && isApplications && applicationCount > 0 && (
-                                <span className="ml-auto min-w-[18px] h-[18px] rounded-full bg-emerald-500/20 text-emerald-500 text-[10px] font-semibold flex items-center justify-center px-1">
+                                <span className="ml-auto rounded-[3px] border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-px font-mono text-[10px] font-semibold text-emerald-500">
                                     {applicationCount > 9 ? "9+" : applicationCount}
                                 </span>
                             )}
@@ -187,6 +187,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             <aside
                 className={cn(
                     "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-border bg-background p-4 gap-6",
+                    // drawer harus opaque (bg-background) supaya konten di belakang tak tembus
                     "transition-transform duration-300 ease-in-out md:hidden",
                     mobileOpen ? "translate-x-0" : "-translate-x-full"
                 )}
@@ -210,7 +211,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             {/* ── Desktop: persistent sidebar ── */}
             <aside
                 className={cn(
-                    "hidden md:flex flex-col border-r border-border bg-muted/20 p-4 gap-6",
+                    "hidden md:flex flex-col border-r border-border bg-background p-4 gap-6",
                     "sticky top-0 h-screen overflow-y-auto",
                     "transition-all duration-300 ease-in-out",
                     collapsed ? "w-16" : "w-56"
@@ -262,10 +263,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                         <svg width="90" height="24" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
                             <circle cx="16" cy="44" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
-                            <circle cx="34" cy="30" r="6" fill="#3b82f6" />
+                            <circle cx="34" cy="30" r="6" fill="#7c3aed" />
                             <line x1="16" y1="22" x2="16" y2="38" stroke="currentColor" strokeWidth="2" />
                             <line x1="20" y1="18" x2="30" y2="26" stroke="currentColor" strokeWidth="2" />
-                            <text x="50" y="30" fontFamily="system-ui,sans-serif" fontSize="22" fontWeight="600" fill="currentColor" dominantBaseline="central">Git<tspan fill="#3b82f6">Hire</tspan></text>
+                            <text x="50" y="30" fontFamily="system-ui,sans-serif" fontSize="22" fontWeight="600" fill="currentColor" dominantBaseline="central">Git<tspan fill="#7c3aed">Hire</tspan></text>
                         </svg>
                     </Link>
 
@@ -287,7 +288,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 </header>
 
                 {/* Page content */}
-                <main className="flex-1 w-full max-w-[1240px] p-4 md:px-8 md:py-7">
+                <main className="flex-1 w-full p-4 md:px-8 md:py-7">
                     {children}
                 </main>
             </div>

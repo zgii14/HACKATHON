@@ -1,5 +1,5 @@
 import { MaxWidthWrapper } from "@/components";
-import { Toaster } from "@/components/ui/sonner";
+import { AppToastContainer } from "@/components/ui/app-toast";
 import React from 'react';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 const MarketingLayout = ({ children }: Props) => {
     return (
         <MaxWidthWrapper>
-            <Toaster richColors theme="dark" position="top-right" />
+            <AppToastContainer />
             <main className="mx-auto w-full relative">
                 {children}
             </main>

@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import { useRouter } from "next/navigation";
 import { useMediaQuery } from "usehooks-ts";
 import { Dialog } from "./dialog";
 import { Drawer } from "./drawer";
@@ -13,19 +12,7 @@ interface Props {
     onClose?: () => void;
 }
 
-const Modal = ({ children, isOpen, setIsOpen, onClose }: Props) => {
-
-    const router = useRouter();
-
-    const handleClose = ({ dragged }: { dragged: boolean }) => {
-        onClose && onClose();
-
-        if (isOpen) {
-            setIsOpen(false);
-        } else {
-            router.back();
-        }
-    };
+const Modal = ({ children, isOpen, setIsOpen }: Props) => {
 
     const isDesktop = useMediaQuery("(max-width: 768px)");
 

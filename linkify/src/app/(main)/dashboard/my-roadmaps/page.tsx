@@ -4,10 +4,10 @@
 
 import { BarFill, EmptyState, PageHeader, Reveal } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
+import { confirmDestructive } from "@/lib/confirm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { toast } from "sonner";
-import { useState } from "react";
+import { toast } from "react-toastify";
 
 type BookmarkedJob = {
     job_id: string;
@@ -23,7 +23,6 @@ type BookmarkedJob = {
 export default function MyRoadmapsPage() {
     const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
-    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
     const { data: bookmarks = [], isLoading } = useQuery({
         queryKey: ["bookmarks"],
@@ -38,11 +37,9 @@ export default function MyRoadmapsPage() {
                 (old ?? []).filter((b) => b.job_id !== jobId)
             );
             qc.invalidateQueries({ queryKey: ["roadmap"] });
-            setConfirmDeleteId(null);
             toast.success("Roadmap job dihapus dari bookmark.");
         },
         onError: (e: Error) => {
-            setConfirmDeleteId(null);
             toast.error(`Gagal hapus: ${e.message}`);
         },
     });
@@ -92,7 +89,6 @@ export default function MyRoadmapsPage() {
                         {bookmarks.map((b) => {
                             const pct = b.total_steps > 0 ? Math.round((b.completed_steps / b.total_steps) * 100) : 0;
                             const isDone = pct === 100;
-                            const confirming = confirmDeleteId === b.job_id;
 
                             return (
                                 <li key={b.job_id} className="border-t border-border/60 last:border-b">
@@ -140,8 +136,18 @@ export default function MyRoadmapsPage() {
                                             </Link>
                                             <button
                                                 type="button"
-                                                onClick={() => setConfirmDeleteId(b.job_id)}
-                                                className="text-[12px] text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                disabled={remove.isPending}
+                                                onClick={async () => {
+                                                    if (
+                                                        await confirmDestructive({
+                                                            title: "Hapus roadmap ini?",
+                                                            text: "Progress roadmap tidak bisa dikembalikan.",
+                                                            confirmText: "Ya, hapus",
+                                                        })
+                                                    )
+                                                        remove.mutate(b.job_id);
+                                                }}
+                                                className="text-[12px] text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                                 title="Hapus dari bookmark"
                                             >
                                                 Hapus
@@ -149,29 +155,6 @@ export default function MyRoadmapsPage() {
                                         </div>
                                     </div>
 
-                                    {confirming && (
-                                        <div className="flex items-center gap-3 border-l-2 border-destructive bg-destructive/[0.06] px-4 py-2.5 mb-3">
-                                            <p className="flex-1 text-xs font-medium text-destructive">
-                                                Hapus roadmap ini? Progress tidak bisa dikembalikan.
-                                            </p>
-                                            <button
-                                                type="button"
-                                                disabled={remove.isPending}
-                                                onClick={() => setConfirmDeleteId(null)}
-                                                className="text-[12px] font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                            >
-                                                Batal
-                                            </button>
-                                            <button
-                                                type="button"
-                                                disabled={remove.isPending}
-                                                onClick={() => remove.mutate(b.job_id)}
-                                                className="rounded-md bg-destructive px-3 py-1.5 text-[12px] font-bold text-destructive-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                                            >
-                                                {remove.isPending ? "Menghapus…" : "Hapus"}
-                                            </button>
-                                        </div>
-                                    )}
                                 </li>
                             );
                         })}

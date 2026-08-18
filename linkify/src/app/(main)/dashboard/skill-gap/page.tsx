@@ -15,6 +15,7 @@ import {
     useReducedMotion,
 } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
+import { interestLabel } from "@/utils/constants/interests";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
@@ -203,7 +204,7 @@ export default function SkillGapPage() {
                         banyak dicari untuk menaikkan match score.
                         {data?.mode === "interests" && data.interests.length > 0 && (
                             <span className="mt-2 block text-xs">
-                                Bidang: <span className="font-medium text-foreground">{data.interests.join(" · ")}</span>
+                                Bidang: <span className="font-medium text-foreground">{data.interests.map(interestLabel).join(" · ")}</span>
                             </span>
                         )}
                     </p>

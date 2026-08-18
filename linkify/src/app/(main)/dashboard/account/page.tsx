@@ -7,7 +7,7 @@ import { useApi } from "@/hooks/use-api";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 type BioData = {
     bio_full_name: string | null;

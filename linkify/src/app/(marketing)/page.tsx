@@ -18,7 +18,6 @@ import {
     SearchIcon,
     SparklesIcon,
     StarIcon,
-    TargetIcon,
     TrendingUpIcon,
     WalletIcon,
     ZapIcon,

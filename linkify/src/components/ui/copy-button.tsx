@@ -3,7 +3,7 @@
 import { cn } from "@/utils";
 import { Check, Copy, LucideIcon } from "lucide-react";
 import React, { useState } from 'react'
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 interface Props {
     text: string;

@@ -50,7 +50,7 @@ const Providers = ({ children }: Props) => {
                     }
                     return false;
                 },
-                retryDelay: (failureCount, error) => {
+                retryDelay: (_failureCount, error) => {
                     // Retry AUTH_NOT_READY tiap 150ms agar tidak delay lama
                     if (error instanceof Error && error.message === "AUTH_NOT_READY") {
                         return 150;

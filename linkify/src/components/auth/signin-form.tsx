@@ -6,7 +6,7 @@ import { useSignIn } from '@clerk/nextjs';
 import { Eye, EyeOff, LoaderIcon } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Label } from "../ui/label";
 
 const SignInForm = () => {
@@ -46,7 +46,6 @@ const SignInForm = () => {
                 });
                 router.push("/auth/auth-callback");
             } else {
-                console.log(JSON.stringify(signInAttempt, null, 2));
                 toast.error("Invalid email or password");
                 setIsLoading(false);
             }

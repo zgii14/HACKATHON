@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
+import { INTEREST_LABELS } from "@/utils/constants/interests";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     Search,
@@ -17,14 +18,10 @@ import {
     Sparkles,
     UserCheck,
     X,
-    ChevronRight,
-    Award,
-    Code,
-    CornerDownRight
+    Code
 } from "lucide-react";
-import Link from "next/link";
 import { useState, useDeferredValue } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 type Candidate = {
     id: string;
@@ -47,21 +44,6 @@ type Candidate = {
     };
 };
 
-// Label bidang minat — selaras dengan onboarding (key → label + emoji)
-const INTEREST_LABELS: Record<string, { label: string; emoji: string }> = {
-    backend: { label: "Backend", emoji: "⚙️" },
-    frontend: { label: "Frontend", emoji: "💻" },
-    fullstack: { label: "Full Stack", emoji: "🌐" },
-    mobile: { label: "Mobile", emoji: "📱" },
-    ai_ml: { label: "AI / ML", emoji: "🤖" },
-    data: { label: "Data Engineering", emoji: "📊" },
-    devops: { label: "DevOps / Cloud", emoji: "☁️" },
-    qa: { label: "QA & Testing", emoji: "🧪" },
-    security: { label: "Cybersecurity", emoji: "🔒" },
-    blockchain: { label: "Blockchain / Web3", emoji: "⛓️" },
-    game: { label: "Game / AR/VR", emoji: "🎮" },
-    iot: { label: "IoT & Embedded", emoji: "🔌" },
-};
 
 type SearchResponse = {
     total: number;
