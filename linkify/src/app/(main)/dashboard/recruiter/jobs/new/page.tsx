@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Briefcase, Plus, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, Briefcase, Save, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 export default function NewJobPage() {
     const { withAuth } = useApi();
@@ -20,7 +20,6 @@ export default function NewJobPage() {
     const [salary, setSalary] = useState("");
     const [skillsText, setSkillsText] = useState("");
     const [workType, setWorkType] = useState("Hybrid");
-    const [isRemote, setIsRemote] = useState(false);
     const [description, setDescription] = useState("");
 
     const createMutation = useMutation({
@@ -58,7 +57,7 @@ export default function NewJobPage() {
             salary,
             required_skills,
             work_type: workType,
-            is_remote: isRemote || workType === "Remote",
+            is_remote: workType === "Remote",
             description,
         });
     };
@@ -138,7 +137,6 @@ export default function NewJobPage() {
                                 value={workType}
                                 onChange={(e) => {
                                     setWorkType(e.target.value);
-                                    if (e.target.value === "Remote") setIsRemote(true);
                                 }}
                                 className="w-full text-xs rounded-xl border border-border bg-card px-3.5 py-2.5 focus:outline-none"
                             >

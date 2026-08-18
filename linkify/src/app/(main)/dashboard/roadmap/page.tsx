@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 type Step = {
     index: number;
@@ -38,16 +38,6 @@ function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitl
         enabled: authReady && !!jobId,
     });
 
-    const applyMutation = useMutation({
-        mutationFn: () => withAuth(`/applications/${jobId}`, { method: "POST", body: JSON.stringify({ note: null }) }),
-        onSuccess: (data) => {
-            qc.setQueryData(["applications", jobId], data);
-            qc.invalidateQueries({ queryKey: ["applications"] });
-            toast.success(`Lamaran ke ${jobCompany} sudah tercatat!`);
-        },
-        onError: () => toast.error("Gagal menyimpan lamaran. Coba lagi."),
-    });
-
     if (application) {
         return (
             <div className="flex flex-wrap items-center gap-4">
@@ -63,13 +53,12 @@ function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitl
 
     return (
         <div className="flex flex-wrap items-center gap-4">
-            <button
-                onClick={() => applyMutation.mutate()}
-                disabled={applyMutation.isPending}
-                className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            <Link
+                href={`/dashboard/jobs/${jobId}`}
+                className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-                {applyMutation.isPending ? "Memproses…" : `Apply ke ${jobTitle || jobCompany} →`}
-            </button>
+                Apply ke {jobTitle || jobCompany} →
+            </Link>
             <Link href={`/dashboard/jobs/${jobId}`} prefetch={false} className="text-[12px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 Lihat detail job
             </Link>
@@ -162,7 +151,7 @@ function RoadmapContent() {
         if (!isLoading) return;
         const interval = setInterval(() => setLoadingMsgIdx((prev) => (prev + 1) % LOADING_MESSAGES.length), 2000);
         return () => clearInterval(interval);
-    }, [isLoading]);
+    }, [isLoading, LOADING_MESSAGES.length]);
 
     const patch = useMutation({
         mutationFn: async ({ index, completed }: { index: number; completed: boolean }) => {
@@ -175,7 +164,7 @@ function RoadmapContent() {
                 const newSteps = old.steps.map((s) => (s.index === updated.index ? { ...s, completed: updated.completed } : s));
                 if (updated.completed && newSteps.every((s) => s.completed)) {
                     const jobLabel = old.job_title ? ` ke ${old.job_title}` : "";
-                    toast.success(`Semua langkah selesai. Kamu siap apply${jobLabel}!`, { duration: 6000 });
+                    toast.success(`Semua langkah selesai. Kamu siap apply${jobLabel}!`, { autoClose: 6000 });
                 }
                 return { ...old, steps: newSteps };
             });

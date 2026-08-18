@@ -138,7 +138,7 @@ export default function DashboardHomePage() {
     const activeRoadmap = bookmarks.find((b) => b.total_steps > 0 && b.completed_steps < b.total_steps) ?? bookmarks[0];
 
     const appCount = applications.length;
-    const interviewCount = applications.filter((a) => a.status === "interview").length;
+    const interviewCount = applications.filter((a) => a.status === "interview" || a.status === "interview_confirmed").length;
     const offerCount = applications.filter((a) => a.status === "offer").length;
 
     const readinessItems = [

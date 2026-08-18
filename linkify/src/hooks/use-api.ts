@@ -65,7 +65,17 @@ export function useApi() {
             if (!authReady) throw new Error("AUTH_NOT_READY");
             const token = await getToken();
             if (!token) throw new Error("AUTH_NOT_READY");
-            return apiFetchBlob(path, { ...init, token });
+            try {
+                return await apiFetchBlob(path, { ...init, token });
+            } catch (error) {
+                if (error instanceof ApiError && error.status === 401) {
+                    const freshToken = await getToken({ skipCache: true });
+                    if (freshToken && freshToken !== token) {
+                        return apiFetchBlob(path, { ...init, token: freshToken });
+                    }
+                }
+                throw error;
+            }
         },
         [authReady, getToken]
     );

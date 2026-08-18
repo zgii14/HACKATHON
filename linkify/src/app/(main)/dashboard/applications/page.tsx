@@ -15,13 +15,14 @@ import {
     useReducedMotion,
 } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
+import { confirmDestructive } from "@/lib/confirm";
 import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlignmentType, convertInchesToTwip, Document, Packer, Paragraph, TextRun } from "docx";
 import { saveAs } from "file-saver";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 type ApplicationStatus = "applied" | "interview" | "interview_confirmed" | "rejected" | "offer";
 
@@ -441,7 +442,7 @@ function ApplicationRow({
 
                             {/* Aksi + status */}
                             <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-                                <div className="relative">
+                                {app.status === "interview" && <div className="relative">
                                     <button
                                         type="button"
                                         onClick={() => setShowStatusMenu((v) => !v)}
@@ -456,7 +457,7 @@ function ApplicationRow({
                                         <>
                                             <div className="fixed inset-0 z-10" onClick={() => setShowStatusMenu(false)} />
                                             <div className="absolute left-0 top-full z-20 mt-1 min-w-[160px] overflow-hidden rounded-md border border-border bg-background py-1 shadow-lg">
-                                                {ALL_STATUSES.map((s) => (
+                                                {["interview_confirmed" as ApplicationStatus].map((s) => (
                                                     <button
                                                         key={s}
                                                         onClick={() => statusMutation.mutate(s)}
@@ -471,7 +472,7 @@ function ApplicationRow({
                                             </div>
                                         </>
                                     )}
-                                </div>
+                                </div>}
 
                                 <ActionLink href={`/dashboard/jobs/${app.job_id}`}>Detail job</ActionLink>
                                 <button onClick={() => onGenerateLetter(app)} className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -486,7 +487,16 @@ function ApplicationRow({
                                     </a>
                                 )}
                                 <button
-                                    onClick={() => withdrawMutation.mutate()}
+                                    onClick={async () => {
+                                        if (
+                                            await confirmDestructive({
+                                                title: "Tarik lamaran?",
+                                                text: "Lamaran ini akan ditarik dan tidak bisa dikembalikan.",
+                                                confirmText: "Ya, tarik",
+                                            })
+                                        )
+                                            withdrawMutation.mutate();
+                                    }}
                                     disabled={withdrawMutation.isPending}
                                     className="ml-auto text-[12px] text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 >

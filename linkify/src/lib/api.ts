@@ -27,7 +27,7 @@ export async function apiFetch<T>(
         h.set("Authorization", `Bearer ${token}`);
     }
 
-    if (body && !h.has("Content-Type")) {
+    if (body && !(typeof FormData !== "undefined" && body instanceof FormData) && !h.has("Content-Type")) {
         h.set("Content-Type", "application/json");
     }
 

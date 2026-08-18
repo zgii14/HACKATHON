@@ -4,14 +4,11 @@
 
 import { PageHeader, Reveal } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
-import { parseApiError } from "@/lib/errors";
-import { useAuth } from "@clerk/nextjs";
+import { INTERESTS } from "@/utils/constants/interests";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { toast } from "react-toastify";
 
 type Profile = {
     github_username: string | null;
@@ -35,20 +32,7 @@ const SYNC_STEPS = [
     "Menyimpan profil…",
 ];
 
-const INTEREST_OPTIONS = [
-    { key: "backend", label: "Backend Development", emoji: "⚙️" },
-    { key: "frontend", label: "Frontend Development", emoji: "💻" },
-    { key: "fullstack", label: "Full Stack", emoji: "🌐" },
-    { key: "mobile", label: "Mobile (Android/iOS)", emoji: "📱" },
-    { key: "ai_ml", label: "AI / ML & Data Science", emoji: "🤖" },
-    { key: "data", label: "Data Engineering", emoji: "📊" },
-    { key: "devops", label: "DevOps / Cloud", emoji: "☁️" },
-    { key: "qa", label: "QA & Testing", emoji: "🧪" },
-    { key: "security", label: "Cybersecurity", emoji: "🔒" },
-    { key: "blockchain", label: "Blockchain / Web3", emoji: "⛓️" },
-    { key: "game", label: "Game / AR/VR", emoji: "🎮" },
-    { key: "iot", label: "IoT & Embedded", emoji: "🔌" },
-];
+const INTEREST_OPTIONS = INTERESTS;
 
 export default function OnboardingPage() {
     const [githubUrl, setGithubUrl] = useState("");
@@ -59,7 +43,6 @@ export default function OnboardingPage() {
     const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
     const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
-    const { getToken } = useAuth();
     const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
     const router = useRouter();
@@ -95,7 +78,6 @@ export default function OnboardingPage() {
     const sync = useMutation({
         mutationFn: async (): Promise<SyncResult> => {
             if (!file || !githubUrl.trim()) throw new Error("GitHub URL dan file PDF wajib diisi");
-            const token = await getToken();
             const fd = new FormData();
             fd.append("github_url", githubUrl.trim());
             fd.append("cv", file);
@@ -105,17 +87,12 @@ export default function OnboardingPage() {
                 setStepIndex(i);
             }, 1800);
             try {
-                const res = await fetch(`${API_BASE.replace(/\/$/, "")}/profiles/sync`, {
+                return await withAuth<SyncResult>("/profiles/sync", {
                     method: "POST",
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
                     body: fd,
                 });
+            } finally {
                 clearInterval(interval);
-                if (!res.ok) throw new Error(await parseApiError(res));
-                return res.json();
-            } catch (err) {
-                clearInterval(interval);
-                throw err;
             }
         },
         onSuccess: (result) => {

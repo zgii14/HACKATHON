@@ -1,12 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher(["/dashboard(.*)"]);
-const isAuthRoute = createRouteMatcher(["/auth/sign-in(.*)", "/auth/sign-up(.*)"]);
+const isDashboardRoute = createRouteMatcher(["/dashboard(.*)"]);
 
-export default clerkMiddleware((auth, req) => {
-    // Bypass middleware protection for local development & demo convenience
-    return;
+export default clerkMiddleware(async (auth, req) => {
+    if (isDashboardRoute(req)) {
+        await auth().protect();
+    }
 });
 
 export const config = {

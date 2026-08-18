@@ -3,20 +3,25 @@
 import { getAuthStatus } from "@/actions";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from 'next/navigation';
+import { useEffect } from "react";
 
 const AuthCallbackPage = () => {
 
     const router = useRouter();
 
-    const { data } = useQuery({
+    const { data, isError } = useQuery({
         queryKey: ["auth-status"],
         queryFn: async () => await getAuthStatus(),
         retry: true,
         retryDelay: 500,
     });
 
-    if (data?.success) {
-        router.push("/dashboard");
+    useEffect(() => {
+        if (data?.success) router.replace("/dashboard");
+    }, [data?.success, router]);
+
+    if (isError) {
+        return <div className="flex h-screen items-center justify-center">Gagal memverifikasi akun. Silakan login ulang.</div>;
     }
 
     return (
