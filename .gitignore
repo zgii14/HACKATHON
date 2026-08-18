@@ -52,6 +52,19 @@ _pptx_temp/
 _pptx_temp2/
 _pptx_output.txt
 body.json
+scratch_*.py
+fix_role.py
+ui-audit-preview.html
+.pytest_cache/
+
+# ── DB backups (keep local, jangan commit) ────────
+*_backup.sql
+
+# ── Basi / experiment artifacts ───────────────────
+hallmark-temp/
+hallmark-demo/
+githire-backend/
+rekomendasi.png
 
 # ── Secrets ──────────────────────────────────────
 *.pem
