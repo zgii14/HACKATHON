@@ -29,6 +29,7 @@ type Gap = {
     total_job_skills: number;
     weak_skills: string[];
     github_backed_count: number;
+    verified_skill_count: number;
     mode: string;
     interests: string[];
 };
@@ -130,7 +131,7 @@ export default function SkillGapPage() {
                     <div className="flex flex-col items-start gap-2 md:items-end">
                         <div className="font-mono text-[12px] text-muted-foreground">
                             <span className="text-foreground">{data.user_skill_count}</span> skill ·{" "}
-                            <span className="text-foreground">{data.github_backed_count}</span> verified ·{" "}
+                            <span className="text-foreground">{data.verified_skill_count ?? 0}</span> verified ·{" "}
                             <span className="text-warning">{missing}</span> gap
                         </div>
                         <ActionLink href="/dashboard/roadmap">Buat roadmap →</ActionLink>

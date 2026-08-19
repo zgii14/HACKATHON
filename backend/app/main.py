@@ -169,6 +169,14 @@ async def lifespan(app: FastAPI):
         conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS cv_preference VARCHAR(10) NOT NULL DEFAULT 'form'"))
         conn.commit()
 
+    # DDL Migration: skill terverifikasi dari bukti commit GitHub
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE candidate_profiles
+            ADD COLUMN IF NOT EXISTS verified_skills JSON NULL
+        """))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)

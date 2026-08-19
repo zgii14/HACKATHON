@@ -1,5 +1,6 @@
 "use client";
 
+import { VerifiedSkill, VerifiedSkillList } from "@/components/dashboard/verified-skills";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
@@ -49,6 +50,8 @@ type JobApplicant = {
         github: string | null;
         cv_skills: string[];
         merged_skills: string[];
+        verified_skills?: VerifiedSkill[];
+        verified_skill_count?: number;
         cv_data: CandidateCV;
         has_cv?: boolean;
         cv_preference?: "form" | "original";
@@ -416,25 +419,48 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                 </h3>
                                 
                                 {selectedApp.applicant.github ? (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-0.5">
-                                            <span className="text-[9px] text-muted-foreground font-semibold uppercase">Username</span>
-                                            <p className="text-xs font-bold text-foreground">@{selectedApp.applicant.github}</p>
-                                        </div>
-                                        <div className="space-y-0.5">
-                                            <span className="text-[9px] text-muted-foreground font-semibold uppercase">Merged Skills (GitHub + CV)</span>
-                                            <div className="flex flex-wrap gap-1 pt-1">
-                                                {selectedApp.applicant.merged_skills.slice(0, 5).map((s) => (
-                                                    <Badge key={s} variant="outline" className="text-[8px] px-1.5 py-0.5 rounded bg-muted/40 font-medium">
-                                                        {s}
-                                                    </Badge>
-                                                ))}
-                                                {selectedApp.applicant.merged_skills.length > 5 && (
-                                                    <span className="text-[8px] text-muted-foreground font-semibold">+{selectedApp.applicant.merged_skills.length - 5} lainnya</span>
-                                                )}
+                                    <>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-0.5">
+                                                <span className="text-[9px] text-muted-foreground font-semibold uppercase">Username</span>
+                                                <p className="text-xs font-bold text-foreground">@{selectedApp.applicant.github}</p>
+                                            </div>
+                                            <div className="space-y-0.5">
+                                                <span className="text-[9px] text-muted-foreground font-semibold uppercase">Declared Skills (GitHub + CV)</span>
+                                                <div className="flex flex-wrap gap-1 pt-1">
+                                                    {selectedApp.applicant.merged_skills.slice(0, 5).map((s) => (
+                                                        <Badge key={s} variant="outline" className="text-[8px] px-1.5 py-0.5 rounded bg-muted/40 font-medium">
+                                                            {s}
+                                                        </Badge>
+                                                    ))}
+                                                    {selectedApp.applicant.merged_skills.length > 5 && (
+                                                        <span className="text-[8px] text-muted-foreground font-semibold">+{selectedApp.applicant.merged_skills.length - 5} lainnya</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[9px] text-muted-foreground pt-1">Klaim dari CV/topics — belum tentu ada bukti commit.</p>
                                             </div>
                                         </div>
-                                    </div>
+
+                                        {/* Skill terverifikasi — bukti commit di repo non-fork milik kandidat */}
+                                        <div className="border-t border-border pt-3">
+                                            <span className="text-[9px] text-muted-foreground font-semibold uppercase">
+                                                Skill terverifikasi (bukti commit)
+                                            </span>
+                                            {(selectedApp.applicant.verified_skills ?? []).length > 0 ? (
+                                                <div className="mt-1.5">
+                                                    <VerifiedSkillList
+                                                        items={selectedApp.applicant.verified_skills ?? []}
+                                                        initial={4}
+                                                        showRepos
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-muted-foreground italic pt-1.5">
+                                                    Belum ada bukti commit yang cukup.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </>
                                 ) : (
                                     <p className="text-xs text-muted-foreground italic py-1">Kandidat belum menghubungkan portofolio GitHub mereka.</p>
                                 )}

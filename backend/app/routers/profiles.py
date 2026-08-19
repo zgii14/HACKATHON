@@ -9,6 +9,7 @@ from app.models import CandidateProfile, RoadmapProgress, User
 from app.services import github_client
 from app.services.gemini_service import extract_skills_from_cv_text, extract_cv_data_from_text
 from app.services.pdf_extract import extract_text_from_pdf
+from app.services.skill_verification import verify_skills
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -124,6 +125,9 @@ async def sync_profile(
 
     gh_skills = _skills_from_github(gh_signals)
     merged = _merge_skills(gh_skills, cv_skills)
+    # Lapisan tambahan: skill dengan bukti commit. Tidak memengaruhi merged_skills
+    # maupun matching — hanya dipakai untuk membedakan verified vs declared.
+    verified = verify_skills(gh_signals, as_of=datetime.now(timezone.utc))
 
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
     if not profile:
@@ -140,6 +144,7 @@ async def sync_profile(
     profile.cv_skills = cv_skills
     profile.cv_data = cv_data
     profile.merged_skills = merged
+    profile.verified_skills = verified
 
     # Simpan PDF asli (content sudah dibaca di atas) agar bisa dipakai/di-download saat melamar
     profile.cv_file = content
@@ -163,4 +168,6 @@ async def sync_profile(
         "skills_count": len(merged),
         "merged_skills": merged,
         "skills_changed": skills_changed,
+        "verified_skills_count": len(verified),
+        "verified_skills": verified,
     }

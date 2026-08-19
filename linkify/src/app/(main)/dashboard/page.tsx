@@ -32,6 +32,7 @@ type SkillGap = {
     total_job_skills: number;
     weak_skills: string[];
     github_backed_count: number;
+    verified_skill_count: number;
 };
 
 type BookmarkedJob = {
@@ -128,6 +129,8 @@ export default function DashboardHomePage() {
 
     const skillCount = profile?.merged_skills?.length ?? 0;
     const githubBacked = gap?.github_backed_count ?? 0;
+    // Hanya skill dengan bukti commit yang boleh dilabeli "verified"
+    const verifiedCount = gap?.verified_skill_count ?? 0;
     const gapCount = gap?.missing_skills.length ?? 0;
     const weakCount = gap?.weak_skills?.length ?? 0;
     const topMatches = (recommended ?? []).slice(0, 5);
@@ -150,8 +153,8 @@ export default function DashboardHomePage() {
         },
         {
             label: "GitHub evidence",
-            complete: githubBacked > 0,
-            helper: `${githubBacked} skill terverifikasi`,
+            complete: verifiedCount > 0,
+            helper: verifiedCount > 0 ? `${verifiedCount} skill terverifikasi` : "belum ada bukti commit",
             href: "/dashboard/profile",
         },
         {
@@ -278,7 +281,7 @@ export default function DashboardHomePage() {
             <Reveal delay={0.07}>
                 <div className="grid grid-cols-2 border-y border-border md:grid-cols-4">
                     {[
-                        { k: "Skill", v: skillCount, d: `${githubBacked} verified GitHub`, href: "/dashboard/profile" },
+                        { k: "Skill", v: skillCount, d: `${verifiedCount} verified · ${githubBacked} di GitHub`, href: "/dashboard/profile" },
                         { k: "Skill gap", v: gapCount, d: weakCount > 0 ? `${weakCount} perlu bukti` : "prioritas pasar", href: "/dashboard/skill-gap" },
                         { k: "Roadmap", v: activeBookmarks, d: `${finishedBookmarks} selesai`, href: "/dashboard/my-roadmaps" },
                         { k: "Lamaran", v: appCount, d: offerCount > 0 ? `${offerCount} offer` : interviewCount > 0 ? `${interviewCount} interview` : "status aktif", href: "/dashboard/applications" },

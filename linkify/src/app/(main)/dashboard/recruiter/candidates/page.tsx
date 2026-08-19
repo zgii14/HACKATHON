@@ -1,5 +1,6 @@
 "use client";
 
+import { VerifiedSkill, VerifiedSkillChips } from "@/components/dashboard/verified-skills";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
@@ -33,6 +34,8 @@ type Candidate = {
     github: string | null;
     cv_skills: string[];
     merged_skills: string[];
+    verified_skills?: VerifiedSkill[];
+    verified_skill_count?: number;
     cv_data: any;
     interests: string[];
     github_signals: {
@@ -493,7 +496,7 @@ export default function CandidateSearchPage() {
                                         <div className="space-y-1.5">
                                             <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
                                                 <Code className="w-3.5 h-3.5" />
-                                                Verified Skills Tags
+                                                Declared Skills (CV + GitHub)
                                             </div>
                                             <div className="flex flex-wrap gap-1">
                                                 {candidate.merged_skills && candidate.merged_skills.length > 0 ? (
@@ -517,6 +520,21 @@ export default function CandidateSearchPage() {
                                                     <span className="text-[10px] text-muted-foreground italic">Belum ada keahlian terdata</span>
                                                 )}
                                             </div>
+                                        </div>
+
+                                        {/* Skill terverifikasi — punya bukti commit di repo sendiri */}
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+                                                <Code className="w-3.5 h-3.5" />
+                                                Terverifikasi ({candidate.verified_skill_count ?? 0}) · bukti commit
+                                            </div>
+                                            {(candidate.verified_skills ?? []).length > 0 ? (
+                                                <VerifiedSkillChips items={candidate.verified_skills ?? []} />
+                                            ) : (
+                                                <span className="text-[10px] text-muted-foreground italic">
+                                                    Belum ada bukti commit yang cukup
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 );

@@ -66,6 +66,8 @@ class ProfileOut(BaseModel):
     github_signals: dict | None
     cv_skills: list | None
     merged_skills: list | None
+    # Skill dengan bukti commit GitHub. Sisanya bersifat declared (dari CV/topics).
+    verified_skills: list | None = None
     interests: list | None = None
     cv_data: dict | None = None
     # Bio data
@@ -75,8 +77,11 @@ class ProfileOut(BaseModel):
     bio_address: str | None = None
     bio_phone: str | None = None
     updated_at: datetime | None
-    # User role — None = belum pilih (tampilkan role picker). candidate | recruiter setelah dipilih.
+    # User role — ditentukan allowlist email di auth.resolve_effective_role().
     role: str | None = None
+    # True kalau akun ini pernah diset recruiter tapi emailnya tidak terdaftar,
+    # sehingga diturunkan jadi candidate. Dipakai UI untuk menjelaskan alasannya.
+    recruiter_access_denied: bool = False
     # CV asli tersimpan + preferensi versi CV (form | original)
     cv_filename: str | None = None
     cv_uploaded_at: datetime | None = None
@@ -155,7 +160,12 @@ class SkillGapOut(BaseModel):
     user_skill_count: int = 0
     total_job_skills: int = 0
     weak_skills: list[str] = Field(default_factory=list)
+    # Skill yang namanya muncul di GitHub (bahasa/topics) — BUKAN hasil anti-cheat.
+    # Dipertahankan untuk backward compatibility; jangan dilabeli "verified" di UI.
     github_backed_count: int = 0
+    # Skill yang lolos verifikasi bukti commit — ini yang boleh dilabeli "verified".
+    verified_skill_count: int = 0
+    verified_skills: list = Field(default_factory=list)
     mode: str = "all"          # "interests" atau "all"
     interests: list[str] = Field(default_factory=list)
 

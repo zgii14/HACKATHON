@@ -3,6 +3,7 @@
 // Hallmark · genre: modern-minimal · macrostructure: Workbench (app-surface) · theme: GitHire violet (locked)
 
 import { BarFill, CountUp, EmptyState, PageHeader, Reveal, SecTitle } from "@/components/dashboard/ui";
+import { VerifiedSkill, VerifiedSkillList } from "@/components/dashboard/verified-skills";
 import { useApi } from "@/hooks/use-api";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -18,12 +19,14 @@ type Profile = {
     } | null;
     cv_skills: string[] | null;
     merged_skills: string[] | null;
+    verified_skills: VerifiedSkill[] | null;
     updated_at: string | null;
 };
 
 type SkillGap = {
     weak_skills: string[];
     github_backed_count: number;
+    verified_skill_count: number;
     has_profile: boolean;
 };
 
@@ -38,12 +41,24 @@ const LANG_COLORS: Record<string, string> = {
 };
 
 // Tag skill: dot bertoken sesuai sumber, tag hairline netral
-function SkillTag({ skill, source }: { skill: string; source: "github" | "cv" | "both" }) {
+function SkillTag({
+    skill,
+    source,
+    verified = false,
+}: {
+    skill: string;
+    source: "github" | "cv" | "both";
+    verified?: boolean;
+}) {
     const dot = { both: "bg-success", github: "bg-primary", cv: "bg-muted-foreground" }[source];
     return (
-        <span className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-foreground">
+        <span
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-[12px] text-foreground"
+            title={verified ? "Terverifikasi dari bukti commit" : "Declared — belum ada bukti repo"}
+        >
             <span className={`size-1.5 shrink-0 rounded-full ${dot}`} />
             {skill}
+            {verified && <span className="font-mono text-[11px] text-success">✓</span>}
         </span>
     );
 }
@@ -119,7 +134,13 @@ export default function ProfilePage() {
         : "—";
 
     const ghBacked = gap?.github_backed_count ?? 0;
-    const verifiedPct = mergedSkills.length > 0 ? Math.round((ghBacked / mergedSkills.length) * 100) : 0;
+    const ghBackedPct = mergedSkills.length > 0 ? Math.round((ghBacked / mergedSkills.length) * 100) : 0;
+
+    // Skill dengan bukti commit (anti-cheat). Berbeda dari ghBacked yang hanya
+    // mencocokkan nama skill dengan bahasa/topics GitHub.
+    const verifiedSkills = profile.verified_skills ?? [];
+    const verifiedSet = new Set(verifiedSkills.map((v) => v.skill.toLowerCase()));
+    const declaredSkills = mergedSkills.filter((s) => !verifiedSet.has(s.toLowerCase()));
 
     return (
         <div className="w-full">
@@ -174,16 +195,17 @@ export default function ProfilePage() {
             {/* Verifikasi + bahasa */}
             <div className="grid gap-10 pt-8 lg:grid-cols-[4fr_8fr]">
                 <Reveal delay={0.12}>
-                    <section aria-label="Verifikasi skill">
-                        <SecTitle title="Skill terverifikasi" meta="GitHub-backed" />
+                    <section aria-label="Cakupan GitHub">
+                        <SecTitle title="Cakupan GitHub" meta="nama skill cocok" />
                         <div className="pt-4">
                             <div className="flex items-baseline gap-2">
-                                <CountUp value={verifiedPct} className="font-mono text-[44px] font-semibold leading-none tracking-tight" />
+                                <CountUp value={ghBackedPct} className="font-mono text-[44px] font-semibold leading-none tracking-tight" />
                                 <span className="font-mono text-lg text-muted-foreground">%</span>
                             </div>
-                            <BarFill pct={verifiedPct} tone={verifiedPct >= 60 ? "success" : "primary"} className="mt-3 w-full max-w-[240px]" />
-                            <p className="mt-2 font-mono text-[11.5px] text-muted-foreground">
-                                {ghBacked}/{mergedSkills.length} skill terbukti dari aktivitas repo
+                            <BarFill pct={ghBackedPct} tone={ghBackedPct >= 60 ? "success" : "primary"} className="mt-3 w-full max-w-[240px]" />
+                            <p className="mt-2 font-mono text-[11.5px] leading-relaxed text-muted-foreground">
+                                {ghBacked}/{mergedSkills.length} skill namanya muncul di GitHub. Bukti commit dihitung
+                                terpisah di bagian skill terverifikasi.
                             </p>
                         </div>
                     </section>
@@ -223,26 +245,63 @@ export default function ProfilePage() {
                 )}
             </div>
 
-            {/* Semua skill */}
+            {/* Skill terverifikasi — bukti commit di repo sendiri */}
             <Reveal delay={0.26} className="pt-10">
+                <section aria-label="Skill terverifikasi">
+                    <SecTitle
+                        title="Skill terverifikasi"
+                        meta={verifiedSkills.length > 0 ? `${verifiedSkills.length} dengan bukti commit` : "bukti commit"}
+                    />
+                    {verifiedSkills.length > 0 ? (
+                        <>
+                            <p className="pt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                                Skill di bawah punya jejak commit milikmu sendiri di repo non-fork. Level dihitung dari
+                                volume kode, jumlah repo, dan kapan terakhir dipakai.
+                            </p>
+                            <div className="mt-2">
+                                <VerifiedSkillList items={verifiedSkills} initial={6} showRepos />
+                            </div>
+                        </>
+                    ) : (
+                        <p className="pt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                            Belum ada skill dengan bukti commit yang cukup. Skillmu tetap tersimpan sebagai{" "}
+                            <span className="font-semibold text-foreground">declared</span> dan dipakai untuk mencocokkan
+                            lowongan. Commit rutin ke repo sendiri (bukan fork), lalu{" "}
+                            <Link href="/dashboard/onboarding" className="font-semibold text-primary hover:underline">
+                                sync ulang
+                            </Link>{" "}
+                            untuk mengambil buktinya.
+                        </p>
+                    )}
+                </section>
+            </Reveal>
+
+            {/* Semua skill */}
+            <Reveal delay={0.33} className="pt-10">
                 <section aria-label="Semua skill">
                     <SecTitle title="Semua skill" meta={`${mergedSkills.length} total · GitHub + CV`} />
                     <div className="flex flex-wrap gap-4 pt-3 font-mono text-[11px] text-muted-foreground">
                         <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-success" /> keduanya ({bySource.both.length})</span>
                         <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary" /> github ({bySource.github.length})</span>
                         <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-muted-foreground" /> cv ({bySource.cv.length})</span>
+                        <span className="flex items-center gap-1.5">✓ terverifikasi ({verifiedSkills.length})</span>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-1.5">
                         {[...bySource.both, ...bySource.github, ...bySource.cv].map((s) => (
-                            <SkillTag key={s} skill={s} source={getSource(s)} />
+                            <SkillTag key={s} skill={s} source={getSource(s)} verified={verifiedSet.has(s.toLowerCase())} />
                         ))}
                     </div>
+                    {declaredSkills.length > 0 && (
+                        <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                            {declaredSkills.length} skill masih declared — belum ada bukti repo.
+                        </p>
+                    )}
                 </section>
             </Reveal>
 
             {/* Perlu diperkuat */}
             {gap && gap.weak_skills.length > 0 && (
-                <Reveal delay={0.33} className="pt-10">
+                <Reveal delay={0.4} className="pt-10">
                     <section aria-label="Skill perlu diperkuat">
                         <SecTitle title="Perlu diperkuat" meta={`${gap.weak_skills.length} belum terverifikasi`} />
                         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -258,7 +317,7 @@ export default function ProfilePage() {
             )}
 
             {/* CTA */}
-            <Reveal delay={0.4} className="pt-10">
+            <Reveal delay={0.47} className="pt-10">
                 <div className="grid gap-px border-t border-border sm:grid-cols-2">
                     {[
                         { t: "Skill gap analysis", d: "Lihat skill yang belum dikuasai", href: "/dashboard/skill-gap" },

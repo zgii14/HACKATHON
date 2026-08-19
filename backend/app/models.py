@@ -48,6 +48,8 @@ class CandidateProfile(Base):
     github_signals: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     cv_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
     merged_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    # Skill yang lolos verifikasi bukti commit GitHub (lihat services/skill_verification.py)
+    verified_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
     roadmap_cached: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     roadmap_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     interests: Mapped[list | None] = mapped_column(JSON, nullable=True)  # e.g. ["backend", "ai_ml"]

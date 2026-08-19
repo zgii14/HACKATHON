@@ -1,3 +1,4 @@
+import asyncio
 import re
 from typing import Any
 
@@ -5,6 +6,12 @@ import httpx
 from fastapi import HTTPException
 
 from app.config import settings
+
+# Batas request paralel saat mengambil detail repo (languages + commit milik user).
+# Menjaga agar GitHub tidak menandai burst request sebagai abuse.
+REPO_DETAIL_SEMAPHORE = 6
+# Tanpa GITHUB_TOKEN rate limit hanya 60 request/jam → batasi repo yang dianalisis.
+REPO_CAP_NO_TOKEN = 15
 
 
 def parse_github_username(url_or_user: str) -> str | None:
@@ -41,6 +48,110 @@ def _headers(use_auth: bool = True) -> dict[str, str]:
     if use_auth and settings.github_token:
         h["Authorization"] = f"Bearer {settings.github_token}"
     return h
+
+
+def _parse_last_page(link_header: str | None) -> int | None:
+    """
+    Ambil nomor halaman terakhir dari header Link GitHub (rel="last").
+
+    Dipakai untuk menghitung jumlah commit tanpa menarik seluruh riwayat:
+    dengan per_page=1, halaman terakhir = jumlah commit.
+    """
+    if not link_header:
+        return None
+    for part in link_header.split(","):
+        if 'rel="last"' not in part:
+            continue
+        m = re.search(r"[?&]page=(\d+)", part)
+        if m:
+            try:
+                return int(m.group(1))
+            except ValueError:
+                return None
+    return None
+
+
+async def _fetch_repo_detail(
+    client: httpx.AsyncClient,
+    repo: dict,
+    username: str,
+    use_auth: bool,
+    sem: asyncio.Semaphore,
+    with_commits: bool,
+) -> dict:
+    """
+    Ambil bahasa (dan opsional jumlah commit milik user) untuk satu repo.
+
+    Selalu mengembalikan dict — kegagalan ditandai lewat commit_source/confidence
+    agar satu repo bermasalah tidak menggagalkan keseluruhan sync.
+    """
+    name = repo.get("name") or ""
+    full_name = repo.get("full_name") or f"{username}/{name}"
+    langs_url = repo.get("languages_url") or ""
+
+    languages: dict[str, int] = {}
+    own_commits = 0
+    commit_failed = False
+
+    async with sem:
+        # ── Bahasa per repo (byte count) ──
+        if langs_url:
+            try:
+                r = await client.get(langs_url, headers=_headers(use_auth=use_auth))
+                if r.is_success:
+                    data = r.json()
+                    if isinstance(data, dict):
+                        languages = {
+                            k: v
+                            for k, v in data.items()
+                            if isinstance(k, str) and isinstance(v, int) and not isinstance(v, bool)
+                        }
+            except Exception:
+                pass  # repo tanpa bahasa terbaca → bukan error kritis
+
+        # ── Jumlah commit milik user pada repo ini ──
+        if with_commits:
+            try:
+                cr = await client.get(
+                    f"https://api.github.com/repos/{full_name}/commits",
+                    params={"author": username, "per_page": 1},
+                    headers=_headers(use_auth=use_auth),
+                )
+                if cr.status_code == 409:
+                    # Repository kosong → 0 commit, bukan kegagalan fetch
+                    own_commits = 0
+                elif cr.is_success:
+                    last_page = _parse_last_page(cr.headers.get("Link"))
+                    if last_page is not None:
+                        own_commits = last_page
+                    else:
+                        payload = cr.json()
+                        own_commits = len(payload) if isinstance(payload, list) else 0
+                else:
+                    commit_failed = True
+            except Exception:
+                commit_failed = True
+
+    if commit_failed:
+        # Bukti commit tidak bisa diambil → jangan mengarang angka.
+        # own_commits = 0 memastikan repo ini tidak pernah lolos sebagai verified.
+        own_commits = 0
+
+    return {
+        "name": name,
+        "html_url": repo.get("html_url") or "",
+        "fork": False,
+        "own_commits": own_commits,
+        "created_at": repo.get("created_at"),
+        "pushed_at": repo.get("pushed_at"),
+        "size": repo.get("size") or 0,
+        "stars": repo.get("stargazers_count") or 0,
+        "languages": languages,
+        "commit_source": "fallback" if commit_failed else "repo_commits",
+        "confidence": "low" if commit_failed else "high",
+        "_analyzed": with_commits,
+        "_commit_failed": commit_failed,
+    }
 
 
 async def fetch_github_signals(username: str) -> dict[str, Any]:
@@ -130,28 +241,48 @@ async def fetch_github_signals(username: str) -> dict[str, Any]:
         except Exception:
             pass
 
-        # ── Step 3: Fetch byte count per bahasa per repo (dalam koneksi yang sama) ──
+        # ── Step 3: Fetch detail per repo secara paralel (bahasa + commit milik user) ──
+        # Bahasa tetap diambil dari SELURUH repo non-fork agar agregat `languages`
+        # identik dengan perilaku lama. Cap tanpa token hanya membatasi repo yang
+        # dianalisis untuk bukti commit (repos_detail).
         non_fork_repos = [r for r in repos if isinstance(r, dict) and not r.get("fork")]
-        lang_responses: list[dict] = []
-        for repo in non_fork_repos:
-            langs_url = repo.get("languages_url", "")
-            if not langs_url:
-                continue
-            try:
-                r = await client.get(langs_url, headers=_headers(use_auth=use_auth))
-                if r.is_success:
-                    lang_responses.append(r.json())
-            except Exception:
-                pass  # skip repo yang gagal → bukan error kritis
+        indexed = list(enumerate(non_fork_repos))
+        if use_auth:
+            analyzed_idx = {i for i, _ in indexed}
+            repo_cap_applied = False
+        else:
+            ranked = sorted(indexed, key=lambda pair: pair[1].get("pushed_at") or "", reverse=True)
+            analyzed_idx = {i for i, _ in ranked[:REPO_CAP_NO_TOKEN]}
+            repo_cap_applied = len(non_fork_repos) > REPO_CAP_NO_TOKEN
 
-    # ── Akumulasi byte count per bahasa ──
-    # Format: {"Python": 82000, "JavaScript": 12000, ...}
+        sem = asyncio.Semaphore(REPO_DETAIL_SEMAPHORE)
+        settled = await asyncio.gather(
+            *(
+                _fetch_repo_detail(
+                    client, repo, username, use_auth, sem, with_commits=idx in analyzed_idx
+                )
+                for idx, repo in indexed
+            ),
+            return_exceptions=True,
+        )
+
+    # ── Akumulasi byte count per bahasa + kumpulkan bukti per repo ──
+    # Format languages: {"Python": 82000, "JavaScript": 12000, ...}
     languages: dict[str, int] = {}
-    for lang_data in lang_responses:
-        if isinstance(lang_data, dict):
-            for lang, byte_count in lang_data.items():
-                if isinstance(lang, str) and isinstance(byte_count, int):
-                    languages[lang] = languages.get(lang, 0) + byte_count
+    repos_detail: list[dict] = []
+    commit_fetch_failures = 0
+    for item in settled:
+        # Exception dari satu repo tidak menggagalkan sync
+        if not isinstance(item, dict):
+            continue
+        analyzed = item.pop("_analyzed", False)
+        commit_failed = item.pop("_commit_failed", False)
+        for lang, byte_count in (item.get("languages") or {}).items():
+            languages[lang] = languages.get(lang, 0) + byte_count
+        if analyzed:
+            if commit_failed:
+                commit_fetch_failures += 1
+            repos_detail.append(item)
 
     # ── Kumpulkan topics dari semua repo ──
     topics: list[str] = []
@@ -174,4 +305,9 @@ async def fetch_github_signals(username: str) -> dict[str, Any]:
         "languages": languages,         # ← byte count, bukan jumlah repo
         "topics": topics[:40],
         "bio": user_data.get("bio"),
+        # ── Bukti per repo untuk verifikasi skill (lihat services/skill_verification.py) ──
+        "repos_detail": repos_detail,
+        "repos_analyzed": len(repos_detail),
+        "repo_cap_applied": repo_cap_applied,
+        "commit_fetch_failures": commit_fetch_failures,
     }

@@ -214,6 +214,9 @@ def get_job_applications(
                 "cv_skills": profile.cv_skills if profile else [],
                 "merged_skills": profile.merged_skills if profile else [],
                 "cv_data": profile.cv_data if profile else {},
+                # Skill dengan bukti commit GitHub — sisanya declared (CV/topics)
+                "verified_skills": (profile.verified_skills or []) if profile else [],
+                "verified_skill_count": len(profile.verified_skills or []) if profile else 0,
                 "has_cv": bool(profile and (profile.cv_file or profile.cv_data)),
                 "cv_preference": (profile.cv_preference if profile else "form"),
             }
@@ -478,6 +481,8 @@ def search_candidates(
             "merged_skills": profile.merged_skills or [],
             "cv_data": profile.cv_data or {},
             "github_signals": profile.github_signals or {},
+            "verified_skills": profile.verified_skills or [],
+            "verified_skill_count": len(profile.verified_skills or []),
             "interests": profile.interests or []
         })
 
