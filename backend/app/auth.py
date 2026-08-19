@@ -26,6 +26,26 @@ def is_recruiter_email(email: str | None) -> bool:
     return email.strip().lower() in allowed
 
 
+def resolve_effective_role(db_role: str | None, email: str | None) -> tuple[str | None, bool]:
+    """
+    Satu-satunya tempat role efektif ditentukan.
+
+    Mengembalikan (role_efektif, ditolak_sebagai_recruiter). Flag kedua dipakai
+    untuk memberi tahu user kenapa dia jadi candidate — jangan pernah menurunkan
+    role diam-diam, itu bikin bug sulit dilacak.
+
+    Aturan:
+    - Email ada di allowlist  → selalu recruiter (walau DB bilang lain)
+    - DB bilang recruiter tapi email tidak terdaftar → candidate + flag ditolak
+    - Selain itu → apa adanya dari DB
+    """
+    if is_recruiter_email(email):
+        return "recruiter", False
+    if db_role == "recruiter":
+        return "candidate", True
+    return db_role, False
+
+
 def get_jwks_client() -> PyJWKClient:
     global _jwks_client
     if not settings.clerk_jwks_url:
@@ -104,10 +124,10 @@ def get_current_user(
                 user.clerk_user_id = clerk_id
                 db.commit()
                 db.refresh(user)
-                if is_recruiter_email(user.email):
-                    user.role = "recruiter"
-                elif user.role == "recruiter":
-                    user.role = "candidate"
+                user.role, denied = resolve_effective_role(user.role, user.email)
+                # Atribut transient (bukan kolom DB) — dibaca /me/profile untuk
+                # menjelaskan ke user kenapa dia bukan recruiter.
+                user.recruiter_access_denied = denied
                 return user
 
         from sqlalchemy.exc import IntegrityError
@@ -133,11 +153,9 @@ def get_current_user(
             db.commit()
             db.refresh(user)
 
-    # DB role can contain legacy/self-selected recruiter values. Effective access
-    # still comes from the trusted email allowlist on every request.
-    if is_recruiter_email(user.email):
-        user.role = "recruiter"
-    elif user.role == "recruiter":
-        user.role = "candidate"
+    # DB role bisa berisi nilai lama/self-selected. Akses efektif tetap ditentukan
+    # allowlist email di setiap request — lihat resolve_effective_role().
+    user.role, denied = resolve_effective_role(user.role, user.email)
+    user.recruiter_access_denied = denied
 
     return user

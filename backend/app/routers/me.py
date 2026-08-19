@@ -158,10 +158,12 @@ def read_profile(user: User = Depends(get_current_user)):
             github_signals=None,
             cv_skills=None,
             merged_skills=None,
+            verified_skills=[],
             interests=None,
             cv_data=None,
             updated_at=None,
             role=user.role,
+            recruiter_access_denied=getattr(user, "recruiter_access_denied", False),
         )
     # Inject role dari User ke response ProfileOut
     data = {
@@ -169,6 +171,7 @@ def read_profile(user: User = Depends(get_current_user)):
         "github_signals": p.github_signals,
         "cv_skills": p.cv_skills,
         "merged_skills": p.merged_skills,
+        "verified_skills": p.verified_skills or [],
         "interests": p.interests,
         "cv_data": p.cv_data,
         "bio_full_name": p.bio_full_name,
@@ -178,6 +181,7 @@ def read_profile(user: User = Depends(get_current_user)):
         "bio_phone": p.bio_phone,
         "updated_at": p.updated_at,
         "role": user.role,
+        "recruiter_access_denied": getattr(user, "recruiter_access_denied", False),
         "cv_filename": p.cv_filename,
         "cv_uploaded_at": p.cv_uploaded_at,
         "cv_preference": p.cv_preference,
@@ -328,6 +332,10 @@ def get_skill_gap(
 
     github_backed_count = len(merged_norm) - len(cv_only_norm)
 
+    # Skill dengan bukti commit. Berbeda dari github_backed_count di atas yang
+    # hanya mencocokkan nama skill dengan bahasa/topics GitHub.
+    verified_skills: list = profile.verified_skills or []
+
     # ── Missing skills: skill job yang user tidak punya sama sekali ────────
     user_skills = {normalize_skill(s) for s in profile.merged_skills}
     missing_with_freq = [
@@ -356,6 +364,8 @@ def get_skill_gap(
         total_job_skills=len(skill_freq),
         weak_skills=weak_skills,
         github_backed_count=github_backed_count,
+        verified_skill_count=len(verified_skills),
+        verified_skills=verified_skills,
         mode=effective_mode,
         interests=user_interests,
     )

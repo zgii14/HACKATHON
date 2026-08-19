@@ -1,6 +1,7 @@
 "use client";
 
 import { cn, DASHBOARD_LINKS } from "@/utils";
+import { AppRole, redirectForRole } from "@/utils/constants/roles";
 import { useApi } from "@/hooks/use-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
@@ -9,6 +10,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 // ── Logo Components (Logo 6 — Minimal Dark) ──────────────────────────────────
 function GitHireLogo() {
@@ -54,7 +56,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     // Fetch profile role untuk sidebar dinamis
     const { data: profile } = useQuery({
         queryKey: ["profile"],
-        queryFn: () => withAuth<{ role: string } | null>("/me/profile"),
+        queryFn: () =>
+            withAuth<{ role: string; recruiter_access_denied?: boolean } | null>("/me/profile"),
         enabled: authReady,
         staleTime: 5 * 60 * 1000,
     });
@@ -115,14 +118,30 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     useEffect(() => {
         if (!authReady || !profile) return;
-        if (role == null && !assignedRef.current) {
-            assignedRef.current = true;
-            assignCandidate.mutate();
-        } else if (role === "recruiter" && pathname === "/dashboard") {
-            router.replace("/dashboard/recruiter/jobs");
+        if (role == null) {
+            if (!assignedRef.current) {
+                assignedRef.current = true;
+                assignCandidate.mutate();
+            }
+            return;
         }
+        // Guard dua arah, digerakkan peta rute — bukan pengecekan per-halaman.
+        const dest = redirectForRole(role as AppRole, pathname);
+        if (dest) router.replace(dest);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authReady, profile, role, pathname, router]);
+
+    // Beri tahu sekali kalau akses recruiter ditolak — jangan turunkan role diam-diam.
+    const deniedNotified = useRef(false);
+    useEffect(() => {
+        if (profile?.recruiter_access_denied && !deniedNotified.current) {
+            deniedNotified.current = true;
+            toast.info(
+                "Akunmu belum terdaftar sebagai recruiter, jadi dibuka sebagai kandidat. Hubungi admin untuk didaftarkan.",
+                { autoClose: 8000 }
+            );
+        }
+    }, [profile?.recruiter_access_denied]);
 
     // Tutup mobile drawer saat navigasi
     useEffect(() => {

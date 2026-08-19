@@ -96,7 +96,24 @@ CLERK_SECRET_KEY=
 
 ### Auth Flow
 
-Clerk issues JWTs → backend validates via JWKS (`auth.py:decode_clerk_token`) → auto-creates/syncs `User` row on first request. Role (`candidate` | `recruiter`) is determined by email whitelist in `auth.py` (env `RECRUITER_EMAILS` + hardcoded `recruiter@githire.com`), not stored role.
+Clerk issues JWTs → backend validates via JWKS (`auth.py:decode_clerk_token`) → auto-creates/syncs `User` row on first request.
+
+### Roles — read this before touching anything role-related
+
+**`auth.py:resolve_effective_role(db_role, email)` is the ONLY place role is decided.** It is pure and unit-tested (`test_role_resolution.py`). Never re-derive role anywhere else.
+
+| DB role | Email in allowlist? | Effective role | `recruiter_access_denied` |
+|---------|--------------------|----------------|---------------------------|
+| anything | yes | `recruiter` | `false` |
+| `recruiter` | no | `candidate` | **`true`** |
+| `candidate` | no | `candidate` | `false` |
+| `NULL` | no | `NULL` → frontend auto-assigns `candidate` | `false` |
+
+- Allowlist = env **`RECRUITER_EMAILS`** (comma-separated, case-insensitive) + hardcoded `recruiter@githire.com`. **Must be set in Railway too** — an empty allowlist silently makes every recruiter a candidate.
+- Stored `users.role` is NOT authoritative; it is overridden per-request.
+- Demotions are never silent: `/me/profile` returns `recruiter_access_denied`, and the shell shows a toast explaining why.
+
+**Route protection:** `linkify/src/utils/constants/roles.ts` owns the route→role map. Any `/dashboard/*` path that isn't listed as recruiter-only or shared defaults to candidate-only, so new pages are guarded automatically. `dashboard-shell.tsx` calls `redirectForRole()` — do NOT add per-page `if (pathname === ...)` checks.
 
 ### Database Migrations
 
