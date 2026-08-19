@@ -7,8 +7,8 @@ import { UserButton } from "@clerk/nextjs";
 import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // ── Logo Components (Logo 6 — Minimal Dark) ──────────────────────────────────
 function GitHireLogo() {
@@ -44,6 +44,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const pathname = usePathname();
     const router = useRouter();
     const { withAuth, authReady } = useApi();
+    const qc = useQueryClient();
 
     // Desktop: sidebar collapsed ke icon-only
     const [collapsed, setCollapsed] = useState(false);
@@ -95,19 +96,33 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     });
     const applicationCount: number = applications.length;
 
-    // Routing berbasis role — satu-satunya tempat redirect role.
-    //   role null      → belum pilih  → paksa ke /dashboard/select-role
+    // Routing berbasis role.
+    //   role null      → user baru → auto-set candidate (recruiter ditentukan email allowlist)
     //   role recruiter → di home kandidat → arahkan ke recruiter jobs
     const role = profile?.role ?? null;
-    const onSelectRole = pathname === "/dashboard/select-role";
+
+    // Auto-assign candidate untuk user baru. Recruiter tidak pernah role null
+    // (dipaksa dari email allowlist di backend), jadi tidak perlu role picker.
+    const assignedRef = useRef(false);
+    const assignCandidate = useMutation({
+        mutationFn: () =>
+            withAuth("/me/role", { method: "POST", body: JSON.stringify({ role: "candidate" }) }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
+        onError: () => {
+            assignedRef.current = false;
+        },
+    });
+
     useEffect(() => {
         if (!authReady || !profile) return;
-        if (role == null && !onSelectRole) {
-            router.replace("/dashboard/select-role");
+        if (role == null && !assignedRef.current) {
+            assignedRef.current = true;
+            assignCandidate.mutate();
         } else if (role === "recruiter" && pathname === "/dashboard") {
             router.replace("/dashboard/recruiter/jobs");
         }
-    }, [authReady, profile, role, pathname, onSelectRole, router]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authReady, profile, role, pathname, router]);
 
     // Tutup mobile drawer saat navigasi
     useEffect(() => {
