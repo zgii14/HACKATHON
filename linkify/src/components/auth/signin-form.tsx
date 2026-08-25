@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from "react-toastify";
 import { Label } from "../ui/label";
+import GoogleAuthButton from "./google-auth-button";
 
 const SignInForm = () => {
 
@@ -74,6 +75,15 @@ const SignInForm = () => {
             <h2 className="text-2xl font-semibold">
                 Sign in to GitHire
             </h2>
+
+            <div className="w-full">
+                <GoogleAuthButton mode="sign-in" disabled={isLoading} />
+                <div className="flex items-center gap-x-3 mt-6">
+                    <span className="h-px flex-1 bg-border" />
+                    <span className="text-xs text-muted-foreground">or</span>
+                    <span className="h-px flex-1 bg-border" />
+                </div>
+            </div>
 
             <form onSubmit={handleSignIn} className="w-full">
                 <div className="space-y-2 w-full">

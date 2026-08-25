@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { toast } from "react-toastify";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Label } from "../ui/label";
+import GoogleAuthButton from "./google-auth-button";
 
 const SignUpForm = () => {
 
@@ -176,6 +177,15 @@ const SignUpForm = () => {
             <h2 className="text-2xl font-semibold">
                 Create an account
             </h2>
+
+            <div className="w-full">
+                <GoogleAuthButton mode="sign-up" disabled={isUpdating} />
+                <div className="flex items-center gap-x-3 mt-6">
+                    <span className="h-px flex-1 bg-border" />
+                    <span className="text-xs text-muted-foreground">or</span>
+                    <span className="h-px flex-1 bg-border" />
+                </div>
+            </div>
 
             <form onSubmit={handleSignUp} className="w-full">
                 <div className="space-y-2 w-full">
