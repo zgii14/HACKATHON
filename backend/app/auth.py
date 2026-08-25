@@ -13,17 +13,47 @@ security = HTTPBearer(auto_error=False)
 _jwks_client: PyJWKClient | None = None
 
 
-def is_recruiter_email(email: str | None) -> bool:
-    """Only explicitly trusted accounts can access recruiter capabilities."""
-    if not email:
-        return False
+def recruiter_allowlist() -> set[str]:
+    """Himpunan email yang boleh jadi recruiter. Satu sumber untuk cek dan log."""
     allowed = {
         item.strip().lower()
         for item in settings.recruiter_emails.split(",")
         if item.strip()
     }
     allowed.add("recruiter@githire.com")
-    return email.strip().lower() in allowed
+    return allowed
+
+
+def is_recruiter_email(email: str | None) -> bool:
+    """Only explicitly trusted accounts can access recruiter capabilities."""
+    if not email:
+        return False
+    return email.strip().lower() in recruiter_allowlist()
+
+
+def _mask_email(email: str) -> str:
+    """`rozagi2004@gmail.com` -> `ro***@gmail.com`. Cukup untuk dicocokkan mata."""
+    local, sep, domain = email.partition("@")
+    if not sep:
+        return f"{local[:2]}***"
+    return f"{local[:2]}***@{domain}"
+
+
+def describe_recruiter_allowlist() -> str:
+    """
+    Ringkasan allowlist untuk log startup — tanpa membocorkan alamat penuh.
+
+    Dipakai untuk membedakan "RECRUITER_EMAILS tidak sampai ke proses" dari
+    "sampai tapi tidak cocok". Tanpa ini, keduanya terlihat identik dari luar:
+    user cuma melihat dirinya jadi candidate.
+    """
+    raw = settings.recruiter_emails or ""
+    entries = sorted(recruiter_allowlist())
+    masked = ", ".join(_mask_email(item) for item in entries)
+    return (
+        f"RECRUITER_EMAILS terbaca {len(raw)} char, "
+        f"allowlist {len(entries)} entri: {masked}"
+    )
 
 
 def resolve_effective_role(db_role: str | None, email: str | None) -> tuple[str | None, bool]:

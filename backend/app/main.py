@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import text
 
+from app.auth import describe_recruiter_allowlist
 from app.config import settings
 from app.database import Base, engine
 from app.routers import jobs, me, profiles, recruiter
@@ -21,6 +22,10 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Cetak kondisi allowlist recruiter di log startup. Kalau angkanya 1 entri,
+    # berarti RECRUITER_EMAILS tidak sampai ke proses ini — bukan salah kode.
+    logger.warning("[auth] %s", describe_recruiter_allowlist())
+
     # Retry DB connection — tunggu DB siap (max 5x, delay 2s)
     for attempt in range(1, 6):
         try:

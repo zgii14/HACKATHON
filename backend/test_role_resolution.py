@@ -9,7 +9,11 @@ import unittest
 from unittest.mock import patch
 
 from app import auth
-from app.auth import is_recruiter_email, resolve_effective_role
+from app.auth import (
+    describe_recruiter_allowlist,
+    is_recruiter_email,
+    resolve_effective_role,
+)
 
 
 def with_allowlist(value: str):
@@ -95,6 +99,36 @@ class EffectiveRoleTests(unittest.TestCase):
             role, denied = resolve_effective_role("recruiter", "hrd@perusahaan.com")
         self.assertEqual(role, "candidate")
         self.assertTrue(denied)
+
+
+class AllowlistDiagnosticTests(unittest.TestCase):
+    """Log startup harus bisa membedakan 'env tidak sampai' dari 'tidak cocok'."""
+
+    def test_empty_env_shows_only_hardcoded_entry(self):
+        with with_allowlist(""):
+            out = describe_recruiter_allowlist()
+        self.assertIn("0 char", out)
+        self.assertIn("1 entri", out)
+
+    def test_filled_env_is_counted(self):
+        with with_allowlist("hrd@perusahaan.com"):
+            out = describe_recruiter_allowlist()
+        self.assertIn("2 entri", out)
+
+    def test_full_address_is_never_logged(self):
+        with with_allowlist("hrd@perusahaan.com"):
+            out = describe_recruiter_allowlist()
+        self.assertNotIn("hrd@perusahaan.com", out)
+        self.assertIn("@perusahaan.com", out)  # domain tetap terlihat untuk dicocokkan
+
+    def test_diagnostic_agrees_with_actual_check(self):
+        # Log yang menghitung himpunannya sendiri bisa berbohong — pastikan sama
+        with with_allowlist("hrd@perusahaan.com"):
+            self.assertIn("2 entri", describe_recruiter_allowlist())
+            self.assertTrue(is_recruiter_email("hrd@perusahaan.com"))
+        with with_allowlist(""):
+            self.assertIn("1 entri", describe_recruiter_allowlist())
+            self.assertFalse(is_recruiter_email("hrd@perusahaan.com"))
 
 
 if __name__ == "__main__":
