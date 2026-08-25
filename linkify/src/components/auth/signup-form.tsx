@@ -244,6 +244,13 @@ const SignUpForm = () => {
                         </Button>
                     </div>
                 </div>
+                {/*
+                    Tempat Clerk menaruh widget CAPTCHA. Wajib ada sebelum
+                    signUp.create() dipanggil. Tanpa elemen ini Clerk memakai
+                    widget tak terlihat yang langsung memblokir trafik yang
+                    dicurigai bot — user asli ditolak tanpa bisa membuktikan diri.
+                */}
+                <div id="clerk-captcha" className="mt-4 empty:mt-0" />
                 <div className="mt-4 w-full">
                     <Button
                         type="submit"

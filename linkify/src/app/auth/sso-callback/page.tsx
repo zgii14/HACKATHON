@@ -21,6 +21,12 @@ const SSOCallbackPage = () => {
                 <p className="text-lg font-medium text-center mt-3">
                     Completing sign-in...
                 </p>
+                {/*
+                    Bot protection ikut berjalan saat Clerk menuntaskan OAuth di
+                    halaman ini. Tanpa wadah ini widget-nya jatuh ke mode tak
+                    terlihat yang memblokir tanpa memberi kesempatan verifikasi.
+                */}
+                <div id="clerk-captcha" className="mt-4 empty:mt-0" />
             </div>
         </>
     );
