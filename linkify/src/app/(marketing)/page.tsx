@@ -132,7 +132,7 @@ const HomePage = async () => {
 
             {/* ── Hero: satu layar, editorial ── */}
             <MaxWidthWrapper>
-                <section className="grid gap-6 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8 lg:py-12">
+                <section className="grid gap-6 py-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8 lg:py-8">
                     <div>
                         <AnimationContainer delay={0.08}>
                             <h1 className="font-heading text-6xl font-medium leading-[0.95] tracking-[-0.03em] sm:text-7xl lg:text-[104px]">
@@ -210,7 +210,7 @@ const HomePage = async () => {
 
             {/* ── Stats band ── */}
             <MaxWidthWrapper>
-                <div className={`grid grid-cols-2 gap-y-12 border-b ${BORDER} py-12 md:grid-cols-4 md:py-16`}>
+                <div className={`grid grid-cols-2 gap-y-12 border-b ${BORDER} py-6 md:grid-cols-4 md:py-8`}>
                     {STATS.map((s, i) => {
                         const dir = (i === 0 ? "left" : i === 3 ? "right" : "up") as "left" | "right" | "up";
                         return (
@@ -227,7 +227,7 @@ const HomePage = async () => {
 
             {/* ── (01) Tiga pilar ── */}
             <MaxWidthWrapper>
-                <section id="features" className="grid gap-12 py-12 md:grid-cols-[240px_1fr] md:gap-24 md:py-16">
+                <section id="features" className="grid gap-12 py-6 md:grid-cols-[240px_1fr] md:gap-24 md:py-8">
                     <div>
                         <AnimationContainer>
                             <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(01) Yang kami bangun</p>
