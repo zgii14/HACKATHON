@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useSignUp } from '@clerk/nextjs';
 import { Eye, EyeOff, LoaderIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from "react-toastify";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
@@ -15,6 +15,7 @@ import GoogleAuthButton from "./google-auth-button";
 const SignUpForm = () => {
 
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const { signUp, isLoaded, setActive } = useSignUp();
 
@@ -98,7 +99,8 @@ const SignUpForm = () => {
                 await setActive({
                     session: completeSignUp.createdSessionId,
                 });
-                router.push("/auth/auth-callback");
+                const redirectUrl = searchParams.get("redirect_url");
+                router.push(redirectUrl ? `/auth/auth-callback?redirect_url=${encodeURIComponent(redirectUrl)}` : "/auth/auth-callback");
             } else {
                 toast.error("Invalid verification code");
                 setIsLoading(false);

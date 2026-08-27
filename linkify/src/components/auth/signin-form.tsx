@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSignIn } from '@clerk/nextjs';
 import { Eye, EyeOff, LoaderIcon } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from "react-toastify";
 import { Label } from "../ui/label";
@@ -13,6 +13,7 @@ import GoogleAuthButton from "./google-auth-button";
 const SignInForm = () => {
 
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const { signIn, isLoaded, setActive } = useSignIn();
 
@@ -45,7 +46,8 @@ const SignInForm = () => {
                 await setActive({
                     session: signInAttempt.createdSessionId,
                 });
-                router.push("/auth/auth-callback");
+                const redirectUrl = searchParams.get("redirect_url");
+                router.push(redirectUrl ? `/auth/auth-callback?redirect_url=${encodeURIComponent(redirectUrl)}` : "/auth/auth-callback");
             } else {
                 toast.error("Invalid email or password");
                 setIsLoading(false);

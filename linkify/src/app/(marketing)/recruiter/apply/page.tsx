@@ -15,7 +15,7 @@ type ReqStatus = {
 } | null;
 
 export default function RecruiterApplyPage() {
-    const { withAuth, authReady, isSignedIn } = useApi();
+    const { withAuth, authReady, isSignedIn, isLoaded } = useApi();
     const qc = useQueryClient();
 
     const [form, setForm] = useState({
@@ -66,15 +66,28 @@ export default function RecruiterApplyPage() {
         submit.mutate();
     };
 
-    if (!isSignedIn && !isLoading) {
+    if (!isLoaded) {
+        return (
+            <MaxWidthWrapper className="py-16">
+                <div className="mx-auto max-w-xl rounded-xl border border-border p-8 text-center">
+                    <p className="font-mono text-sm text-muted-foreground">Memuat...</p>
+                </div>
+            </MaxWidthWrapper>
+        );
+    }
+
+    if (!isSignedIn) {
         return (
             <MaxWidthWrapper className="py-16">
                 <div className="mx-auto max-w-xl rounded-xl border border-border p-8 text-center">
                     <h1 className="text-2xl font-semibold">Daftar sebagai Recruiter</h1>
                     <p className="mt-2 text-sm text-muted-foreground">Silakan login dulu untuk mengajukan pendaftaran recruiter.</p>
-                    <Link href="/auth/sign-in" className="mt-6 inline-flex rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:brightness-110">
+                    <Link href="/auth/sign-in?redirect_url=/recruiter/apply" className="mt-6 inline-flex rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:brightness-110">
                         Masuk / Daftar
                     </Link>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                        Belum punya akun? <Link href="/auth/sign-up?redirect_url=/recruiter/apply" className="text-primary hover:underline">Daftar</Link>
+                    </p>
                 </div>
             </MaxWidthWrapper>
         );

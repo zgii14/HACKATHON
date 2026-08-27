@@ -2,12 +2,13 @@
 
 import { getAuthStatus } from "@/actions";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from "react";
 
 const AuthCallbackPage = () => {
 
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const { data, isError } = useQuery({
         queryKey: ["auth-status"],
@@ -17,8 +18,16 @@ const AuthCallbackPage = () => {
     });
 
     useEffect(() => {
-        if (data?.success) router.replace("/dashboard");
-    }, [data?.success, router]);
+        if (data?.success) {
+            const redirectUrl = searchParams.get("redirect_url");
+            // Hanya izinkan redirect internal untuk keamanan
+            if (redirectUrl && redirectUrl.startsWith("/") && !redirectUrl.startsWith("//")) {
+                router.replace(redirectUrl);
+            } else {
+                router.replace("/dashboard");
+            }
+        }
+    }, [data?.success, router, searchParams]);
 
     if (isError) {
         return <div className="flex h-screen items-center justify-center">Gagal memverifikasi akun. Silakan login ulang.</div>;

@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useSignIn, useSignUp } from "@clerk/nextjs";
 import { LoaderIcon } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -27,6 +28,7 @@ const GoogleAuthButton = ({ mode, disabled }: Props) => {
     const { signIn, isLoaded: signInLoaded } = useSignIn();
     const { signUp, isLoaded: signUpLoaded } = useSignUp();
     const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
+    const searchParams = useSearchParams();
 
     const isLoaded = mode === "sign-in" ? signInLoaded : signUpLoaded;
 
@@ -37,12 +39,16 @@ const GoogleAuthButton = ({ mode, disabled }: Props) => {
 
         try {
             const flow = mode === "sign-in" ? signIn : signUp;
+            const redirectUrl = searchParams.get("redirect_url");
+            const completeUrl = redirectUrl
+                ? `/auth/auth-callback?redirect_url=${encodeURIComponent(redirectUrl)}`
+                : "/auth/auth-callback";
             await flow!.authenticateWithRedirect({
                 strategy: "oauth_google",
                 // Clerk menuntaskan OAuth di sini, lalu melempar ke auth-callback
                 // yang sudah ada — jalur setelah login tetap satu pintu.
                 redirectUrl: "/auth/sso-callback",
-                redirectUrlComplete: "/auth/auth-callback",
+                redirectUrlComplete: completeUrl,
             });
         } catch {
             // Sampai sini berarti redirect gagal dan halaman tidak berpindah,
