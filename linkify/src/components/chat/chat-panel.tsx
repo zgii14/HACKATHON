@@ -5,7 +5,7 @@ import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { ArrowLeft, MessageCircleMore, Phone, Video } from "lucide-react";
+import { ArrowLeft, MessageCircleMore } from "lucide-react";
 import { ConversationList, type Conv } from "@/components/chat/conversation-list";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -155,14 +155,8 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
                                 </div>
                             </div>
                             <div className="flex items-center gap-1">
-                                <button className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Call">
-                                    <Phone className="size-4" />
-                                </button>
-                                <button className="rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Video">
-                                    <Video className="size-4" />
-                                </button>
                                 {onClose && (
-                                    <button onClick={onClose} className="ml-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted">
+                                    <button onClick={onClose} className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted">
                                         Tutup
                                     </button>
                                 )}
