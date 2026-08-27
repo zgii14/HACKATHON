@@ -77,15 +77,45 @@ class ProfileOut(BaseModel):
     bio_address: str | None = None
     bio_phone: str | None = None
     updated_at: datetime | None
-    # User role — ditentukan allowlist email di auth.resolve_effective_role().
+    # User role — ditentukan recruiter_profiles + allowlist di auth.resolve_effective_role().
     role: str | None = None
     # True kalau akun ini pernah diset recruiter tapi emailnya tidak terdaftar,
     # sehingga diturunkan jadi candidate. Dipakai UI untuk menjelaskan alasannya.
     recruiter_access_denied: bool = False
+    # True kalau sedang menunggu persetujuan recruiter
+    recruiter_pending: bool = False
+    is_admin: bool = False
     # CV asli tersimpan + preferensi versi CV (form | original)
     cv_filename: str | None = None
     cv_uploaded_at: datetime | None = None
     cv_preference: str | None = "form"
+
+    model_config = {"from_attributes": True}
+
+
+class RecruiterRequestCreate(BaseModel):
+    company_name: str = Field(..., min_length=3, max_length=255)
+    company_website: str = Field(..., max_length=255)
+    company_size: str = Field(..., pattern="^(1-50|50-200|200\\+)$")
+    industry: str = Field(..., min_length=2, max_length=100)
+    wa_pic: str = Field(..., min_length=8, max_length=50)
+    reason: str | None = Field(None, max_length=500)
+
+
+class RecruiterRequestOut(BaseModel):
+    id: UUID
+    user_id: UUID
+    company_name: str
+    company_website: str
+    company_size: str
+    industry: str
+    wa_pic: str
+    reason: str | None
+    status: str
+    requested_at: datetime
+    reviewed_at: datetime | None = None
+    reviewed_by: str | None = None
+    user_email: str | None = None
 
     model_config = {"from_attributes": True}
 

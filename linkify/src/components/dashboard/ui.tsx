@@ -322,6 +322,135 @@ export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: numbe
     );
 }
 
+/* ── JobCard: kartu Joblet-style (2 kolom desktop / 1 kolom mobile) ── */
+export function JobCard({
+    job,
+    rank,
+    index,
+    featured = false,
+}: {
+    job: JobRowData;
+    rank?: number;
+    index?: number;
+    featured?: boolean;
+}) {
+    const reduced = useReducedMotion();
+    const pct = job.match_score == null ? null : Math.round(job.match_score * 100);
+    const stagger = Math.min((index ?? 0) * 0.04, 0.4);
+    const badge = pct == null ? null : pct >= 80 ? "Top match" : pct >= 60 ? "High match" : "Match";
+
+    return (
+        <motion.li
+            className="relative h-full"
+            initial={reduced ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduced ? 0 : 0.4, ease: EASE_OUT, delay: stagger }}
+        >
+            <Link
+                href={`/dashboard/jobs/${job.id}`}
+                aria-label={`Lihat detail ${job.title}`}
+                className="absolute inset-0 z-0 rounded-lg transition-colors duration-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <div
+                className={`group relative flex h-full flex-col rounded-lg border p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ${
+                    featured
+                        ? "border-primary/40 bg-primary/[0.04]"
+                        : "border-border bg-background hover:border-primary/40"
+                }`}
+            >
+                <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                        {rank != null && (
+                            <span className="font-mono text-[10.5px] uppercase tracking-[0.07em] text-muted-foreground">
+                                #{rank}
+                                {featured ? " · pilihan teratas" : ""}
+                            </span>
+                        )}
+                        <h3 className={`mt-1 line-clamp-2 text-[15px] leading-tight tracking-tight ${featured ? "font-bold text-primary" : "font-bold"}`}>
+                            {job.title}
+                        </h3>
+                        <p className="mt-1 truncate text-[12.5px] text-muted-foreground">
+                            {job.company}
+                            {job.location ? ` · ${job.location}` : ""}
+                            {job.is_remote ? " · remote" : ""}
+                        </p>
+                    </div>
+                    {badge != null && (
+                        <span
+                            className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.05em] ${
+                                badge === "Top match"
+                                    ? "border-primary/50 bg-primary/10 text-primary"
+                                    : "border-border bg-muted/40 text-muted-foreground"
+                            }`}
+                        >
+                            {badge}
+                        </span>
+                    )}
+                </div>
+
+                {job.salary && <p className="mt-2.5 text-[13.5px] font-semibold text-success">{job.salary}</p>}
+
+                {pct != null && (
+                    <div className="mt-3">
+                        <div className="flex items-baseline justify-between">
+                            <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">Match</span>
+                            <span className="font-mono text-[16px] font-semibold tabular-nums tracking-tight">{pct}%</span>
+                        </div>
+                        <BarFill pct={pct} tone={pct >= 60 ? "primary" : "warning"} className="mt-1 w-full" />
+                    </div>
+                )}
+
+                {job.required_skills.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                        {job.required_skills.slice(0, 5).map((skill) => (
+                            <span key={skill} className="rounded-[4px] border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                                {skill}
+                            </span>
+                        ))}
+                        {job.required_skills.length > 5 && (
+                            <span className="px-1 py-0.5 text-[11px] text-muted-foreground">+{job.required_skills.length - 5}</span>
+                        )}
+                    </div>
+                )}
+
+                <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+                    <span className="truncate font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
+                        {job.work_type || (job.is_remote ? "Remote" : "On-site")}
+                        {job.min_experience ? ` · ${job.min_experience}` : ""}
+                    </span>
+                    <div className="flex shrink-0 items-center gap-3">
+                        <Link
+                            href={`/dashboard/roadmap?job_id=${job.id}`}
+                            prefetch={false}
+                            className="relative z-10 text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            Buat roadmap
+                        </Link>
+                        <Link
+                            href={`/dashboard/jobs/${job.id}`}
+                            prefetch={false}
+                            className="relative z-10 inline-flex items-center gap-1 text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            Lihat detail
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5"
+                            >
+                                <path d="M5 12h14M13 5l7 7-7 7" />
+                            </svg>
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </motion.li>
+    );
+}
+
 /* ── Spotlight: sorot lembut ikut kursor + lift halus saat hover ── */
 export function Spotlight({ children, className = "" }: { children: React.ReactNode; className?: string }) {
     const reduced = useReducedMotion();

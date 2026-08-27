@@ -24,6 +24,23 @@ def recruiter_allowlist() -> set[str]:
     return allowed
 
 
+def admin_allowlist() -> set[str]:
+    """Himpunan email admin (untuk hidden admin page)."""
+    allowed = {
+        item.strip().lower()
+        for item in (settings.admin_emails or "").split(",")
+        if item.strip()
+    }
+    allowed.add("admin.githire@gmail.com")
+    return allowed
+
+
+def is_admin_email(email: str | None) -> bool:
+    if not email:
+        return False
+    return email.strip().lower() in admin_allowlist()
+
+
 def is_recruiter_email(email: str | None) -> bool:
     """Only explicitly trusted accounts can access recruiter capabilities."""
     if not email:
@@ -56,6 +73,16 @@ def describe_recruiter_allowlist() -> str:
     )
 
 
+def describe_admin_allowlist() -> str:
+    raw = settings.admin_emails or ""
+    entries = sorted(admin_allowlist())
+    masked = ", ".join(_mask_email(item) for item in entries)
+    return (
+        f"ADMIN_EMAILS terbaca {len(raw)} char, "
+        f"allowlist {len(entries)} entri: {masked}"
+    )
+
+
 def resolve_effective_role(db_role: str | None, email: str | None) -> tuple[str | None, bool]:
     """
     Satu-satunya tempat role efektif ditentukan.
@@ -64,16 +91,24 @@ def resolve_effective_role(db_role: str | None, email: str | None) -> tuple[str 
     untuk memberi tahu user kenapa dia jadi candidate — jangan pernah menurunkan
     role diam-diam, itu bikin bug sulit dilacak.
 
-    Aturan:
-    - Email ada di allowlist  → selalu recruiter (walau DB bilang lain)
-    - DB bilang recruiter tapi email tidak terdaftar → candidate + flag ditolak
+    Aturan (role beneran di DB):
+    - Email ada di admin/recruiter allowlist → selalu recruiter (bypass darurat, walau DB bilang lain)
+    - DB bilang recruiter → recruiter (KTP dicap beneran setelah approve)
     - Selain itu → apa adanya dari DB
+    - Tidak ada silent demotion lagi — kalau dulu recruiter via DB lalu dihapus dari allowlist,
+      dulu di-downgrade; sekarang tidak — role di DB tetap dihormati.
     """
-    if is_recruiter_email(email):
+    if is_recruiter_email(email) or is_admin_email(email):
         return "recruiter", False
+    # Role beneran di DB: kalau sudah approved, hormati
     if db_role == "recruiter":
-        return "candidate", True
+        return "recruiter", False
     return db_role, False
+
+
+def resolve_recruiter_pending(db_role: str | None, recruiter_status: str | None) -> bool:
+    """True jika user sedang menunggu persetujuan recruiter."""
+    return recruiter_status == "pending"
 
 
 def get_jwks_client() -> PyJWKClient:
@@ -155,9 +190,17 @@ def get_current_user(
                 db.commit()
                 db.refresh(user)
                 user.role, denied = resolve_effective_role(user.role, user.email)
-                # Atribut transient (bukan kolom DB) — dibaca /me/profile untuk
-                # menjelaskan ke user kenapa dia bukan recruiter.
+                # Atribut transient — dibaca /me/profile
                 user.recruiter_access_denied = denied
+                # Cek pending recruiter
+                try:
+                    from app.models import RecruiterProfile
+                    rp = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+                    user.recruiter_pending = resolve_recruiter_pending(user.role, rp.status if rp else None)
+                    user.is_admin = is_admin_email(user.email)
+                except Exception:
+                    user.recruiter_pending = False
+                    user.is_admin = is_admin_email(user.email)
                 return user
 
         from sqlalchemy.exc import IntegrityError
@@ -183,9 +226,16 @@ def get_current_user(
             db.commit()
             db.refresh(user)
 
-    # DB role bisa berisi nilai lama/self-selected. Akses efektif tetap ditentukan
-    # allowlist email di setiap request — lihat resolve_effective_role().
+    # DB role beneran — hormati yang di DB, allowlist cuma bypass darurat
     user.role, denied = resolve_effective_role(user.role, user.email)
     user.recruiter_access_denied = denied
+    try:
+        from app.models import RecruiterProfile
+        rp = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+        user.recruiter_pending = resolve_recruiter_pending(user.role, rp.status if rp else None)
+        user.is_admin = is_admin_email(user.email)
+    except Exception:
+        user.recruiter_pending = False
+        user.is_admin = is_admin_email(user.email)
 
     return user

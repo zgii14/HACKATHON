@@ -5,7 +5,7 @@ import { AppRole, redirectForRole } from "@/utils/constants/roles";
 import { useApi } from "@/hooks/use-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -57,7 +57,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const { data: profile } = useQuery({
         queryKey: ["profile"],
         queryFn: () =>
-            withAuth<{ role: string; recruiter_access_denied?: boolean } | null>("/me/profile"),
+            withAuth<{ role: string; recruiter_access_denied?: boolean; recruiter_pending?: boolean; is_admin?: boolean } | null>("/me/profile"),
         enabled: authReady,
         staleTime: 5 * 60 * 1000,
     });
@@ -77,6 +77,14 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             title: "Cari Kandidat",
             href: "/dashboard/recruiter/candidates",
             icon: Search,
+        },
+    ];
+
+    const ADMIN_LINKS = [
+        {
+            title: "Permohonan Recruiter",
+            href: "/dashboard/admin/recruiter-requests",
+            icon: ShieldCheck,
         },
     ];
 
@@ -161,6 +169,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         // Role belum dipilih → jangan tampilkan menu apa pun (user sedang di role picker)
         if (role == null) return null;
         const links = role === "recruiter" ? RECRUITER_LINKS : DASHBOARD_LINKS;
+        const showAdmin = !!profile?.is_admin;
 
         return (
             <nav className="flex flex-col gap-1">
@@ -201,6 +210,33 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                         </Link>
                     );
                 })}
+                {showAdmin && (
+                    <>
+                        <div className="mt-4 mb-1 px-3">
+                            {showLabel && <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Admin</p>}
+                            {!showLabel && <div className="h-px bg-border" />}
+                        </div>
+                        {ADMIN_LINKS.map((item) => {
+                            const active = pathname === item.href || pathname.startsWith(item.href);
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    prefetch={false}
+                                    title={!showLabel ? item.title : undefined}
+                                    className={cn(
+                                        "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-all duration-150",
+                                        showLabel ? "justify-start" : "justify-center",
+                                        active ? "bg-amber-500/10 text-amber-600 font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    )}
+                                >
+                                    <item.icon className="size-4 shrink-0" />
+                                    {showLabel && <span className="truncate flex-1">{item.title}</span>}
+                                </Link>
+                            );
+                        })}
+                    </>
+                )}
             </nav>
         );
     };
@@ -320,6 +356,17 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                         />
                     </div>
                 </header>
+
+                {/* Pending recruiter banner */}
+                {profile?.recruiter_pending && (
+                    <div className="mx-4 mt-4 rounded-md border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm md:mx-8">
+                        <span className="font-medium text-amber-600">Menunggu persetujuan recruiter</span>
+                        <span className="text-muted-foreground"> — pengajuanmu untuk menjadi recruiter sedang ditinjau admin (1-2 hari). Kamu tetap bisa pakai fitur kandidat sementara.</span>
+                        <Link href="/recruiter/apply" className="ml-2 font-medium text-amber-600 hover:underline">
+                            Lihat status
+                        </Link>
+                    </div>
+                )}
 
                 {/* Page content */}
                 <main className="flex-1 w-full p-4 md:px-8 md:py-7">

@@ -13,7 +13,7 @@ import {
     SheetContent,
     SheetTrigger
 } from "@/components/ui/sheet";
-import { cn, NAV_LINKS } from "@/utils";
+import { cn, handleHashLinkClick, NAV_LINKS } from "@/utils";
 import { useAuth } from "@clerk/nextjs";
 import { LucideIcon, Menu, X, ZapIcon } from "lucide-react";
 import Link from "next/link";
@@ -108,7 +108,7 @@ const MobileNavbar = () => {
                                 <li key={link.title}>
                                     <Link
                                         href={link.href!}
-                                        onClick={handleClose}
+                                        onClick={(e) => { handleHashLinkClick(e, link.href!); handleClose(); }}
                                         className="flex items-center w-full py-4 text-sm font-medium text-neutral-300 hover:text-white transition-colors"
                                     >
                                         {link.title}

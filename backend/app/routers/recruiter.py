@@ -15,6 +15,12 @@ from app.schemas import ApplicationStatus
 from app.services.cv_pdf import render_cv_pdf
 from app.services.gemini_service import _call_gemini_with_retry
 from app.services.matching import jaccard_score, explain_match
+from app.services.screening import (
+    PROMPT_VERSION,
+    build_screening_prompt,
+    clamp_score,
+    derive_verdict,
+)
 
 router = APIRouter(prefix="/recruiter", tags=["recruiter"])
 
@@ -62,6 +68,8 @@ def _screening_fingerprint(job: "Job", profile: "CandidateProfile") -> str:
         "merged_skills": sorted(profile.merged_skills or []),
         "cv_data": profile.cv_data or {},
         "github_signals": profile.github_signals or {},
+        # Prompt berubah -> fingerprint berubah -> hasil cache lama dihitung ulang
+        "prompt_version": PROMPT_VERSION,
     }
     blob = json.dumps(payload, sort_keys=True, ensure_ascii=False, default=str)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
@@ -324,7 +332,7 @@ def ai_candidate_screening(
         )
         return {
             "match_score": score,
-            "recommendation": "consider",
+            "recommendation": derive_verdict(score),
             "reasoning": "Profil kandidat belum lengkap sehingga penilaian terbatas.",
             "strengths": ["Profil kandidat belum disinkronkan sepenuhnya."],
             "weaknesses": ["Kandidat belum mengunggah CV / portofolio."],
@@ -341,52 +349,31 @@ def ai_candidate_screening(
             return cached
 
     # Anchor deterministik dari skor algoritmik + skill matched/missing
-    algo_score = round(jaccard_score(profile.merged_skills or [], job.required_skills or []) * 100)
-    reasons, missing = explain_match(profile.merged_skills or [], job.required_skills or [])
+    required = job.required_skills or []
+    algo_score = round(jaccard_score(profile.merged_skills or [], required) * 100)
+    # Lowongan tanpa required_skills -> anchor tidak bermakna, jangan menjepit
+    anchor = algo_score if required else None
+    reasons, missing = explain_match(profile.merged_skills or [], required)
     matched_note = "; ".join(reasons) if reasons else "tidak ada skill yang cocok terdeteksi"
     missing_note = ", ".join(missing[:8]) if missing else "tidak ada"
-    gh_summary = json.dumps(profile.github_signals or {}, ensure_ascii=False, default=str)[:1500]
 
-    # Bangun prompt untuk Gemini AI
-    prompt = f"""
-    You are an expert AI Recruiting screener. Assess how well this candidate fits the job.
-
-    --- JOB ---
-    Title: {job.title}
-    Company: {job.company}
-    Requirements: {job.description}
-    Required Skills: {", ".join(job.required_skills or [])}
-    Min Experience: {job.min_experience or "tidak disebutkan"}
-    Min Education: {job.min_education or "tidak disebutkan"}
-    Work Type: {job.work_type or "tidak disebutkan"}
-    Salary: {job.salary or "tidak disebutkan"}
-
-    --- CANDIDATE ---
-    Skills (GitHub + CV, merged): {", ".join(profile.merged_skills or [])}
-    GitHub signals (verified activity - commits, languages, repos): {gh_summary}
-    CV History: {json.dumps(profile.cv_data, ensure_ascii=False)}
-
-    --- DETERMINISTIC ANCHOR ---
-    Algorithmic skill-match = {algo_score}% (matched: {matched_note}; missing: {missing_note}).
-    Use this as your anchor. Only deviate from it when the CV or GitHub evidence justifies it,
-    and if you do, explain why in `reasoning`.
-
-    --- RULES ---
-    - Only cite evidence that is actually present in the data above. Prefer verified GitHub signals over unproven CV claims.
-    - If information is missing, write "tidak disebutkan" - never invent experience, skills, or numbers.
-    - Give a clear hiring recommendation.
-    - Respond in Bahasa Indonesia.
-
-    Return ONLY valid JSON matching this exact structure (no markdown, no code blocks):
-    {{
-      "match_score": 85,
-      "recommendation": "interview",
-      "reasoning": "Kandidat memenuhi mayoritas skill inti dan aktivitas GitHub-nya konsisten dengan klaim CV.",
-      "strengths": ["Pengalaman React 2 tahun terbukti di GitHub", "Menguasai TypeScript"],
-      "weaknesses": ["Belum ada pengalaman deployment cloud (AWS/GCP)"]
-    }}
-    `recommendation` must be exactly one of: "interview", "consider", "reject".
-    """
+    prompt = build_screening_prompt(
+        job_title=job.title,
+        job_company=job.company,
+        job_description=job.description or "",
+        required_skills=required,
+        min_experience=job.min_experience or "",
+        min_education=job.min_education or "",
+        work_type=job.work_type or "",
+        salary=job.salary or "",
+        cv_json=json.dumps(profile.cv_data, ensure_ascii=False),
+        verified_skills=profile.verified_skills or [],
+        merged_skills=profile.merged_skills or [],
+        signals=profile.github_signals or {},
+        anchor=anchor,
+        matched_note=matched_note,
+        missing_note=missing_note,
+    )
 
     try:
         text = _call_gemini_with_retry(prompt)
@@ -396,6 +383,10 @@ def ai_candidate_screening(
     res_json = normalize_screening_result(_extract_json_data(text))
     if res_json is None:
         raise HTTPException(502, "Hasil analisis AI tidak valid. Silakan coba lagi.")
+    # Dua jaminan keras: skor dijepit ke anchor, verdict diturunkan dari skor.
+    # Instruksi di prompt saja tidak cukup — model bisa mengabaikannya.
+    res_json["match_score"] = clamp_score(res_json["match_score"], anchor)
+    res_json["recommendation"] = derive_verdict(res_json["match_score"])
     # Tandai bahwa skor ini dari AI (berbeda metodologi dari skor algoritma di job list)
     res_json["score_source"] = "ai"
     res_json["cached"] = False

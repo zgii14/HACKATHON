@@ -6,6 +6,7 @@ import SignUpForm from "./auth/signup-form";
 import { Icons } from "./global/icons";
 import MaxWidthWrapper from "./global/max-width-wrapper";
 import AnimationContainer from "./global/animation-container";
+import SmoothScrollLink from "./global/smooth-scroll-link";
 // navigation
 import Navbar from "./navigation/navbar";
 import Footer from "./navigation/footer";
@@ -27,6 +28,7 @@ export {
     Icons,
     MaxWidthWrapper,
     AnimationContainer,
+    SmoothScrollLink,
     Navbar,
     Footer,
 

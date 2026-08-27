@@ -141,3 +141,26 @@ class JobApplication(Base):
     )
 
     __table_args__ = (UniqueConstraint("user_id", "job_id", name="uq_user_job_application"),)
+
+
+class RecruiterProfile(Base):
+    __tablename__ = "recruiter_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    company_name: Mapped[str] = mapped_column(String(255))
+    company_website: Mapped[str] = mapped_column(String(255))
+    company_size: Mapped[str] = mapped_column(String(50))  # 1-50 | 50-200 | 200+
+    industry: Mapped[str] = mapped_column(String(100))
+    wa_pic: Mapped[str] = mapped_column(String(50))
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending | approved | rejected
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_by: Mapped[str | None] = mapped_column(String(320), nullable=True)
+
+    user: Mapped["User"] = relationship("User", backref="recruiter_profile")

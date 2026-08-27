@@ -5,9 +5,9 @@ from fastapi.responses import Response
 from sqlalchemy import update as sa_update
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_user, is_recruiter_email
+from app.auth import get_current_user, is_recruiter_email, is_admin_email
 from app.database import get_db
-from app.models import CandidateProfile, Job, RoadmapProgress, User
+from app.models import CandidateProfile, Job, RecruiterProfile, RoadmapProgress, User
 from app.services.cv_pdf import render_cv_pdf
 from app.schemas import (
     BookmarkedJobOut,
@@ -83,11 +83,83 @@ def set_role(
     if body.role not in VALID_ROLES:
         raise HTTPException(400, f"Role tidak valid. Pilih salah satu: {', '.join(sorted(VALID_ROLES))}")
     if body.role == "recruiter" and not is_recruiter_email(user.email):
-        raise HTTPException(403, "Akun ini belum terdaftar sebagai recruiter.")
+        # Cek apakah sudah approved via recruiter_profiles
+        rp = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+        if not rp or rp.status != "approved":
+            raise HTTPException(403, "Akun ini belum terdaftar sebagai recruiter. Silakan daftar via footer landing page.")
     user.role = body.role
     db.commit()
     db.refresh(user)
     return user
+
+
+# ── Recruiter Request (hidden footer) ──────────────────────────────────────
+from app.schemas import RecruiterRequestCreate, RecruiterRequestOut
+import re
+
+
+def _is_valid_url(url: str) -> bool:
+    return bool(re.match(r"^https?://.+", url.strip()))
+
+
+@router.post("/recruiter-request", response_model=RecruiterRequestOut)
+def create_recruiter_request(
+    body: RecruiterRequestCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Kandidat mengajukan diri jadi recruiter (6 field). Hidden di footer landing."""
+    # Sudah recruiter?
+    if user.role == "recruiter":
+        raise HTTPException(400, "Kamu sudah menjadi recruiter.")
+    # Cek existing pending/approved
+    existing = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+    if existing:
+        if existing.status == "pending":
+            raise HTTPException(409, "Pengajuanmu masih menunggu persetujuan admin.")
+        if existing.status == "approved":
+            # Sync role jika belum
+            user.role = "recruiter"
+            db.commit()
+            raise HTTPException(400, "Kamu sudah disetujui sebagai recruiter. Reload halaman.")
+        # jika rejected, boleh ajukan lagi → hapus yang lama
+        if existing.status == "rejected":
+            db.delete(existing)
+            db.commit()
+
+    if not _is_valid_url(body.company_website):
+        raise HTTPException(400, "Website perusahaan harus diawali http:// atau https://")
+
+    rp = RecruiterProfile(
+        user_id=user.id,
+        company_name=body.company_name.strip(),
+        company_website=body.company_website.strip(),
+        company_size=body.company_size,
+        industry=body.industry.strip(),
+        wa_pic=body.wa_pic.strip(),
+        reason=body.reason.strip() if body.reason else None,
+        status="pending",
+    )
+    db.add(rp)
+    db.commit()
+    db.refresh(rp)
+    # Attach email for response
+    out = RecruiterRequestOut.model_validate(rp)
+    out.user_email = user.email
+    return out
+
+
+@router.get("/recruiter-request", response_model=RecruiterRequestOut | None)
+def get_my_recruiter_request(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    rp = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+    if not rp:
+        return None
+    out = RecruiterRequestOut.model_validate(rp)
+    out.user_email = user.email
+    return out
 
 
 VALID_CV_PREFS = {"form", "original"}
@@ -149,10 +221,12 @@ def download_my_cv(
 
 
 @router.get("/profile", response_model=ProfileOut | None)
-def read_profile(user: User = Depends(get_current_user)):
+def read_profile(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    rp = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+    pending = rp.status == "pending" if rp else False
+    is_admin = is_admin_email(user.email)
     p = user.profile
     if not p:
-        # Kembalikan role saja walau profil belum diisi (untuk recruiter yang baru login)
         return ProfileOut(
             github_username=None,
             github_signals=None,
@@ -164,8 +238,9 @@ def read_profile(user: User = Depends(get_current_user)):
             updated_at=None,
             role=user.role,
             recruiter_access_denied=getattr(user, "recruiter_access_denied", False),
+            recruiter_pending=pending or getattr(user, "recruiter_pending", False),
+            is_admin=is_admin or getattr(user, "is_admin", False),
         )
-    # Inject role dari User ke response ProfileOut
     data = {
         "github_username": p.github_username,
         "github_signals": p.github_signals,
@@ -182,6 +257,8 @@ def read_profile(user: User = Depends(get_current_user)):
         "updated_at": p.updated_at,
         "role": user.role,
         "recruiter_access_denied": getattr(user, "recruiter_access_denied", False),
+        "recruiter_pending": pending or getattr(user, "recruiter_pending", False),
+        "is_admin": is_admin or getattr(user, "is_admin", False),
         "cv_filename": p.cv_filename,
         "cv_uploaded_at": p.cv_uploaded_at,
         "cv_preference": p.cv_preference,

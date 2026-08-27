@@ -10,6 +10,7 @@ import { aeonik, inter } from "./constants/fonts";
 import { cn } from "./functions/cn";
 import { isValidUrl } from "./functions/urls";
 import { generateMetadata } from "./functions/metadata";
+import { handleHashLinkClick, smoothScrollToHash } from "./functions/smooth-scroll";
 
 export {
     // constants
@@ -36,4 +37,6 @@ export {
     cn,
     isValidUrl,
     generateMetadata,
+    handleHashLinkClick,
+    smoothScrollToHash,
 };

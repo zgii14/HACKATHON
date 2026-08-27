@@ -11,8 +11,8 @@ export type AppRole = "candidate" | "recruiter";
 /** Prefix rute khusus recruiter. */
 export const RECRUITER_ROUTE_PREFIXES = ["/dashboard/recruiter"] as const;
 
-/** Rute netral — boleh diakses role mana pun (mis. pengaturan akun). */
-export const SHARED_ROUTE_PREFIXES = ["/dashboard/account"] as const;
+/** Rute netral — boleh diakses role mana pun (mis. pengaturan akun, admin hidden). */
+export const SHARED_ROUTE_PREFIXES = ["/dashboard/account", "/dashboard/admin"] as const;
 
 /** Halaman awal tiap role: tujuan setelah login dan saat salah masuk area. */
 export const ROLE_HOME: Record<AppRole, string> = {

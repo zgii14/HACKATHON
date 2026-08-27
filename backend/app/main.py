@@ -7,10 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from app.auth import describe_recruiter_allowlist
+from app.auth import describe_admin_allowlist, describe_recruiter_allowlist
 from app.config import settings
 from app.database import Base, engine
-from app.routers import jobs, me, profiles, recruiter
+from app.routers import admin_recruiter, jobs, me, profiles, recruiter
 from app.routers import applications
 from app.seed import reseed_jobs, seed_jobs_if_empty
 from app.database import get_db
@@ -25,6 +25,7 @@ async def lifespan(app: FastAPI):
     # Cetak kondisi allowlist recruiter di log startup. Kalau angkanya 1 entri,
     # berarti RECRUITER_EMAILS tidak sampai ke proses ini — bukan salah kode.
     logger.warning("[auth] %s", describe_recruiter_allowlist())
+    logger.warning("[auth] %s", describe_admin_allowlist())
 
     # Retry DB connection — tunggu DB siap (max 5x, delay 2s)
     for attempt in range(1, 6):
@@ -182,6 +183,28 @@ async def lifespan(app: FastAPI):
         """))
         conn.commit()
 
+    # DDL Migration: recruiter_profiles untuk pendaftaran recruiter (hidden footer)
+    with engine.connect() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS recruiter_profiles (
+                id UUID PRIMARY KEY,
+                user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                company_name VARCHAR(255) NOT NULL,
+                company_website VARCHAR(255) NOT NULL,
+                company_size VARCHAR(50) NOT NULL,
+                industry VARCHAR(100) NOT NULL,
+                wa_pic VARCHAR(50) NOT NULL,
+                reason TEXT NULL,
+                status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                requested_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                reviewed_at TIMESTAMPTZ NULL,
+                reviewed_by VARCHAR(320) NULL
+            )
+        """))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_recruiter_profiles_status ON recruiter_profiles(status)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_recruiter_profiles_user ON recruiter_profiles(user_id)"))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)
@@ -210,6 +233,7 @@ app.include_router(profiles.router)
 app.include_router(jobs.router)
 app.include_router(applications.router)
 app.include_router(recruiter.router)
+app.include_router(admin_recruiter.router)
 
 
 @app.get("/health")

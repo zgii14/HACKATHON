@@ -7,7 +7,7 @@ import {
     NavigationMenuList,
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { cn, NAV_LINKS } from "@/utils";
+import { cn, handleHashLinkClick, NAV_LINKS } from "@/utils";
 import { useClerk } from "@clerk/nextjs";
 import { ZapIcon } from "lucide-react";
 import Link from "next/link";
@@ -44,14 +44,14 @@ const Navbar = () => {
             <AnimationContainer reverse delay={0.1} className="size-full">
                 <MaxWidthWrapper>
                     <div className={cn(
-                        "relative flex items-center justify-between h-14 px-4 rounded-2xl transition-all duration-500",
+                        "relative flex items-center justify-between h-14 px-4 rounded-full border border-white/[0.08] bg-[hsl(224_71.4%_4.1%)]/60 backdrop-blur-xl transition-all duration-500",
                         scroll
-                            ? "bg-background/70 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-                            : "bg-transparent"
+                            ? "shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+                            : "shadow-[0_4px_16px_rgba(0,0,0,0.25)]"
                     )}>
 
                         {/* Left: Logo */}
-                        <Link href="/#home" className="flex items-center z-10">
+                        <Link href="/#home" onClick={(e) => handleHashLinkClick(e, "/#home")} className="flex items-center z-10">
                             <svg width="110" height="30" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg" aria-label="GitHire">
                                 <circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
                                 <circle cx="16" cy="44" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -71,7 +71,7 @@ const Navbar = () => {
                                     {NAV_LINKS.map((link) => (
                                         <NavigationMenuItem key={link.title}>
                                             <Link href={link.href} legacyBehavior passHref>
-                                                <NavigationMenuLink className={cn(
+                                                <NavigationMenuLink onClick={(e) => handleHashLinkClick(e, link.href)} className={cn(
                                                     navigationMenuTriggerStyle(),
                                                     "bg-transparent hover:bg-white/[0.06] text-neutral-300 hover:text-white transition-all duration-200 rounded-xl text-sm font-medium"
                                                 )}>
