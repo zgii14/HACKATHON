@@ -1,9 +1,11 @@
 import { SignInForm } from "@/components";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 const SignInPage = () => {
     return (
-        <div className="flex flex-col items-start max-w-sm mx-auto h-dvh overflow-hidden pt-4 md:pt-20">
+        <div className="flex flex-col items-start max-w-sm mx-auto min-h-dvh pt-4 md:pt-20 px-4 pb-6">
             <div className="flex items-center w-full py-8 border-b border-border/80">
                 <Link href="/#home" className="flex items-center">
                     <svg width="110" height="30" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg" aria-label="GitHire">

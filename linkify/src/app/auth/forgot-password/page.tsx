@@ -97,7 +97,7 @@ const ForgotPasswordPage = () => {
     };
 
     return (
-        <div className="flex flex-col items-start max-w-sm mx-auto h-dvh overflow-hidden pt-4 md:pt-20">
+        <div className="flex flex-col items-start max-w-sm mx-auto min-h-dvh pt-4 md:pt-20 px-4 pb-6">
             {/* Logo */}
             <div className="flex items-center w-full py-8 border-b border-border/80">
                 <Link href="/#home" className="flex items-center">
