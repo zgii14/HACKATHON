@@ -159,8 +159,6 @@ export function LogoNetwork() {
                 <circle cx="420" cy="270" r="4" fill="rgba(255,255,255,0.8)" />
             </motion.g>
 
-            {/* Label kecil mirip logo text */}
-            <text x="300" y="395" textAnchor="middle" fontFamily="system-ui,sans-serif" fontSize="11" letterSpacing="0.18em" fill="rgba(255,255,255,0.22)" fontWeight="600">GITHUB → MATCH → CAREER</text>
         </svg>
     );
 }

@@ -71,16 +71,16 @@ const PILLARS = [
     {
         icon: SearchIcon,
         no: "03",
-        title: "Ruang kerja recruiter",
-        description: "Cari kandidat terbaik, screening berbasis AI, dan kirim undangan interview langsung lewat WhatsApp atau email.",
-        points: ["Database kandidat", "AI screening", "Tiket interview"],
-        cta: { label: "Masuk portal", href: "/dashboard/recruiter" },
+        title: "Terhubung ke recruiter yang tepat",
+        description: "Lamaranmu langsung sampai ke recruiter yang memang mencari skill sepertimu, tanpa harus menebak-nebak lowongan mana yang cocok.",
+        points: ["Rekomendasi lowongan", "Undangan interview", "Cover letter AI"],
+        cta: { label: "Lihat lowongan", href: "/dashboard/jobs" },
     },
 ];
 
 const STATS = [
     { value: "100+", label: "Lowongan IT aktif" },
-    { value: "83%", label: "Match score terbaik" },
+    { value: "2", label: "Sumber data digabung" },
     { value: "6", label: "Fitur AI terintegrasi" },
     { value: "<60s", label: "Profil siap dinilai" },
 ];
@@ -95,14 +95,14 @@ const STEPS = [
     {
         no: "02",
         title: "Match",
-        description: "Dapatkan skor kecocokan terhadap 100+ lowongan dan lihat celah keahlianmu.",
-        point: "Jaccard similarity",
+        description: "Dapatkan skor kecocokan dan lihat celah keahlianmu.",
+        point: "Skor kecocokan",
     },
     {
         no: "03",
         title: "Improve",
-        description: "Ikuti roadmap belajar personal per lowongan, lengkap dengan kuis AI 3 soal.",
-        point: "Roadmap + kuis",
+        description: "Ikuti roadmap belajar personal per lowongan.",
+        point: "Roadmap belajar",
     },
     {
         no: "04",
@@ -131,22 +131,15 @@ const HomePage = async () => {
 
             {/* ── Hero: satu layar, editorial ── */}
             <MaxWidthWrapper>
-                <section className="grid min-h-[calc(100svh-4rem)] items-center gap-16 py-24 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12 lg:py-0">
+                <section className="grid gap-6 py-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8 lg:py-16">
                     <div>
-                        <AnimationContainer>
-                            <div className="inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-400/10 px-4 py-1.5 text-[13px] font-medium text-violet-300">
-                                <ZapIcon className="h-3.5 w-3.5" />
-                                Platform karir berbasis AI untuk fresh graduate IT Indonesia
-                            </div>
-                        </AnimationContainer>
-
                         <AnimationContainer delay={0.08}>
-                            <h1 className="font-heading mt-10 text-6xl font-medium leading-[0.95] tracking-[-0.03em] sm:text-7xl lg:text-[104px]">
-                                Dari kode,{" "}
+                            <h1 className="font-heading text-6xl font-medium leading-[0.95] tracking-[-0.03em] sm:text-7xl lg:text-[104px]">
+                                From code,{" "}
                                 <span className="font-serif italic">
-                                    jadi{" "}
+                                    to{" "}
                                     <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                                        karier.
+                                        career.
                                     </span>
                                 </span>
                             </h1>
@@ -199,7 +192,7 @@ const HomePage = async () => {
             </MaxWidthWrapper>
 
             {/* ── Marquee ── */}
-            <div className={`overflow-hidden border-y ${BORDER} py-7`}>
+            <div className={`overflow-hidden border-y ${BORDER} py-3`}>
                 <div className="flex w-max animate-marquee items-center gap-8 [--duration:30s] [--gap:2rem]">
                     {[0, 1].map((copy) => (
                         <div key={copy} className="flex items-center gap-8" aria-hidden={copy === 1}>
@@ -294,7 +287,7 @@ const HomePage = async () => {
                         </AnimationContainer>
                         <AnimationContainer delay={0.16}>
                             <p className={`mt-6 max-w-md text-[15px] leading-relaxed ${MUTED}`}>
-                                Setiap lowongan dihitung dengan Jaccard similarity antara skill-mu dan kebutuhan posisi. Kamu tahu persis kenapa skornya begitu — lengkap dengan alasan dan skill yang kurang.
+                                Setiap skor dijelaskan lewat skill mana yang sudah kamu penuhi dan mana yang masih kurang, jadi kamu tahu persis alasan di baliknya, lengkap dengan skill yang perlu dipelajari selanjutnya.
                             </p>
                         </AnimationContainer>
                         <AnimationContainer delay={0.24}>
