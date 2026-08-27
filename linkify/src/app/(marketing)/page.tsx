@@ -147,7 +147,7 @@ const HomePage = async () => {
                         </AnimationContainer>
 
                         <AnimationContainer delay={0.16}>
-                            <p className={`mt-12 max-w-md text-lg leading-relaxed ${MUTED}`}>
+                            <p className={`mt-8 max-w-md text-lg leading-relaxed ${MUTED}`}>
                                 Satu platform untuk menilai kesiapan Anda, menemukan lowongan yang tepat, dan membangun karir pertama Anda.
                             </p>
                         </AnimationContainer>
