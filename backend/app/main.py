@@ -10,7 +10,7 @@ from sqlalchemy import text
 from app.auth import describe_admin_allowlist, describe_recruiter_allowlist
 from app.config import settings
 from app.database import Base, engine
-from app.routers import admin_recruiter, jobs, me, profiles, recruiter
+from app.routers import admin_recruiter, chat, jobs, me, profiles, recruiter
 from app.routers import applications
 from app.seed import reseed_jobs, seed_jobs_if_empty
 from app.database import get_db
@@ -205,6 +205,39 @@ async def lifespan(app: FastAPI):
         conn.execute(text("CREATE INDEX IF NOT EXISTS idx_recruiter_profiles_user ON recruiter_profiles(user_id)"))
         conn.commit()
 
+    # DDL Migration: premium flag + chat tables
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE"))
+        conn.execute(text("ALTER TABLE recruiter_profiles ADD COLUMN IF NOT EXISTS is_premium BOOLEAN NOT NULL DEFAULT FALSE"))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS conversations (
+                id UUID PRIMARY KEY,
+                recruiter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                candidate_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                job_id UUID NULL REFERENCES jobs(id) ON DELETE SET NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (recruiter_id, candidate_id, job_id)
+            )
+        """))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_conversations_recruiter ON conversations(recruiter_id)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_conversations_candidate ON conversations(candidate_id)"))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS messages (
+                id UUID PRIMARY KEY,
+                conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+                sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                body TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)"))
+        # Enrich messages for WhatsApp-like ticks & reply
+        conn.execute(text("ALTER TABLE messages ADD COLUMN IF NOT EXISTS status VARCHAR(10) NOT NULL DEFAULT 'sent'"))
+        conn.execute(text("ALTER TABLE messages ADD COLUMN IF NOT EXISTS reply_to_id UUID NULL REFERENCES messages(id) ON DELETE SET NULL"))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)
@@ -234,6 +267,7 @@ app.include_router(jobs.router)
 app.include_router(applications.router)
 app.include_router(recruiter.router)
 app.include_router(admin_recruiter.router)
+app.include_router(chat.router)
 
 
 @app.get("/health")

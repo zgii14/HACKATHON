@@ -1,4 +1,5 @@
 import { AnimationContainer, MaxWidthWrapper, SmoothScrollLink } from "@/components";
+import { BarFill, CountUp, Spotlight } from "@/components/dashboard/ui";
 import { LandingOrb } from "@/components/landing/landing-scroll-effects";
 import dynamic from "next/dynamic";
 
@@ -210,20 +211,23 @@ const HomePage = async () => {
             {/* ── Stats band ── */}
             <MaxWidthWrapper>
                 <div className={`grid grid-cols-2 gap-y-12 border-b ${BORDER} py-20 md:grid-cols-4 md:py-28`}>
-                    {STATS.map((s, i) => (
-                        <AnimationContainer key={s.label} delay={0.1 * (i + 1)}>
-                            <div className="flex flex-col items-start gap-2 md:items-center md:text-center">
-                                <p className="font-heading text-5xl font-medium tracking-[-0.03em] md:text-6xl">{s.value}</p>
-                                <p className={`font-mono text-[11px] uppercase tracking-[0.08em] ${MUTED}`}>{s.label}</p>
-                            </div>
-                        </AnimationContainer>
-                    ))}
+                    {STATS.map((s, i) => {
+                        const dir = (i === 0 ? "left" : i === 3 ? "right" : "up") as "left" | "right" | "up";
+                        return (
+                            <AnimationContainer key={s.label} delay={0.1 * (i + 1)} direction={dir}>
+                                <div className="flex flex-col items-start gap-2 md:items-center md:text-center">
+                                    <p className="font-heading text-5xl font-medium tracking-[-0.03em] md:text-6xl">{s.value}</p>
+                                    <p className={`font-mono text-[11px] uppercase tracking-[0.08em] ${MUTED}`}>{s.label}</p>
+                                </div>
+                            </AnimationContainer>
+                        );
+                    })}
                 </div>
             </MaxWidthWrapper>
 
             {/* ── (01) Tiga pilar ── */}
             <MaxWidthWrapper>
-                <section id="features" className="grid gap-12 py-32 md:grid-cols-[240px_1fr] md:gap-24 md:py-48">
+                <section id="features" className="grid gap-12 py-16 md:grid-cols-[240px_1fr] md:gap-24 md:py-24">
                     <div>
                         <AnimationContainer>
                             <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(01) Yang kami bangun</p>
@@ -236,8 +240,9 @@ const HomePage = async () => {
                     </div>
                     <div className={`border-t ${BORDER}`}>
                         {PILLARS.map((p, i) => (
-                            <AnimationContainer key={p.no} delay={0.1 * (i + 1)}>
-                                <div className={`group grid gap-5 border-b ${BORDER} py-10 md:grid-cols-[64px_1fr_auto] md:gap-10 md:py-12`}>
+                            <AnimationContainer key={p.no} delay={0.1 * (i + 1)} direction={i % 2 === 0 ? "left" : "right"}>
+                                <Spotlight>
+                                    <div className={`group grid gap-5 border-b ${BORDER} py-10 md:grid-cols-[64px_1fr_auto] md:gap-10 md:py-12`}>
                                     <span className={`font-mono text-sm ${MUTED}`}>{p.no}</span>
                                     <div>
                                         <div className="flex items-start gap-3">
@@ -263,6 +268,7 @@ const HomePage = async () => {
                                         </Link>
                                     </div>
                                 </div>
+                                </Spotlight>
                             </AnimationContainer>
                         ))}
                     </div>
@@ -271,7 +277,7 @@ const HomePage = async () => {
 
             {/* ── (02) Showcase: match score ── */}
             <MaxWidthWrapper>
-                <section className="grid items-center gap-16 py-32 md:grid-cols-2 md:gap-24 md:py-48">
+                <section className="grid items-center gap-16 py-16 md:grid-cols-2 md:gap-24 md:py-24">
                     <div>
                         <AnimationContainer>
                             <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(02) Hasilnya</p>
@@ -304,21 +310,24 @@ const HomePage = async () => {
 
                     <div className={`border ${BORDER} ${SURFACE}`}>
                         {MOCK_MATCHES.map((job, i) => (
-                            <AnimationContainer key={job.title} delay={0.1 * (i + 1)}>
-                                <div className={`px-6 py-6 md:px-8 ${i === MOCK_MATCHES.length - 1 ? "" : `border-b ${BORDER}`}`}>
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div className="min-w-0">
-                                            <p className="truncate text-[15px] font-semibold">{job.title}</p>
-                                            <p className={`mt-0.5 text-[13px] ${MUTED}`}>{job.company}</p>
+                            <AnimationContainer key={job.title} delay={0.1 * (i + 1)} direction={i % 2 === 0 ? "left" : "right"}>
+                                <Spotlight>
+                                    <div className={`px-6 py-6 md:px-8 ${i === MOCK_MATCHES.length - 1 ? "" : `border-b ${BORDER}`}`}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <p className="truncate text-[15px] font-semibold">{job.title}</p>
+                                                <p className={`mt-0.5 text-[13px] ${MUTED}`}>{job.company}</p>
+                                            </div>
+                                            <div className="shrink-0 text-right">
+                                                <p className="font-mono text-2xl font-bold tracking-tight text-violet-400">
+                                                    <CountUp value={job.score} />%
+                                                </p>
+                                                <p className={`font-mono text-[10px] uppercase tracking-[0.08em] ${MUTED}`}>match</p>
+                                            </div>
                                         </div>
-                                        <div className="shrink-0 text-right">
-                                            <p className="font-mono text-2xl font-bold tracking-tight text-violet-400">{job.score}%</p>
-                                            <p className={`font-mono text-[10px] uppercase tracking-[0.08em] ${MUTED}`}>match</p>
+                                        <div className="mt-3">
+                                            <BarFill pct={job.score} tone={job.score > 70 ? "success" : job.score > 50 ? "warning" : "primary"} />
                                         </div>
-                                    </div>
-                                    <div className="mt-3 h-px w-full bg-white/10">
-                                        <div className="h-px bg-gradient-to-r from-violet-400 to-fuchsia-400" style={{ width: `${job.score}%` }} />
-                                    </div>
                                     <div className="mt-4 flex flex-wrap items-center gap-3">
                                         <span className={`font-mono text-[12px] ${MUTED}`}>{job.salary}</span>
                                         <span className={`font-mono text-[12px] ${MUTED}`}>Remote</span>
@@ -331,6 +340,7 @@ const HomePage = async () => {
                                         </span>
                                     </div>
                                 </div>
+                                </Spotlight>
                             </AnimationContainer>
                         ))}
                         <AnimationContainer delay={0.1 * (MOCK_MATCHES.length + 1)}>
@@ -351,7 +361,7 @@ const HomePage = async () => {
 
             {/* ── (03) Cara kerja ── */}
             <MaxWidthWrapper>
-                <section id="how-it-works" className="grid gap-12 py-32 md:grid-cols-[240px_1fr] md:gap-24 md:py-48">
+                <section id="how-it-works" className="grid gap-12 py-16 md:grid-cols-[240px_1fr] md:gap-24 md:py-24">
                     <div>
                         <AnimationContainer>
                             <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(03) Cara kerja</p>
@@ -373,7 +383,7 @@ const HomePage = async () => {
                     </div>
                     <div className={`border-t ${BORDER}`}>
                         {STEPS.map((s, i) => (
-                            <AnimationContainer key={s.no} delay={0.1 * (i + 1)}>
+                            <AnimationContainer key={s.no} delay={0.1 * (i + 1)} direction={i % 2 === 0 ? "right" : "left"}>
                                 <div className={`grid gap-3 border-b ${BORDER} py-8 md:grid-cols-[64px_160px_1fr_auto] md:gap-10`}>
                                     <span className={`font-mono text-sm ${MUTED}`}>{s.no}</span>
                                     <h3 className="font-heading text-2xl font-medium tracking-[-0.02em]">{s.title}</h3>
@@ -388,12 +398,12 @@ const HomePage = async () => {
 
             {/* ── (04) Testimoni: satu kutipan besar ── */}
             <MaxWidthWrapper>
-                <section className="border-t py-32 md:py-48">
+                <section className="border-t py-20 md:py-32">
                     <div className="mx-auto max-w-3xl text-center">
                         <AnimationContainer>
                             <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(04) Bukti pengguna</p>
                         </AnimationContainer>
-                        <AnimationContainer delay={0.1}>
+                        <AnimationContainer delay={0.1} direction="scale">
                             <blockquote className="font-heading mt-8 text-2xl font-medium leading-snug tracking-[-0.01em] md:text-4xl">
                                 &quot;Akhirnya ada platform yang bisa bantu aku tahu kenapa lamaran sering ditolak.{" "}
                                 <span className="font-serif italic">Ternyata skill gap-ku di Docker dan Kubernetes.</span>{" "}
@@ -404,7 +414,9 @@ const HomePage = async () => {
                             <div className="mt-10 flex flex-col items-center gap-3">
                                 <div className="flex gap-1">
                                     {Array.from({ length: 5 }).map((_, i) => (
-                                        <StarIcon key={i} className="h-4 w-4 fill-violet-400 text-violet-400" />
+                                        <AnimationContainer key={i} delay={0.2 + i * 0.05} direction="scale">
+                                            <StarIcon className="h-4 w-4 fill-violet-400 text-violet-400" />
+                                        </AnimationContainer>
                                     ))}
                                 </div>
                                 <p className="text-sm font-semibold">Rizky Pratama</p>
@@ -417,7 +429,7 @@ const HomePage = async () => {
 
             {/* ── CTA akhir: closing statement ── */}
             <MaxWidthWrapper>
-                <section className="border-t py-32 text-center md:py-52">
+                <section className="border-t py-20 text-center md:py-32">
                     <AnimationContainer>
                         <h2 className="font-heading mx-auto max-w-3xl text-5xl font-medium leading-[0.95] tracking-[-0.03em] md:text-7xl">
                             Dari kode,{" "}
@@ -438,26 +450,30 @@ const HomePage = async () => {
                         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
                             <Link
                                 href={ctaHref}
-                                className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 transition hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                                className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 transition-all hover:bg-violet-500 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                             >
                                 {ctaLabel}
                                 <ArrowRightIcon className="h-4 w-4" />
                             </Link>
                             <Link
                                 href="/dashboard/jobs"
-                                className={`inline-flex items-center gap-2 rounded-full border ${BORDER} px-7 py-3.5 text-sm font-semibold transition hover:border-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400`}
+                                className={`inline-flex items-center gap-2 rounded-full border ${BORDER} px-7 py-3.5 text-sm font-semibold transition-all hover:border-white/30 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400`}
                             >
                                 Lihat 100+ Lowongan
                             </Link>
                         </div>
                     </AnimationContainer>
-                    <AnimationContainer delay={0.3}>
-                        <div className={`mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 font-mono text-[11px] uppercase tracking-[0.08em] ${MUTED}`}>
+                    <div className={`mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 font-mono text-[11px] uppercase tracking-[0.08em] ${MUTED}`}>
+                        <AnimationContainer delay={0.3}>
                             <span className="flex items-center gap-1.5"><SparklesIcon className="h-3 w-3 text-violet-400" /> AI Gemini</span>
+                        </AnimationContainer>
+                        <AnimationContainer delay={0.35}>
                             <span className="flex items-center gap-1.5"><GithubIcon className="h-3 w-3 text-violet-400" /> GitHub integration</span>
+                        </AnimationContainer>
+                        <AnimationContainer delay={0.4}>
                             <span className="flex items-center gap-1.5"><FileTextIcon className="h-3 w-3 text-violet-400" /> CV ATS</span>
-                        </div>
-                    </AnimationContainer>
+                        </AnimationContainer>
+                    </div>
                     {/* Hidden recruiter link — footer */}
                     <div className="mt-16 flex flex-col items-center gap-2 border-t border-white/[0.06] pt-6">
                         <p className="font-mono text-[11px] text-white/25">© 2026 GitHire · From Code to Career</p>

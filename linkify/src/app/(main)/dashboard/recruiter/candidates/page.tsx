@@ -19,9 +19,11 @@ import {
     Sparkles,
     UserCheck,
     X,
-    Code
+    Code,
+    MessageCircle
 } from "lucide-react";
 import { useState, useDeferredValue } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 type Candidate = {
@@ -66,6 +68,7 @@ type RecruiterJob = {
 export default function CandidateSearchPage() {
     const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
+    const router = useRouter();
 
     // Search and filter states
     const [q, setQ] = useState("");
@@ -140,6 +143,25 @@ export default function CandidateSearchPage() {
         },
         onError: (err: any) => {
             toast.error(err.message || "Gagal mengirim undangan wawancara.");
+        },
+    });
+
+    const chatMutation = useMutation({
+        mutationFn: (candidateUserId: string) =>
+            withAuth("/chat/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ candidate_id: candidateUserId }),
+            }),
+        onSuccess: () => {
+            toast.success("Percakapan dimulai. Lanjut di halaman Chat.");
+            qc.invalidateQueries({ queryKey: ["chat-conversations"] });
+            router.push("/dashboard/chat");
+        },
+        onError: (err: any) => {
+            const msg = err.message || "";
+            if (msg.includes("Kuota chat")) toast.error(msg);
+            else toast.error(msg || "Gagal memulai chat.");
         },
     });
 
@@ -423,17 +445,29 @@ export default function CandidateSearchPage() {
                                                 </div>
                                             </div>
 
-                                            <Button
-                                                size="sm"
-                                                onClick={() => {
-                                                    setInviteCandidate(candidate);
-                                                    resetInviteForm();
-                                                }}
-                                                className="h-8 text-xs font-bold gap-1 rounded-xl bg-primary hover:bg-primary/95 text-white"
-                                            >
-                                                <UserCheck className="w-3.5 h-3.5" />
-                                                Direct Invite
-                                            </Button>
+                                            <div className="flex gap-1.5">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => chatMutation.mutate(candidate.user_id)}
+                                                    disabled={chatMutation.isPending}
+                                                    className="h-8 text-xs font-bold gap-1 rounded-xl"
+                                                >
+                                                    <MessageCircle className="w-3.5 h-3.5" />
+                                                    Chat
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setInviteCandidate(candidate);
+                                                        resetInviteForm();
+                                                    }}
+                                                    className="h-8 text-xs font-bold gap-1 rounded-xl bg-primary hover:bg-primary/95 text-white"
+                                                >
+                                                    <UserCheck className="w-3.5 h-3.5" />
+                                                    Direct Invite
+                                                </Button>
+                                            </div>
                                         </div>
 
                                         {/* Bidang minat kandidat */}
