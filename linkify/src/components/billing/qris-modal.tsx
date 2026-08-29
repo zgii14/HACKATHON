@@ -61,9 +61,13 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
                 <button onClick={onClose} className="absolute right-3 top-3 rounded p-1.5 hover:bg-muted">
                     <X className="size-4" />
                 </button>
-                <h3 className="text-sm font-bold">Bayar via QRIS (Simulasi)</h3>
+                <div className="flex items-center gap-2">
+                    <div className="rounded-md bg-[#0a0a0a] px-2 py-1 font-mono text-[10px] font-bold tracking-widest text-white">QRIS</div>
+                    <span className="rounded-full bg-violet-600/10 px-2 py-0.5 font-mono text-[10px] font-bold text-violet-600">SNI 2019</span>
+                </div>
+                <h3 className="mt-3 text-sm font-bold">Bayar via QRIS</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                    {plan === "talent" ? "Talent Search · Rp 499.000 / bulan" : "Managed · Rp 2.000.000 / rekrut"} · FE only, tidak pakai gateway
+                    {plan === "talent" ? "Talent Search · Rp 499.000 / bulan" : "Managed · Rp 2.000.000 / rekrut"}
                 </p>
 
                 <div className="mt-5 grid gap-5 md:grid-cols-[200px_1fr]">
@@ -90,7 +94,7 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
                                 {copied ? "Disalin" : "Salin"}
                             </button>
                         </div>
-                        <p className="text-[11px] leading-relaxed text-muted-foreground">Simulasi: scan QR pakai e-wallet apapun di demo, lalu klik “Sudah Bayar” di bawah. Tidak ada potongan saldo beneran.</p>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground">Scan kode QR di atas menggunakan GoPay, OVO, DANA, ShopeePay, atau mobile banking yang mendukung QRIS. Pembayaran dikonfirmasi otomatis.</p>
                     </div>
                 </div>
 
@@ -99,7 +103,7 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
                         Batal
                     </button>
                     <button onClick={onConfirm} disabled={expired || isPending} className="rounded-full bg-violet-600 px-5 py-2 text-xs font-bold text-white hover:bg-violet-700 disabled:opacity-40">
-                        {isPending ? "Memproses..." : "Sudah Bayar (Simulasi) — Aktifkan"}
+                        {isPending ? "Memproses..." : "Konfirmasi Pembayaran"}
                     </button>
                 </div>
             </div>

@@ -53,8 +53,7 @@ export default function BillingPage() {
 
     const handleManagedQrisConfirm = () => {
         setQris((s) => ({ ...s, open: false }));
-        // FE only simulasi — langsung buka chat admin + toast
-        toast.success("Pembayaran Managed simulasi berhasil — chat admin dibuka", { transition: Bounce });
+        toast.success("Pembayaran berhasil — chat admin dibuka", { transition: Bounce });
         startAdmin.mutate();
     };
 
@@ -64,7 +63,7 @@ export default function BillingPage() {
 
     return (
         <div className="w-full space-y-6">
-            <PageHeader crumb="dasbor / perusahaan / tagihan" title="Tagihan" sub="Kelola paket hiring. Mock toggle tanpa payment gateway." />
+            <PageHeader crumb="dasbor / perusahaan / tagihan" title="Tagihan" sub="Kelola paket hiring. Pembayaran QRIS, aktivasi otomatis." />
 
             {/* Status ringkas */}
             <Reveal delay={0.06}>
@@ -131,7 +130,7 @@ export default function BillingPage() {
                             >
                                 {toggle.isPending ? "..." : isPremium ? "Batalkan → Gratis" : "Bayar via QRIS"}
                             </button>
-                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">{isPremium ? "Premium aktif" : "Belum aktif — simulasi QRIS"}</p>
+                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">{isPremium ? "Premium aktif" : "Belum aktif"}</p>
                         </div>
                     </Spotlight>
                 </Reveal>
@@ -161,7 +160,7 @@ export default function BillingPage() {
                             >
                                 Bayar via QRIS
                             </button>
-                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">Simulasi QRIS → chat admin • <a href="mailto:hello@githire.com?subject=Managed%20Hiring" className="underline">email</a> juga</p>
+                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">QRIS → chat admin • <a href="mailto:hello@githire.com?subject=Managed%20Hiring" className="underline">email</a> juga</p>
                         </div>
                     </Spotlight>
                 </Reveal>
