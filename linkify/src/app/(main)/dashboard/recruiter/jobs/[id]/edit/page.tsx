@@ -16,7 +16,7 @@ export default function EditJobPage() {
 
     const { data: job, isLoading } = useQuery<any>({
         queryKey: ["job-edit", id],
-        queryFn: () => withAuth(`/jobs/${id}`),
+        queryFn: () => withAuth(`/recruiter/jobs/${id}`),
         enabled: authReady && !!id,
     });
 

@@ -123,12 +123,13 @@ def create_job(
     """Membuat lowongan baru dengan menetapkan recruiter_id ke user login."""
     if user.role != "recruiter":
         raise HTTPException(403, "Hanya recruiter yang diperbolehkan membuat lowongan.")
-    # Glints-like: Free 2 total, Premium 10 total
+    # Glints-like: Free 2 aktif, Premium 10 aktif
     is_premium = bool(getattr(user, "is_premium", False))
     limit = 10 if is_premium else 2
-    count = db.query(Job).filter(Job.recruiter_id == str(user.id)).count()
+    db.query(User).filter(User.id == user.id).with_for_update().one()
+    count = db.query(Job).filter(Job.recruiter_id == str(user.id), Job.is_closed == False).count()
     if count >= limit:
-        raise HTTPException(429, f"Limit lowongan tercapai ({count}/{limit}). Upgrade ke Premium untuk 10 lowongan total.")
+        raise HTTPException(429, f"Limit lowongan aktif tercapai ({count}/{limit}). Tutup lowongan lain atau upgrade ke Premium untuk 10 slot.")
 
     new_job = Job(
         id=uuid.uuid4(),
@@ -246,9 +247,10 @@ def open_job(
         raise HTTPException(404, "Lowongan tidak ditemukan.")
     if not job.is_closed:
         raise HTTPException(400, "Lowongan sudah terbuka.")
-    # cek limit saat buka kembali (hitung total tidak termasuk yang akan dibuka? sudah termasuk)
+    # cek limit saat buka kembali — lock user row
     is_premium = bool(getattr(user, "is_premium", False))
     limit = 10 if is_premium else 2
+    db.query(User).filter(User.id == user.id).with_for_update().one()
     total = db.query(Job).filter(Job.recruiter_id == str(user.id), Job.is_closed == False).count()
     if total >= limit:
         raise HTTPException(429, f"Limit lowongan aktif tercapai ({total}/{limit}). Tutup lowongan lain dulu.")
@@ -285,9 +287,40 @@ def get_my_jobs(
             "created_at": job.created_at,
             "applicant_count": app_count,
         })
-    # Urutkan: lowongan terbaru dulu, tapi yang tutup di bawah
-    result.sort(key=lambda r: (r["is_closed"], -r["applicant_count"]))
+    # Urutkan: lowongan terbaru dulu, tapi yang tutup di bawah — tiebreaker created_at
+    result.sort(key=lambda r: (r["is_closed"], -(r["created_at"].timestamp() if r["created_at"] else 0)))
     return result
+
+
+@router.get("/jobs/{job_id}")
+def get_my_job_detail(
+    job_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat melihat detail lowongan.")
+    job = db.query(Job).filter(Job.id == job_id, Job.recruiter_id == str(user.id)).first()
+    if not job:
+        raise HTTPException(404, "Lowongan tidak ditemukan atau bukan milikmu.")
+    return {
+        "id": job.id,
+        "title": job.title,
+        "company": job.company,
+        "description": job.description,
+        "required_skills": job.required_skills,
+        "location": job.location,
+        "is_remote": job.is_remote,
+        "apply_url": job.apply_url,
+        "salary": job.salary,
+        "min_education": job.min_education,
+        "min_experience": job.min_experience,
+        "work_type": job.work_type,
+        "is_closed": bool(job.is_closed),
+        "created_at": job.created_at,
+        "updated_at": job.updated_at,
+        "recruiter_id": job.recruiter_id,
+    }
 
 @router.get("/jobs/my-jobs/{job_id}/applications")
 def get_job_applications(
@@ -426,19 +459,18 @@ def ai_candidate_screening(
     """Menjalankan AI screening otomatis dengan Gemini untuk pelamar."""
     if user.role != "recruiter":
         raise HTTPException(403, "Hanya recruiter yang diperbolehkan mengakses AI screening.")
-    # Glints-like: Free 5/minggu, Premium unlimited
+    # Glints-like: Free 5/minggu, Premium unlimited — hitung via screened_at, bukan updated_at
     is_premium = bool(getattr(user, "is_premium", False))
     if not is_premium:
-        from datetime import timedelta
-        week_ago = datetime.utcnow() - timedelta(days=7)
-        # hitung screening minggu ini milik recruiter ini (join Job)
+        from datetime import timedelta, timezone
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
         cnt = (
             db.query(JobApplication)
             .join(Job, JobApplication.job_id == Job.id)
             .filter(
                 Job.recruiter_id == str(user.id),
-                JobApplication.ai_screening.isnot(None),
-                JobApplication.updated_at >= week_ago,
+                JobApplication.screened_at.isnot(None),
+                JobApplication.screened_at >= week_ago,
             )
             .count()
         )
@@ -521,6 +553,8 @@ def ai_candidate_screening(
     res_json["cached"] = False
     app.ai_screening = res_json
     app.screening_fingerprint = fingerprint
+    from datetime import timezone
+    app.screened_at = datetime.now(timezone.utc)
     db.commit()
     return res_json
 
@@ -614,11 +648,18 @@ def search_candidates(
         is_blurred = (not is_premium) and global_idx >= 5
         c["is_blurred"] = is_blurred
         if is_blurred:
-            # sembunyikan data sensitif untuk blur — frontend akan overlay
             c["email"] = None
             c["phone"] = None
-            # simpan nama samaran
+            c["address"] = None
+            c["github"] = None
             c["fullName"] = (c["fullName"] or "Kandidat")[:1] + "***"
+            c["cv_data"] = {}
+            c["cv_skills"] = []
+            c["merged_skills"] = []
+            c["verified_skills"] = []
+            c["verified_skill_count"] = 0
+            c["github_signals"] = {}
+            c["interests"] = []
     return {
         "total": len(filtered),
         "limit": limit,
@@ -642,6 +683,8 @@ def invite_candidate(
     job = db.query(Job).filter(Job.id == body.job_id, Job.recruiter_id == str(user.id)).first()
     if not job:
         raise HTTPException(404, "Lowongan tidak ditemukan atau Anda tidak memiliki akses.")
+    if getattr(job, "is_closed", False):
+        raise HTTPException(400, "Lowongan sudah ditutup, tidak bisa mengundang kandidat.")
 
     # Pastikan kandidat ada
     candidate = db.query(User).filter(User.id == candidate_user_id).first()
@@ -690,25 +733,20 @@ def billing_status(
     if user.role != "recruiter":
         raise HTTPException(403, "Hanya recruiter yang dapat melihat tagihan.")
     is_premium = bool(getattr(user, "is_premium", False))
-    # lowongan total
-    total_jobs = db.query(Job).filter(Job.recruiter_id == str(user.id)).count()
+    total_jobs = db.query(Job).filter(Job.recruiter_id == str(user.id), Job.is_closed == False).count()
     limit_jobs = 10 if is_premium else 2
-    # screening minggu ini
-    from datetime import timedelta
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    # screening minggu ini — pakai screened_at
+    from datetime import timedelta, timezone
+    week_ago = datetime.now(timezone.utc) - timedelta(days=7)
     screening_used = (
         db.query(JobApplication)
         .join(Job, JobApplication.job_id == Job.id)
-        .filter(Job.recruiter_id == str(user.id), JobApplication.ai_screening.isnot(None), JobApplication.updated_at >= week_ago)
+        .filter(Job.recruiter_id == str(user.id), JobApplication.screened_at.isnot(None), JobApplication.screened_at >= week_ago)
         .count()
     )
     screening_limit = None if is_premium else 5
     screening_remaining = None if is_premium else max(0, 5 - screening_used)
-    # chat quota reuse logic
-    from app.routers.chat import _is_premium as chat_is_premium
     chat_limit = 100 if is_premium else 5
-    chat_used = db.query(JobApplication).join(Job, JobApplication.job_id == Job.id).filter(Job.recruiter_id == str(user.id)).count()  # dummy, real chat used via conversations
-    # actual chat used from conversations
     from app.models import Conversation
     from sqlalchemy import func
     chat_used = db.query(func.count(Conversation.id)).filter(Conversation.recruiter_id == user.id, Conversation.created_at >= week_ago).scalar() or 0

@@ -78,7 +78,7 @@ export default function AdminRecruiterDetailPage() {
                                     <p className="truncate text-sm font-medium">{j.title}</p>
                                     <p className="truncate text-xs text-muted-foreground">{j.company} · {j.location || "-"}</p>
                                 </div>
-                                <Link href={`/dashboard/recruiter/jobs/${j.id}`} className="text-xs font-medium text-violet-600 hover:underline">Lihat</Link>
+                                <Link href={`/dashboard/jobs/${j.id}`} className="text-xs font-medium text-violet-600 hover:underline">Lihat</Link>
                             </div>
                         ))}
                     </div>

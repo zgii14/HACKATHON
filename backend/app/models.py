@@ -137,6 +137,7 @@ class JobApplication(Base):
     cover_letter: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_screening: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     screening_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    screened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     applied_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow
     )

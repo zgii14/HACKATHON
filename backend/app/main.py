@@ -245,6 +245,11 @@ async def lifespan(app: FastAPI):
         conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP"))
         conn.commit()
 
+    # DDL Migration: screened_at for quota P1 #1
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS screened_at TIMESTAMPTZ NULL"))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)

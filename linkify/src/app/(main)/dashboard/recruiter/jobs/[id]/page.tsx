@@ -18,7 +18,7 @@ import {
     Brain
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 type CandidateCV = {
@@ -103,12 +103,20 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
     });
 
     // Fetch AI Screening untuk kandidat terpilih
-    const { data: aiResult, isLoading: aiLoading, refetch: runAIScreening } = useQuery<AIScreeningResult>({
+    const { data: aiResult, isLoading: aiLoading, error: aiError, refetch: runAIScreening } = useQuery<AIScreeningResult>({
         queryKey: ["ai-screening", selectedApp?.id],
         queryFn: () => withAuth(`/recruiter/applications/${selectedApp?.id}/ai-screening`, { method: "POST" }),
         enabled: authReady && !!selectedApp?.id,
         staleTime: 60 * 1000,
+        retry: false,
     });
+
+    useEffect(() => {
+        if (aiError) {
+            const msg = (aiError as any)?.message || "";
+            if (msg.includes("Kuota screening")) toast.error(msg + " — Lihat Tagihan", { autoClose: 5000 });
+        }
+    }, [aiError]);
 
     // Paksa analisis ulang (bypass cache backend via ?refresh=true)
     const refreshScreening = useMutation({
@@ -116,9 +124,14 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
             withAuth<AIScreeningResult>(`/recruiter/applications/${selectedApp?.id}/ai-screening?refresh=true`, { method: "POST" }),
         onSuccess: (data) => {
             qc.setQueryData(["ai-screening", selectedApp?.id], data);
+            qc.invalidateQueries({ queryKey: ["billing-status"] });
             toast.success("Analisis diperbarui.");
         },
-        onError: () => toast.error("Gagal menganalisis ulang."),
+        onError: (e: any) => {
+            const msg = e?.message || "";
+            if (msg.includes("Kuota screening")) toast.error(msg + " — Lihat Tagihan", { autoClose: 5000 });
+            else toast.error("Gagal menganalisis ulang.");
+        },
     });
 
     // Mutation untuk mengupdate status pelamar
@@ -343,7 +356,12 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     </button>
                                 </div>
 
-                                {aiLoading ? (
+                                {aiError ? (
+                                    <div className="text-center py-6 space-y-2">
+                                        <p className="text-xs font-semibold text-amber-600">{(aiError as any)?.message || "Gagal memuat screening"}</p>
+                                        <Link href="/dashboard/recruiter/billing" className="text-xs font-medium text-violet-600 hover:underline">Lihat Tagihan →</Link>
+                                    </div>
+                                ) : aiLoading ? (
                                     <div className="flex flex-col items-center justify-center py-6 space-y-2">
                                         <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
                                         <p className="text-[10px] text-muted-foreground animate-pulse font-medium">Gemini sedang menganalisis kecocokan pelamar...</p>

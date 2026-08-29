@@ -126,6 +126,8 @@ def apply_to_job(
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(404, "Lowongan tidak ditemukan")
+    if getattr(job, "is_closed", False):
+        raise HTTPException(400, "Lowongan sudah ditutup, tidak menerima lamaran baru.")
 
     # Guard: user harus sudah onboarding (punya profil & merged_skills)
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
