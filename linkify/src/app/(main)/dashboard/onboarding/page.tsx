@@ -7,14 +7,19 @@ import { useApi } from "@/hooks/use-api";
 import { INTERESTS } from "@/utils/constants/interests";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 type Profile = {
     github_username: string | null;
     merged_skills: string[] | null;
     interests: string[] | null;
     updated_at: string | null;
+    cv_data: any | null;
+    cv_filename: string | null;
+    cv_uploaded_at: string | null;
+    github_signals: any | null;
 } | null;
 
 type SyncResult = {
@@ -37,7 +42,6 @@ const INTEREST_OPTIONS = INTERESTS;
 export default function OnboardingPage() {
     const [githubUrl, setGithubUrl] = useState("");
     const [file, setFile] = useState<File | null>(null);
-    const [showConfirm, setShowConfirm] = useState(false);
     const [stepIndex, setStepIndex] = useState(0);
     const [showInterestSurvey, setShowInterestSurvey] = useState(false);
     const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
@@ -54,6 +58,13 @@ export default function OnboardingPage() {
     });
 
     const hasExistingProfile = !!existingProfile?.merged_skills?.length;
+
+    // Prefill GitHub URL ketika profil sudah ada — biar sync ulang tinggal upload PDF
+    useEffect(() => {
+        if (hasExistingProfile && existingProfile?.github_username && !githubUrl) {
+            setGithubUrl(`https://github.com/${existingProfile.github_username}`);
+        }
+    }, [hasExistingProfile, existingProfile?.github_username]);
 
     const toggleInterest = (key: string) => {
         setSelectedInterests((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -96,7 +107,6 @@ export default function OnboardingPage() {
             }
         },
         onSuccess: (result) => {
-            setShowConfirm(false);
             qc.invalidateQueries({ queryKey: ["profile"] });
             qc.invalidateQueries({ queryKey: ["me"] });
             qc.invalidateQueries({ queryKey: ["skill-gap"] });
@@ -110,12 +120,11 @@ export default function OnboardingPage() {
             }
         },
         onError: (e: Error) => {
-            setShowConfirm(false);
             toast.error(e.message);
         },
     });
 
-    const handleSyncClick = () => {
+    const handleSyncClick = async () => {
         if (!githubUrl.trim() || !file) {
             toast.error("GitHub URL dan file PDF wajib diisi");
             return;
@@ -124,14 +133,23 @@ export default function OnboardingPage() {
             toast.error("Sedang memuat profil, tunggu sebentar lalu coba lagi.");
             return;
         }
-        if (hasExistingProfile) setShowConfirm(true);
-        else {
-            setStepIndex(0);
-            sync.mutate();
+        if (hasExistingProfile) {
+            const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
+            const result = await Swal.fire({
+                title: "Sync ulang profil?",
+                html: `Kamu akan melakukan sinkronisasi ulang profil <b>@${existingProfile?.github_username}</b> dengan <b>${existingProfile?.merged_skills?.length ?? 0} skill</b>.<br><span style="color:#6b7280">Jika skill berubah, progress roadmap akan diatur ulang.</span>`,
+                icon: "warning",
+                theme: isDark ? "dark" : "light",
+                showCancelButton: true,
+                confirmButtonText: "Ya, sync ulang",
+                cancelButtonText: "Batal",
+                confirmButtonColor: "hsl(262.1, 83.3%, 57.8%)",
+                cancelButtonColor: "#6b7280",
+                reverseButtons: true,
+                focusCancel: true,
+            });
+            if (!result.isConfirmed) return;
         }
-    };
-
-    const confirmSync = () => {
         setStepIndex(0);
         sync.mutate();
     };
@@ -228,42 +246,55 @@ export default function OnboardingPage() {
         <div className="w-full max-w-2xl">
             <PageHeader
                 crumb="dasbor / onboarding"
-                title={hasExistingProfile ? "Update profil" : "Onboarding"}
+                title={hasExistingProfile ? "Data GitHub + CV" : "Onboarding"}
                 sub={
                     hasExistingProfile
-                        ? `Profil GitHub @${existingProfile?.github_username} sudah terhubung dengan ${existingProfile?.merged_skills?.length ?? 0} skill.`
+                        ? `Profil @${existingProfile?.github_username} · ${existingProfile?.merged_skills?.length ?? 0} skill terhubung. Upload PDF baru untuk sync ulang.`
                         : "Kami hanya membaca data GitHub publik. Upload CV PDF untuk ekstraksi skill."
                 }
             />
 
             <Reveal delay={0.06} className="pt-6">
-                {hasExistingProfile && (
-                    <p className="mb-5 border-l-2 border-warning/50 bg-warning/[0.05] px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
-                        <span className="font-semibold text-foreground">Profil sudah ada.</span> Jika skill tidak berubah, progress roadmapmu tetap aman.
-                        Jika skill berubah, roadmap di-generate ulang dari awal.
-                    </p>
-                )}
-
-                {showConfirm && (
-                    <div className="mb-5 border-l-2 border-warning bg-warning/[0.06] px-4 py-3">
-                        <p className="text-[13px] font-semibold">Konfirmasi sync ulang</p>
-                        <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
-                            Kamu akan men-sync ulang profil <span className="font-medium text-foreground">@{existingProfile?.github_username}</span> dengan{" "}
-                            <span className="font-medium text-foreground">{existingProfile?.merged_skills?.length ?? 0} skill</span>. Jika skill berubah,{" "}
-                            <span className="font-medium text-warning">progress roadmapmu akan direset</span>.
-                        </p>
-                        <div className="mt-3 flex gap-4">
-                            <button
-                                onClick={confirmSync}
-                                disabled={sync.isPending}
-                                className="rounded-md bg-primary px-3.5 py-2 text-[12px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                                Ya, sync ulang
-                            </button>
-                            <button onClick={() => setShowConfirm(false)} disabled={sync.isPending} className="text-[12px] font-semibold text-muted-foreground hover:text-foreground">
-                                Batal
-                            </button>
+                {hasExistingProfile && existingProfile && (
+                    <div className="mb-5 rounded-xl border border-border bg-card p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <div className="flex size-8 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">
+                                    {(existingProfile.github_username ?? "?").slice(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold">@{existingProfile.github_username ?? "-"}</p>
+                                    <p className="font-mono text-[11px] text-muted-foreground">
+                                        {existingProfile.merged_skills?.length ?? 0} skill · {existingProfile.github_signals?.commits ?? 0} commits · {existingProfile.github_signals?.stars ?? 0} stars
+                                    </p>
+                                </div>
+                            </div>
+                            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-600">Terhubung</span>
                         </div>
+                        {existingProfile.merged_skills && existingProfile.merged_skills.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                                {existingProfile.merged_skills.slice(0, 8).map((s) => (
+                                    <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px]">
+                                        {s}
+                                    </span>
+                                ))}
+                                {(existingProfile.merged_skills.length ?? 0) > 8 && (
+                                    <span className="px-1 py-0.5 font-mono text-[11px] text-muted-foreground">+{existingProfile.merged_skills.length - 8}</span>
+                                )}
+                            </div>
+                        )}
+                        <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium">CV terhubung</p>
+                                <p className="truncate font-mono text-[11px] text-muted-foreground">
+                                    {existingProfile.cv_filename ?? "cv.pdf"} · {existingProfile.cv_data ? "teks OK" : "belum ada"} · {existingProfile.updated_at ? new Date(existingProfile.updated_at).toLocaleDateString("id-ID") : "-"}
+                                </p>
+                            </div>
+                            <span className="rounded-full bg-violet-600/10 px-2 py-0.5 font-mono text-[10px] font-bold text-violet-600">PDF</span>
+                        </div>
+                        <p className="mt-3 border-l-2 border-warning/50 bg-warning/[0.05] px-3 py-2 text-[12px] leading-relaxed text-muted-foreground">
+                            <span className="font-semibold text-foreground">Sync ulang?</span> Jika skill tidak berubah, roadmap tetap aman. Jika berubah, roadmap di-generate ulang.
+                        </p>
                     </div>
                 )}
 
