@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X, Copy, Check } from "lucide-react";
 
 type Props = {
@@ -14,10 +15,11 @@ type Props = {
 };
 
 export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }: Props) {
+    const reduced = useReducedMotion();
     const [expiresAt, setExpiresAt] = useState(() => Date.now() + 5 * 60 * 1000);
     const [now, setNow] = useState(Date.now());
     const [copied, setCopied] = useState(false);
-    // FE only — generate sekali per buka, jangan tiap detik
+    // generate sekali per buka, jangan tiap detik
     const orderId = useMemo(() => {
         if (!open) return "";
         return `GH-${plan.toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
@@ -41,8 +43,6 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
         return () => clearInterval(id);
     }, [open]);
 
-    if (!open) return null;
-
     const remaining = Math.max(0, expiresAt - now);
     const minutes = Math.floor(remaining / 60000);
     const seconds = Math.floor((remaining % 60000) / 1000);
@@ -55,9 +55,24 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl">
+        <AnimatePresence>
+            {open && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: reduced ? 0 : 0.2 }}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={onClose}
+                    />
+                    <motion.div
+                        initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8 }}
+                        transition={{ duration: reduced ? 0.15 : 0.28, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
+                    >
                 <button onClick={onClose} className="absolute right-3 top-3 rounded p-1.5 hover:bg-muted">
                     <X className="size-4" />
                 </button>
@@ -106,7 +121,9 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
                         {isPending ? "Memproses..." : "Konfirmasi Pembayaran"}
                     </button>
                 </div>
-            </div>
-        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
     );
 }
