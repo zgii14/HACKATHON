@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.auth import get_current_user
+from app.auth import get_current_user, is_admin_email
 from app.database import get_db
 from app.models import CandidateProfile, Conversation, Job, Message, RecruiterProfile, User
 
@@ -192,6 +192,40 @@ def list_conversations(
             "unread_count": unread,
         })
     return out
+
+
+@router.post("/start-admin", response_model=dict)
+def start_admin_chat(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat menghubungi admin.")
+    # cari admin user (hardcode + allowlist)
+    admin = db.query(User).filter(User.email == "admin.githire@gmail.com").first()
+    if not admin:
+        # fallback cari user dengan is_admin_email true
+        candidates = db.query(User).all()
+        for u in candidates:
+            if u.email and is_admin_email(u.email):
+                admin = u
+                break
+    if not admin:
+        raise HTTPException(404, "Admin tidak ditemukan. Hubungi support.")
+    # recruiter sebagai recruiter_id, admin sebagai candidate_id (admin juga recruiter role, tapi tetap participant)
+    existing = db.query(Conversation).filter(
+        Conversation.recruiter_id == user.id,
+        Conversation.candidate_id == admin.id,
+        Conversation.job_id.is_(None),
+    ).first()
+    if existing:
+        return {"conversation_id": existing.id, "created": False}
+    _check_chat_quota(db, user)
+    conv = Conversation(recruiter_id=user.id, candidate_id=admin.id, job_id=None)
+    db.add(conv)
+    db.commit()
+    db.refresh(conv)
+    return {"conversation_id": conv.id, "created": True}
 
 
 @router.get("/{conversation_id}/messages", response_model=list[dict])

@@ -1,10 +1,13 @@
 "use client";
 
 import { PageHeader, Reveal, Spotlight } from "@/components/dashboard/ui";
+import { QrisModal } from "@/components/billing/qris-modal";
 import { useApi } from "@/hooks/use-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Sparkles, Crown, Users } from "lucide-react";
-import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast, Bounce } from "react-toastify";
 
 type Billing = {
     is_premium: boolean;
@@ -16,6 +19,8 @@ type Billing = {
 export default function BillingPage() {
     const { withAuth, authReady } = useApi();
     const qc = useQueryClient();
+    const router = useRouter();
+    const [qris, setQris] = useState<{ open: boolean; plan: "talent" | "managed"; amount: number }>({ open: false, plan: "talent", amount: 499000 });
     const { data, isLoading } = useQuery<Billing>({
         queryKey: ["billing-status"],
         queryFn: () => withAuth("/recruiter/billing/status"),
@@ -25,12 +30,33 @@ export default function BillingPage() {
     const toggle = useMutation({
         mutationFn: () => withAuth<{ is_premium: boolean; message: string }>("/recruiter/billing/mock-toggle", { method: "POST" }),
         onSuccess: (res) => {
-            toast.success(res.message);
+            toast.success(res.message + " — Premium berhasil diaktifkan", { transition: Bounce, autoClose: 4000, theme: document.documentElement.classList.contains("dark") ? "dark" : "light" });
             qc.invalidateQueries({ queryKey: ["billing-status"] });
             qc.invalidateQueries({ queryKey: ["chat-quota"] });
         },
         onError: (e: Error) => toast.error(e.message),
     });
+
+    const startAdmin = useMutation({
+        mutationFn: () => withAuth<{ conversation_id: string }>("/chat/start-admin", { method: "POST" }),
+        onSuccess: (res) => {
+            toast.success("Chat dengan admin dibuka", { transition: Bounce });
+            router.push(`/dashboard/chat?c=${res.conversation_id}`);
+        },
+        onError: (e: Error) => toast.error(e.message),
+    });
+
+    const handleTalentQrisConfirm = () => {
+        setQris((s) => ({ ...s, open: false }));
+        toggle.mutate();
+    };
+
+    const handleManagedQrisConfirm = () => {
+        setQris((s) => ({ ...s, open: false }));
+        // FE only simulasi — langsung buka chat admin + toast
+        toast.success("Pembayaran Managed simulasi berhasil — chat admin dibuka", { transition: Bounce });
+        startAdmin.mutate();
+    };
 
     if (isLoading) return <div className="h-64 animate-pulse rounded-xl border bg-card" />;
 
@@ -99,13 +125,13 @@ export default function BillingPage() {
                                 <li className="flex gap-2"><Check className="size-4 shrink-0 text-violet-600" /> Badge Premium di chat</li>
                             </ul>
                             <button
-                                onClick={() => toggle.mutate()}
+                                onClick={() => (isPremium ? toggle.mutate() : setQris({ open: true, plan: "talent", amount: 499000 }))}
                                 disabled={toggle.isPending}
                                 className={`mt-6 w-full rounded-full px-4 py-2 text-xs font-bold text-white ${isPremium ? "bg-muted text-foreground border border-border" : "bg-violet-600 hover:bg-violet-700"}`}
                             >
-                                {toggle.isPending ? "..." : isPremium ? "Batalkan → Gratis" : "Mock: Aktifkan Premium"}
+                                {toggle.isPending ? "..." : isPremium ? "Batalkan → Gratis" : "Bayar via QRIS"}
                             </button>
-                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">{isPremium ? "Premium aktif" : "Belum aktif"}</p>
+                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">{isPremium ? "Premium aktif" : "Belum aktif — simulasi QRIS"}</p>
                         </div>
                     </Spotlight>
                 </Reveal>
@@ -129,16 +155,28 @@ export default function BillingPage() {
                                 <li className="flex gap-2"><Check className="size-4 shrink-0 text-amber-600" /> Chat via Githire</li>
                                 <li className="flex gap-2"><Check className="size-4 shrink-0 text-amber-600" /> Pelamar ∞</li>
                             </ul>
-                            <a href="mailto:hello@githire.com?subject=Managed%20Hiring" className="mt-6 block w-full rounded-full border border-border bg-card px-4 py-2 text-center text-xs font-bold hover:bg-muted">
-                                Hubungi Admin
-                            </a>
-                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">Bukan toggle app</p>
+                            <button
+                                onClick={() => setQris({ open: true, plan: "managed", amount: 2000000 })}
+                                className="mt-6 w-full rounded-full bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600"
+                            >
+                                Bayar via QRIS
+                            </button>
+                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">Simulasi QRIS → chat admin • <a href="mailto:hello@githire.com?subject=Managed%20Hiring" className="underline">email</a> juga</p>
                         </div>
                     </Spotlight>
                 </Reveal>
             </div>
 
             <p className="text-center font-mono text-[11px] text-muted-foreground">Semua paket: pelamar masuk ∞ · CV ATS · reset Senin 00:00 WIB</p>
+
+            <QrisModal
+                open={qris.open}
+                onClose={() => setQris((s) => ({ ...s, open: false }))}
+                onConfirm={qris.plan === "talent" ? handleTalentQrisConfirm : handleManagedQrisConfirm}
+                amount={qris.amount}
+                plan={qris.plan}
+                isPending={toggle.isPending || startAdmin.isPending}
+            />
         </div>
     );
 }
