@@ -96,6 +96,7 @@ export default function CandidateSearchPage() {
     const [hrMessage, setHrMessage] = useState("");
     const [hrPhone, setHrPhone] = useState("");
     const [filterOpen, setFilterOpen] = useState(false);
+    const [expandedSkills, setExpandedSkills] = useState<Record<string, boolean>>({});
 
     const deferredQ = useDeferredValue(q);
     const deferredLocation = useDeferredValue(location);
@@ -222,7 +223,7 @@ export default function CandidateSearchPage() {
     const totalPages = data ? Math.ceil(data.total / limit) : 0;
 
     return (
-        <div className="space-y-6 max-w-6xl pb-20 relative">
+        <div className="space-y-8 max-w-6xl pb-20 relative">
             {/* Page Title */}
             <div>
                 <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -283,7 +284,7 @@ export default function CandidateSearchPage() {
             </Dialog>
 
             {/* Main Split Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
                 {/* Left Side: Filter Sidebar — hidden on mobile, visible on desktop */}
                 <div className="hidden lg:col-span-4 lg:flex rounded-xl border border-border bg-card p-4 space-y-4 flex-col">
@@ -463,7 +464,7 @@ export default function CandidateSearchPage() {
                                 return (
                                     <div
                                         key={candidate.id}
-                                        className={`relative bg-card px-4 py-4 hover:bg-muted/20 ${isBlurred ? "overflow-hidden" : ""}`}
+                                        className={`relative bg-card px-5 py-5 hover:bg-muted/20 ${isBlurred ? "overflow-hidden" : ""}`}
                                     >
                                         {isBlurred && (
                                             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-card/70 backdrop-blur-sm rounded-2xl p-5 text-center">
@@ -592,15 +593,15 @@ export default function CandidateSearchPage() {
                                             )}
                                         </div>
 
-                                        {/* Skills list tags */}
+                                        {/* Skills list tags — tampil setengah */}
                                         <div className="space-y-1.5">
                                             <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
                                                 <Code className="w-3.5 h-3.5" />
-                                                Declared Skills (CV + GitHub)
+                                                Declared Skills (CV + GitHub) · {candidate.merged_skills?.length ?? 0}
                                             </div>
                                             <div className="flex flex-wrap gap-1">
                                                 {candidate.merged_skills && candidate.merged_skills.length > 0 ? (
-                                                    candidate.merged_skills.map((skill) => {
+                                                    (expandedSkills[candidate.id] ? candidate.merged_skills : candidate.merged_skills.slice(0, Math.ceil(candidate.merged_skills.length / 2))).map((skill) => {
                                                         const isFiltered = selectedSkills.some(s => s.toLowerCase() === skill.toLowerCase());
                                                         return (
                                                             <Badge
@@ -618,6 +619,11 @@ export default function CandidateSearchPage() {
                                                     })
                                                 ) : (
                                                     <span className="text-[10px] text-muted-foreground italic">Belum ada keahlian terdata</span>
+                                                )}
+                                                {candidate.merged_skills && candidate.merged_skills.length > 6 && (
+                                                    <button onClick={() => setExpandedSkills((p) => ({ ...p, [candidate.id]: !p[candidate.id] }))} className="text-[10px] font-medium text-violet-600 hover:underline">
+                                                        {expandedSkills[candidate.id] ? "Sembunyikan" : `+${candidate.merged_skills.length - Math.ceil(candidate.merged_skills.length / 2)} lagi`}
+                                                    </button>
                                                 )}
                                             </div>
                                         </div>
