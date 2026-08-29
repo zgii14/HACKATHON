@@ -27,6 +27,7 @@ import Link from "next/link";
 import { useState, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Candidate = {
     id: string;
@@ -94,6 +95,7 @@ export default function CandidateSearchPage() {
     const [interviewLocation, setInterviewLocation] = useState("");
     const [hrMessage, setHrMessage] = useState("");
     const [hrPhone, setHrPhone] = useState("");
+    const [filterOpen, setFilterOpen] = useState(false);
 
     const deferredQ = useDeferredValue(q);
     const deferredLocation = useDeferredValue(location);
@@ -232,11 +234,59 @@ export default function CandidateSearchPage() {
                 </p>
             </div>
 
+            {/* Mobile filter bar */}
+            <div className="flex items-center justify-between lg:hidden">
+                <button onClick={() => setFilterOpen(true)} className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold">
+                    <SlidersHorizontal className="size-4" /> Filter {selectedSkills.length > 0 ? `· ${selectedSkills.length}` : ""}
+                </button>
+                <span className="font-mono text-xs text-muted-foreground">{data ? `${data.total} kandidat` : ""}</span>
+            </div>
+            <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+                <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+                    <DialogHeader><DialogTitle className="flex items-center gap-2 text-sm"><SlidersHorizontal className="size-4 text-primary" /> Filter Kandidat</DialogTitle></DialogHeader>
+                    <div className="space-y-5 pt-2">
+                        {/* Filter content duplicated for mobile dialog - same as desktop */}
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Kata Kunci Utama</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <input type="text" placeholder="Nama, lokasi, username github..." value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} className="w-full bg-background rounded-xl border border-border pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-primary" />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Domisili / Kota</label>
+                            <div className="relative">
+                                <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <input type="text" placeholder="Jakarta, Bengkulu, Remote..." value={location} onChange={(e) => { setLocation(e.target.value); setPage(1); }} className="w-full bg-background rounded-xl border border-border pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-primary" />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Minimal Komit GitHub</label>
+                            <input type="number" min="0" placeholder="Contoh: 10, 50, 100" value={minCommits} onChange={(e) => { const val = e.target.value; setMinCommits(val === "" ? "" : Number(val)); setPage(1); }} className="w-full bg-background rounded-xl border border-border px-3 py-2 text-xs focus:outline-none focus:border-primary" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Keahlian (Skills)</label>
+                            <div className="flex gap-2">
+                                <input type="text" placeholder="Tambah skill (e.g. python)" value={skillInput} onChange={(e) => setSkillInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSkill(skillInput); } }} className="flex-1 bg-background rounded-xl border border-border px-3 py-2 text-xs focus:outline-none focus:border-primary" />
+                                <Button size="sm" onClick={() => handleAddSkill(skillInput)} className="rounded-xl px-3 h-8 bg-muted hover:bg-muted/80 text-foreground">+</Button>
+                            </div>
+                            {selectedSkills.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                    {selectedSkills.map((skill) => (
+                                        <Badge key={skill} variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 bg-primary/10 text-primary border-transparent hover:bg-primary/20">{skill}<X className="w-3 h-3 cursor-pointer hover:text-rose-500" onClick={() => handleRemoveSkill(skill)} /></Badge>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {/* Main Split Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 
-                {/* Left Side: Filter Sidebar */}
-                <div className="lg:col-span-4 rounded-2xl border border-border bg-card p-5 space-y-5">
+                {/* Left Side: Filter Sidebar — hidden on mobile, visible on desktop */}
+                <div className="hidden lg:col-span-4 lg:flex rounded-xl border border-border bg-card p-4 space-y-4 flex-col">
                     <div className="flex items-center gap-2 border-b border-border pb-3">
                         <SlidersHorizontal className="w-4 h-4 text-primary" />
                         <h2 className="text-sm font-bold">Filter Kandidat</h2>
@@ -401,9 +451,9 @@ export default function CandidateSearchPage() {
                         </div>
                     )}
 
-                    {/* Candidates List */}
+                    {/* Candidates List — Workbench */}
                     {data && data.candidates.length > 0 ? (
-                        <div className="space-y-4">
+                        <div className="divide-y divide-border border-y border-border">
                             {data.candidates.map((candidate) => {
                                 const commits = candidate.github_signals?.commits ?? 0;
                                 const stars = candidate.github_signals?.stars ?? 0;
@@ -413,7 +463,7 @@ export default function CandidateSearchPage() {
                                 return (
                                     <div
                                         key={candidate.id}
-                                        className={`relative rounded-2xl border bg-card p-5 space-y-4 shadow-sm transition-all duration-300 ${isBlurred ? "border-amber-500/30 overflow-hidden" : "border-border hover:border-primary/45"}`}
+                                        className={`relative bg-card px-4 py-4 hover:bg-muted/20 ${isBlurred ? "overflow-hidden" : ""}`}
                                     >
                                         {isBlurred && (
                                             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-card/70 backdrop-blur-sm rounded-2xl p-5 text-center">
@@ -426,21 +476,21 @@ export default function CandidateSearchPage() {
                                             </div>
                                         )}
                                         <div className={isBlurred ? "blur-sm pointer-events-none select-none" : ""}>
-                                        {/* Card Top Row: Avatar, Name, Direct Invite */}
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
+                                        {/* Card Top Row — Workbench fix HP */}
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                                                <div className="size-10 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
                                                     {candidate.fullName?.substring(0, 2).toUpperCase() || "CN"}
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-bold text-sm text-foreground">
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="truncate font-bold text-sm text-foreground">
                                                         {candidate.fullName || "Kandidat Tanpa Nama"}
                                                     </h3>
-                                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                                                    <div className="flex min-w-0 flex-wrap items-center gap-1 truncate text-[10px] text-muted-foreground mt-0.5">
                                                         {candidate.address && (
-                                                            <span className="flex items-center gap-0.5">
-                                                                <MapPin className="w-3 h-3" />
-                                                                {candidate.address}
+                                                            <span className="inline-flex min-w-0 items-center gap-0.5 truncate">
+                                                                <MapPin className="size-3 shrink-0" />
+                                                                <span className="truncate">{candidate.address}</span>
                                                             </span>
                                                         )}
                                                         {candidate.github && (
@@ -450,10 +500,10 @@ export default function CandidateSearchPage() {
                                                                     href={`https://github.com/${candidate.github}`}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
-                                                                    className="flex items-center gap-0.5 text-primary hover:underline"
+                                                                    className="inline-flex items-center gap-0.5 truncate text-primary hover:underline"
                                                                 >
-                                                                    <Github className="w-3 h-3 text-foreground" />
-                                                                    @{candidate.github}
+                                                                    <Github className="size-3 shrink-0 text-foreground" />
+                                                                    <span className="truncate">@{candidate.github}</span>
                                                                 </a>
                                                             </>
                                                         )}
@@ -461,13 +511,13 @@ export default function CandidateSearchPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-1.5">
+                                            <div className="flex gap-1.5 sm:shrink-0">
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => chatMutation.mutate(candidate.user_id)}
                                                     disabled={chatMutation.isPending}
-                                                    className="h-8 text-xs font-bold gap-1 rounded-xl"
+                                                    className="h-8 flex-1 text-xs font-bold gap-1 rounded-full sm:flex-none"
                                                 >
                                                     <MessageCircle className="w-3.5 h-3.5" />
                                                     Chat
@@ -478,10 +528,10 @@ export default function CandidateSearchPage() {
                                                         setInviteCandidate(candidate);
                                                         resetInviteForm();
                                                     }}
-                                                    className="h-8 text-xs font-bold gap-1 rounded-xl bg-primary hover:bg-primary/95 text-white"
+                                                    className="h-8 flex-1 text-xs font-bold gap-1 rounded-full bg-primary hover:bg-primary/95 text-white sm:flex-none"
                                                 >
                                                     <UserCheck className="w-3.5 h-3.5" />
-                                                    Direct Invite
+                                                    Invite
                                                 </Button>
                                             </div>
                                         </div>
@@ -505,17 +555,17 @@ export default function CandidateSearchPage() {
                                             </div>
                                         )}
 
-                                        {/* Contacts & GitHub Signals Row */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[10px] bg-muted/20 border border-border/20 rounded-xl p-3">
+                                        {/* Contacts & GitHub Signals Row — flat */}
+                                        <div className="grid grid-cols-1 gap-3 border-t border-border pt-3 text-[10px] sm:grid-cols-2">
                                             {/* Details & Contacts */}
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-1.5 text-foreground">
-                                                    <Mail className="w-3.5 h-3.5 text-muted-foreground" />
-                                                    <span className="font-medium select-all">{candidate.email || "-"}</span>
+                                            <div className="space-y-1 min-w-0">
+                                                <div className="flex min-w-0 items-center gap-1.5 text-foreground">
+                                                    <Mail className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                                                    <span className="min-w-0 truncate font-medium select-all break-all">{candidate.email || "-"}</span>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-foreground">
-                                                    <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                                                    <span className="font-medium select-all">{candidate.phone || "-"}</span>
+                                                <div className="flex min-w-0 items-center gap-1.5 text-foreground">
+                                                    <Phone className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                                                    <span className="min-w-0 truncate font-medium select-all">{candidate.phone || "-"}</span>
                                                 </div>
                                             </div>
 
