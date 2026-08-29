@@ -132,7 +132,8 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
                         </div>
                         <h4 className="mt-4 text-sm font-semibold">Pilih percakapan</h4>
                         <p className="mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
-                            Pilih chat di kiri untuk mulai ngobrol. Tukaran kontak manual di chat. Free 5/minggu, Premium 100/minggu. Enter untuk kirim, Shift+Enter untuk baris baru.
+                            Pilih chat di kiri untuk mulai ngobrol. Tukaran kontak manual di chat.
+                            {quota && quota.limit !== null ? " Free 5/minggu, Premium 100/minggu." : ""} Enter untuk kirim, Shift+Enter untuk baris baru.
                         </p>
                     </div>
                 ) : (

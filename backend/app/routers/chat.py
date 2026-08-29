@@ -107,23 +107,15 @@ def start_conversation(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    # Tentukan recruiter & candidate
-    if user.role == "recruiter":
-        recruiter_id = user.id
-        candidate_id = body.candidate_id
-        # Validasi candidate ada
-        cand = db.query(User).filter(User.id == candidate_id).first()
-        if not cand:
-            raise HTTPException(404, "Kandidat tidak ditemukan.")
-    elif user.role == "candidate":
-        # Candidate memulai chat ke recruiter (misal balas)
-        candidate_id = user.id
-        recruiter_id = body.candidate_id  # di sini candidate_id = recruiter_id
-        rec = db.query(User).filter(User.id == recruiter_id, User.role == "recruiter").first()
-        if not rec:
-            raise HTTPException(404, "Recruiter tidak ditemukan.")
-    else:
-        raise HTTPException(403, "Role tidak valid.")
+    # Hanya recruiter (perusahaan) yang boleh memulai chat
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat memulai chat.")
+    recruiter_id = user.id
+    candidate_id = body.candidate_id
+    # Validasi candidate ada
+    cand = db.query(User).filter(User.id == candidate_id).first()
+    if not cand:
+        raise HTTPException(404, "Kandidat tidak ditemukan.")
 
     # Cek existing conversation
     existing = db.query(Conversation).filter(

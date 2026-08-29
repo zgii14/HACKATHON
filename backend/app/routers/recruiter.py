@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.models import CandidateProfile, Job, JobApplication, User
+from app.models import CandidateProfile, Job, JobApplication, RecruiterProfile, User
 from app.schemas import ApplicationStatus
 from app.services.cv_pdf import render_cv_pdf
 from app.services.gemini_service import _call_gemini_with_retry
@@ -123,6 +123,12 @@ def create_job(
     """Membuat lowongan baru dengan menetapkan recruiter_id ke user login."""
     if user.role != "recruiter":
         raise HTTPException(403, "Hanya recruiter yang diperbolehkan membuat lowongan.")
+    # Glints-like: Free 2 total, Premium 10 total
+    is_premium = bool(getattr(user, "is_premium", False))
+    limit = 10 if is_premium else 2
+    count = db.query(Job).filter(Job.recruiter_id == str(user.id)).count()
+    if count >= limit:
+        raise HTTPException(429, f"Limit lowongan tercapai ({count}/{limit}). Upgrade ke Premium untuk 10 lowongan total.")
 
     new_job = Job(
         id=uuid.uuid4(),
@@ -315,6 +321,24 @@ def ai_candidate_screening(
     """Menjalankan AI screening otomatis dengan Gemini untuk pelamar."""
     if user.role != "recruiter":
         raise HTTPException(403, "Hanya recruiter yang diperbolehkan mengakses AI screening.")
+    # Glints-like: Free 5/minggu, Premium unlimited
+    is_premium = bool(getattr(user, "is_premium", False))
+    if not is_premium:
+        from datetime import timedelta
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        # hitung screening minggu ini milik recruiter ini (join Job)
+        cnt = (
+            db.query(JobApplication)
+            .join(Job, JobApplication.job_id == Job.id)
+            .filter(
+                Job.recruiter_id == str(user.id),
+                JobApplication.ai_screening.isnot(None),
+                JobApplication.updated_at >= week_ago,
+            )
+            .count()
+        )
+        if cnt >= 5:
+            raise HTTPException(429, f"Kuota screening mingguan habis ({cnt}/5). Upgrade ke Premium untuk unlimited.")
 
     app = db.query(JobApplication).filter(JobApplication.id == application_id).first()
     if not app:
@@ -538,4 +562,60 @@ def invite_candidate(
     db.commit()
     db.refresh(app)
     return {"status": "success", "application_id": app.id}
+
+
+@router.get("/billing/status")
+def billing_status(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat melihat tagihan.")
+    is_premium = bool(getattr(user, "is_premium", False))
+    # lowongan total
+    total_jobs = db.query(Job).filter(Job.recruiter_id == str(user.id)).count()
+    limit_jobs = 10 if is_premium else 2
+    # screening minggu ini
+    from datetime import timedelta
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    screening_used = (
+        db.query(JobApplication)
+        .join(Job, JobApplication.job_id == Job.id)
+        .filter(Job.recruiter_id == str(user.id), JobApplication.ai_screening.isnot(None), JobApplication.updated_at >= week_ago)
+        .count()
+    )
+    screening_limit = None if is_premium else 5
+    screening_remaining = None if is_premium else max(0, 5 - screening_used)
+    # chat quota reuse logic
+    from app.routers.chat import _is_premium as chat_is_premium
+    chat_limit = 100 if is_premium else 5
+    chat_used = db.query(JobApplication).join(Job, JobApplication.job_id == Job.id).filter(Job.recruiter_id == str(user.id)).count()  # dummy, real chat used via conversations
+    # actual chat used from conversations
+    from app.models import Conversation
+    from sqlalchemy import func
+    chat_used = db.query(func.count(Conversation.id)).filter(Conversation.recruiter_id == user.id, Conversation.created_at >= week_ago).scalar() or 0
+    chat_remaining = max(0, chat_limit - chat_used)
+    return {
+        "is_premium": is_premium,
+        "jobs": {"used": total_jobs, "limit": limit_jobs, "remaining": max(0, limit_jobs - total_jobs)},
+        "screening": {"used": screening_used, "limit": screening_limit, "remaining": screening_remaining},
+        "chat": {"used": chat_used, "limit": chat_limit, "remaining": chat_remaining},
+    }
+
+
+@router.post("/billing/mock-toggle")
+def billing_mock_toggle(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat mengubah paket.")
+    new_val = not bool(getattr(user, "is_premium", False))
+    user.is_premium = new_val
+    # sinkron ke recruiter_profiles
+    rprof = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+    if rprof:
+        rprof.is_premium = new_val
+    db.commit()
+    return {"is_premium": new_val, "message": "Premium aktif" if new_val else "Kembali ke Gratis"}
 

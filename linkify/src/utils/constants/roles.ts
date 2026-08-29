@@ -17,7 +17,7 @@ export const SHARED_ROUTE_PREFIXES = ["/dashboard/account", "/dashboard/admin", 
 /** Halaman awal tiap role: tujuan setelah login dan saat salah masuk area. */
 export const ROLE_HOME: Record<AppRole, string> = {
     candidate: "/dashboard",
-    recruiter: "/dashboard/recruiter/jobs",
+    recruiter: "/dashboard/recruiter",
 };
 
 function matches(pathname: string, prefix: string): boolean {

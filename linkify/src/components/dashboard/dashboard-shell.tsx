@@ -5,7 +5,7 @@ import { AppRole, redirectForRole } from "@/utils/constants/roles";
 import { useApi } from "@/hooks/use-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search, ShieldCheck, MessageCircle } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search, ShieldCheck, MessageCircle, CreditCard, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -64,6 +64,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     const RECRUITER_LINKS = [
         {
+            title: "Dashboard",
+            href: "/dashboard/recruiter",
+            icon: LayoutDashboard,
+        },
+        {
             title: "Lowongan Saya",
             href: "/dashboard/recruiter/jobs",
             icon: Briefcase,
@@ -82,6 +87,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
             title: "Chat",
             href: "/dashboard/chat",
             icon: MessageCircle,
+        },
+        {
+            title: "Tagihan",
+            href: "/dashboard/recruiter/billing",
+            icon: CreditCard,
         },
     ];
 
