@@ -2,17 +2,24 @@
 
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Briefcase, Save, Sparkles } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Briefcase, Save, Sparkles, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast, Bounce } from "react-toastify";
 
 export default function NewJobPage() {
-    const { withAuth } = useApi();
+    const { withAuth, authReady } = useApi();
     const router = useRouter();
     const qc = useQueryClient();
+
+    const { data: billing } = useQuery<{ jobs: { used: number; limit: number; remaining: number }; is_premium: boolean }>({
+        queryKey: ["billing-status"],
+        queryFn: () => withAuth("/recruiter/billing/status"),
+        enabled: authReady,
+    });
+    const isLimitReached = billing ? billing.jobs.remaining <= 0 : false;
 
     const [title, setTitle] = useState("");
     const [company, setCompany] = useState("");
@@ -26,20 +33,34 @@ export default function NewJobPage() {
         mutationFn: (payload: any) =>
             withAuth("/recruiter/jobs", {
                 method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             }),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["my-jobs"] });
-            toast.success("Lowongan pekerjaan berhasil diterbitkan!");
+            qc.invalidateQueries({ queryKey: ["billing-status"] });
+            toast.success("Lowongan berhasil diterbitkan!", { transition: Bounce });
             router.push("/dashboard/recruiter/jobs");
         },
         onError: (err: any) => {
-            toast.error(err.message || "Gagal membuat lowongan.");
+            const msg = err?.message || "";
+            if (msg.includes("Limit lowongan") || err?.status === 429) {
+                toast.error("Slot lowongan penuh (Free 2 / Premium 10). Hapus lowongan lama atau upgrade di Tagihan.", {
+                    transition: Bounce,
+                    autoClose: 5000,
+                });
+                return;
+            }
+            toast.error(msg || "Gagal membuat lowongan.");
         },
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (isLimitReached) {
+            toast.error("Slot penuh — upgrade di Tagihan atau hapus lowongan.", { transition: Bounce });
+            return;
+        }
         if (!title || !company || !description) {
             toast.error("Judul, Perusahaan, dan Deskripsi wajib diisi!");
             return;
@@ -83,6 +104,21 @@ export default function NewJobPage() {
                     </p>
                 </div>
             </div>
+
+            {isLimitReached && (
+                <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+                    <div className="flex-1">
+                        <p className="text-sm font-semibold text-amber-700">Slot lowongan penuh</p>
+                        <p className="mt-1 text-xs leading-relaxed text-amber-700/80">
+                            Kamu sudah memakai {billing?.jobs.used}/{billing?.jobs.limit} lowongan ({billing?.is_premium ? "Premium 10" : "Free 2"}). Hapus lowongan lama atau upgrade paket untuk buat baru.
+                        </p>
+                        <Link href="/dashboard/recruiter/billing" className="mt-2 inline-flex rounded-full bg-amber-600 px-3 py-1 text-xs font-bold text-white hover:bg-amber-700">
+                            Lihat Tagihan
+                        </Link>
+                    </div>
+                </div>
+            )}
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -179,11 +215,11 @@ export default function NewJobPage() {
                     </Link>
                     <Button
                         type="submit"
-                        disabled={createMutation.isPending}
-                        className="h-9 text-xs rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-5 flex items-center gap-1.5 shadow-md shadow-primary/10"
+                        disabled={createMutation.isPending || isLimitReached}
+                        className="h-9 text-xs rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-5 flex items-center gap-1.5 shadow-md shadow-primary/10 disabled:opacity-40"
                     >
                         <Save className="w-4 h-4" />
-                        {createMutation.isPending ? "Menerbitkan..." : "Terbitkan Lowongan"}
+                        {isLimitReached ? "Slot penuh" : createMutation.isPending ? "Menerbitkan..." : "Terbitkan Lowongan"}
                     </Button>
                 </div>
             </form>

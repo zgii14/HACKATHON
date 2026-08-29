@@ -5,7 +5,7 @@ import { AppRole, redirectForRole } from "@/utils/constants/roles";
 import { useApi } from "@/hooks/use-api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
-import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search, ShieldCheck, MessageCircle, CreditCard, LayoutDashboard } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search, ShieldCheck, MessageCircle, CreditCard, LayoutDashboard, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -97,9 +97,19 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
     const ADMIN_LINKS = [
         {
+            title: "Dashboard Admin",
+            href: "/dashboard/admin",
+            icon: LayoutDashboard,
+        },
+        {
             title: "Permohonan Recruiter",
             href: "/dashboard/admin/recruiter-requests",
             icon: ShieldCheck,
+        },
+        {
+            title: "Daftar Recruiter",
+            href: "/dashboard/admin/recruiters",
+            icon: Users,
         },
     ];
 
