@@ -71,49 +71,40 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8 }}
                         transition={{ duration: reduced ? 0.15 : 0.28, ease: [0.16, 1, 0.3, 1] }}
-                        className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl"
+                        className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl"
                     >
                 <button onClick={onClose} className="absolute right-3 top-3 rounded p-1.5 hover:bg-muted">
                     <X className="size-4" />
                 </button>
-                <div className="flex items-center gap-2">
-                    <div className="rounded-md bg-[#0a0a0a] px-2 py-1 font-mono text-[10px] font-bold tracking-widest text-white">QRIS</div>
-                    <span className="rounded-full bg-violet-600/10 px-2 py-0.5 font-mono text-[10px] font-bold text-violet-600">SNI 2019</span>
-                </div>
-                <h3 className="mt-3 text-sm font-bold">Bayar via QRIS</h3>
+                <h3 className="text-sm font-bold">Bayar via QRIS</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
                     {plan === "talent" ? "Talent Search · Rp 499.000 / bulan" : "Managed · Rp 2.000.000 / rekrut"}
                 </p>
 
-                <div className="mt-5 grid gap-5 md:grid-cols-[200px_1fr]">
+                <div className="mt-4 grid gap-4 md:grid-cols-[160px_1fr]">
                     <div className="flex flex-col items-center">
-                        <div className="rounded-xl border border-border bg-white p-3">
-                            <QRCodeSVG value={qrString} size={170} level="M" />
+                        <div className="rounded-lg border border-border bg-white p-2.5">
+                            <QRCodeSVG value={qrString} size={140} level="M" />
                         </div>
                         <p className={`mt-2 font-mono text-xs font-bold ${expired ? "text-rose-600" : "text-violet-600"}`}>
                             {expired ? "QR Kedaluwarsa" : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
                         </p>
-                        <p className="font-mono text-[11px] text-muted-foreground">{expired ? "Buat ulang QR" : "Berlaku 5 menit"}</p>
+                        <p className="font-mono text-[10px] text-muted-foreground">{expired ? "Buat ulang" : "Berlaku 5 menit"}</p>
                     </div>
-                    <div className="space-y-3">
-                        <div className="rounded-md border border-border/50 bg-card px-3 py-2.5">
-                            <div className="flex items-center justify-between gap-3">
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Order ID</span>
-                                <span className="font-mono text-[10px] font-medium">{orderId}</span>
-                            </div>
-                            <div className="mt-2 flex items-center justify-between gap-3 border-t border-border/50 pt-2">
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Nominal</span>
-                                <span className="text-sm font-bold">Rp {amount.toLocaleString("id-ID")}</span>
-                            </div>
+                    <div className="space-y-2.5">
+                        <div className="flex items-center justify-between rounded-md border border-border/50 bg-muted/20 px-3 py-2">
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Order ID</span>
+                            <span className="font-mono text-xs font-medium">{orderId}</span>
                         </div>
-                        <div className="flex gap-2">
-                            <code className="flex-1 truncate rounded border border-border bg-background px-2 py-1.5 font-mono text-[10px]">{qrString.slice(0, 28)}...</code>
-                            <button onClick={copy} className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted">
-                                {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
-                                {copied ? "Disalin" : "Salin"}
-                            </button>
+                        <div className="flex items-center justify-between">
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Nominal</span>
+                            <span className="text-sm font-bold">Rp {amount.toLocaleString("id-ID")}</span>
                         </div>
-                        <p className="text-[11px] leading-relaxed text-muted-foreground">Scan kode QR di atas menggunakan GoPay, OVO, DANA, ShopeePay, atau mobile banking yang mendukung QRIS. Pembayaran dikonfirmasi otomatis.</p>
+                        <button onClick={copy} className="flex w-full items-center justify-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-muted">
+                            {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
+                            {copied ? "Order ID disalin" : "Salin Order ID"}
+                        </button>
+                        <p className="text-[11px] leading-relaxed text-muted-foreground">Scan dengan GoPay / OVO / DANA / mobile banking. Konfirmasi otomatis.</p>
                     </div>
                 </div>
 
