@@ -479,7 +479,7 @@ export default function CandidateSearchPage() {
                                         <div className={isBlurred ? "blur-sm pointer-events-none select-none" : ""}>
                                         {/* Card Top Row — Workbench fix HP */}
                                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                                            <div className="flex min-w-0 flex-1 items-center gap-4">
                                                 <div className="size-10 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-sm">
                                                     {candidate.fullName?.substring(0, 2).toUpperCase() || "CN"}
                                                 </div>
