@@ -94,6 +94,9 @@ class Job(Base):
     recruiter_id: Mapped[str | None] = mapped_column(
         String(36), nullable=True  # VARCHAR(36) di DB — disimpan sebagai string UUID
     )
+    is_closed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, server_default="now()")
 
 
 

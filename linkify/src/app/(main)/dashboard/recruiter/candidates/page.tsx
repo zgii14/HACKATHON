@@ -20,8 +20,10 @@ import {
     UserCheck,
     X,
     Code,
-    MessageCircle
+    MessageCircle,
+    Lock
 } from "lucide-react";
+import Link from "next/link";
 import { useState, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -40,6 +42,7 @@ type Candidate = {
     verified_skill_count?: number;
     cv_data: any;
     interests: string[];
+    is_blurred?: boolean;
     github_signals: {
         commits?: number;
         stars?: number;
@@ -55,6 +58,7 @@ type SearchResponse = {
     limit: number;
     offset: number;
     candidates: Candidate[];
+    is_premium?: boolean;
 };
 
 type RecruiterJob = {
@@ -404,12 +408,24 @@ export default function CandidateSearchPage() {
                                 const commits = candidate.github_signals?.commits ?? 0;
                                 const stars = candidate.github_signals?.stars ?? 0;
                                 const repos = candidate.github_signals?.repos ?? 0;
+                                const isBlurred = !!candidate.is_blurred;
 
                                 return (
                                     <div
                                         key={candidate.id}
-                                        className="rounded-2xl border border-border bg-card p-5 space-y-4 hover:border-primary/45 transition-all duration-300 shadow-sm"
+                                        className={`relative rounded-2xl border bg-card p-5 space-y-4 shadow-sm transition-all duration-300 ${isBlurred ? "border-amber-500/30 overflow-hidden" : "border-border hover:border-primary/45"}`}
                                     >
+                                        {isBlurred && (
+                                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-card/70 backdrop-blur-sm rounded-2xl p-5 text-center">
+                                                <div className="flex size-10 items-center justify-center rounded-full bg-amber-500/10 text-amber-600">
+                                                    <Lock className="size-5" />
+                                                </div>
+                                                <p className="text-sm font-bold">Profil terkunci</p>
+                                                <p className="max-w-xs text-xs text-muted-foreground">Free hanya 5 profil/minggu. Upgrade ke Premium untuk lihat semua kandidat tanpa blur.</p>
+                                                <Link href="/dashboard/recruiter/billing" className="mt-1 inline-flex rounded-full bg-violet-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-violet-700">Lihat Tagihan</Link>
+                                            </div>
+                                        )}
+                                        <div className={isBlurred ? "blur-sm pointer-events-none select-none" : ""}>
                                         {/* Card Top Row: Avatar, Name, Direct Invite */}
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex items-center gap-3">
@@ -569,6 +585,7 @@ export default function CandidateSearchPage() {
                                                     Belum ada bukti commit yang cukup
                                                 </span>
                                             )}
+                                        </div>
                                         </div>
                                     </div>
                                 );

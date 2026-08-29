@@ -27,10 +27,10 @@ def list_jobs(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Job)
+    query = db.query(Job).filter(Job.is_closed == False)  # tutup tidak tampil untuk kandidat
     if remote is not None:
         query = query.filter(Job.is_remote == remote)
-    jobs = query.order_by(Job.title).all()
+    jobs = query.order_by(Job.created_at.desc()).all()
     skills = _profile_skills(db, user) if include_match else None
 
     out: list[JobOut] = []
@@ -57,6 +57,8 @@ def list_jobs(
                 min_education=job.min_education,
                 min_experience=job.min_experience,
                 work_type=job.work_type,
+                is_closed=bool(job.is_closed),
+                created_at=job.created_at,
                 is_external=job.recruiter_id is None,
             )
         )
@@ -72,7 +74,7 @@ def recommended_jobs(
     if skills is None:
         return []
 
-    jobs = db.query(Job).all()
+    jobs = db.query(Job).filter(Job.is_closed == False).all()
     scored: list[tuple[Job, float]] = []
     for job in jobs:
         s = jaccard_score(skills, job.required_skills or [])
@@ -94,6 +96,8 @@ def recommended_jobs(
             min_education=j.min_education,
             min_experience=j.min_experience,
             work_type=j.work_type,
+            is_closed=bool(j.is_closed),
+            created_at=j.created_at,
             is_external=j.recruiter_id is None,
         )
         for j, s in scored[:10]
@@ -131,5 +135,7 @@ def job_detail(
         min_education=job.min_education,
         min_experience=job.min_experience,
         work_type=job.work_type,
+        is_closed=bool(job.is_closed),
+        created_at=job.created_at,
         is_external=job.recruiter_id is None,
     )

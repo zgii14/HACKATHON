@@ -238,6 +238,13 @@ async def lifespan(app: FastAPI):
         conn.execute(text("ALTER TABLE messages ADD COLUMN IF NOT EXISTS reply_to_id UUID NULL REFERENCES messages(id) ON DELETE SET NULL"))
         conn.commit()
 
+    # DDL Migration: jobs is_closed + timestamps Fase 3
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_closed BOOLEAN NOT NULL DEFAULT FALSE"))
+        conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP"))
+        conn.execute(text("ALTER TABLE jobs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP"))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)

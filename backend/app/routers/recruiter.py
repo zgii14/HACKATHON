@@ -154,6 +154,109 @@ def create_job(
         "company": new_job.company
     }}
 
+
+@router.put("/jobs/{job_id}")
+def update_job(
+    job_id: uuid.UUID,
+    body: JobCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat mengedit lowongan.")
+    job = db.query(Job).filter(Job.id == job_id, Job.recruiter_id == str(user.id)).first()
+    if not job:
+        raise HTTPException(404, "Lowongan tidak ditemukan.")
+    # Anti-abuse: hanya bisa edit dalam 24 jam setelah dibuat
+    if job.created_at:
+        from datetime import timezone
+        created = job.created_at
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        if (datetime.now(timezone.utc) - created).total_seconds() > 24 * 3600:
+            raise HTTPException(403, "Edit lowongan hanya bisa dalam 24 jam setelah dipost. Buat lowongan baru untuk perubahan besar.")
+    if job.is_closed:
+        raise HTTPException(400, "Lowongan sudah ditutup, tidak bisa diedit. Buka kembali dulu.")
+    job.title = body.title
+    job.company = body.company
+    job.description = body.description
+    job.required_skills = body.required_skills
+    job.location = body.location
+    job.is_remote = body.is_remote
+    job.apply_url = body.apply_url
+    job.salary = body.salary
+    job.min_education = body.min_education
+    job.min_experience = body.min_experience
+    job.work_type = body.work_type
+    job.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(job)
+    return {"status": "success", "job_id": str(job.id)}
+
+
+@router.delete("/jobs/{job_id}")
+def delete_job(
+    job_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat menghapus lowongan.")
+    job = db.query(Job).filter(Job.id == job_id, Job.recruiter_id == str(user.id)).first()
+    if not job:
+        raise HTTPException(404, "Lowongan tidak ditemukan.")
+    # Jika sudah ada pelamar, jangan hard delete — tutup saja (audit)
+    cnt = db.query(JobApplication).filter(JobApplication.job_id == job.id).count()
+    if cnt > 0:
+        raise HTTPException(400, f"Tidak bisa hapus: sudah ada {cnt} pelamar. Gunakan Tutup lowongan.")
+    db.delete(job)
+    db.commit()
+    return {"status": "success", "deleted": str(job_id)}
+
+
+@router.patch("/jobs/{job_id}/close")
+def close_job(
+    job_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat menutup lowongan.")
+    job = db.query(Job).filter(Job.id == job_id, Job.recruiter_id == str(user.id)).first()
+    if not job:
+        raise HTTPException(404, "Lowongan tidak ditemukan.")
+    if job.is_closed:
+        raise HTTPException(400, "Lowongan sudah tertutup.")
+    job.is_closed = True
+    job.updated_at = datetime.utcnow()
+    db.commit()
+    return {"status": "success", "is_closed": True}
+
+
+@router.patch("/jobs/{job_id}/open")
+def open_job(
+    job_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat membuka lowongan.")
+    job = db.query(Job).filter(Job.id == job_id, Job.recruiter_id == str(user.id)).first()
+    if not job:
+        raise HTTPException(404, "Lowongan tidak ditemukan.")
+    if not job.is_closed:
+        raise HTTPException(400, "Lowongan sudah terbuka.")
+    # cek limit saat buka kembali (hitung total tidak termasuk yang akan dibuka? sudah termasuk)
+    is_premium = bool(getattr(user, "is_premium", False))
+    limit = 10 if is_premium else 2
+    total = db.query(Job).filter(Job.recruiter_id == str(user.id), Job.is_closed == False).count()
+    if total >= limit:
+        raise HTTPException(429, f"Limit lowongan aktif tercapai ({total}/{limit}). Tutup lowongan lain dulu.")
+    job.is_closed = False
+    job.updated_at = datetime.utcnow()
+    db.commit()
+    return {"status": "success", "is_closed": False}
+
 @router.get("/jobs/my-jobs")
 def get_my_jobs(
     user: User = Depends(get_current_user),
@@ -163,8 +266,8 @@ def get_my_jobs(
     if user.role != "recruiter":
         raise HTTPException(403, "Hanya recruiter yang dapat mengakses endpoint ini.")
 
-    jobs = db.query(Job).filter(Job.recruiter_id == str(user.id)).all()
-    
+    jobs = db.query(Job).filter(Job.recruiter_id == str(user.id)).order_by(Job.created_at.desc()).all()
+
     # Ambil jumlah pelamar (applications) untuk masing-masing job
     result = []
     for job in jobs:
@@ -178,10 +281,12 @@ def get_my_jobs(
             "required_skills": job.required_skills,
             "salary": job.salary,
             "work_type": job.work_type,
-            "applicant_count": app_count
+            "is_closed": bool(job.is_closed),
+            "created_at": job.created_at,
+            "applicant_count": app_count,
         })
-    # Urutkan: lowongan dengan pelamar terbanyak muncul paling atas
-    result.sort(key=lambda r: r["applicant_count"], reverse=True)
+    # Urutkan: lowongan terbaru dulu, tapi yang tutup di bawah
+    result.sort(key=lambda r: (r["is_closed"], -r["applicant_count"]))
     return result
 
 @router.get("/jobs/my-jobs/{job_id}/applications")
@@ -501,12 +606,25 @@ def search_candidates(
             "interests": profile.interests or []
         })
 
+    # Glints-like blur: Free hanya 5 profil/minggu full, sisanya blur
+    is_premium = bool(getattr(user, "is_premium", False))
     paginated = filtered[offset : offset + limit]
+    for idx, c in enumerate(paginated):
+        global_idx = offset + idx
+        is_blurred = (not is_premium) and global_idx >= 5
+        c["is_blurred"] = is_blurred
+        if is_blurred:
+            # sembunyikan data sensitif untuk blur — frontend akan overlay
+            c["email"] = None
+            c["phone"] = None
+            # simpan nama samaran
+            c["fullName"] = (c["fullName"] or "Kandidat")[:1] + "***"
     return {
         "total": len(filtered),
         "limit": limit,
         "offset": offset,
-        "candidates": paginated
+        "candidates": paginated,
+        "is_premium": is_premium,
     }
 
 @router.post("/candidates/{candidate_user_id}/invite")
