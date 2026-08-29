@@ -476,7 +476,7 @@ export default function CandidateSearchPage() {
                                                 <Link href="/dashboard/recruiter/billing" className="mt-1 inline-flex rounded-full bg-violet-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-violet-700">Lihat Tagihan</Link>
                                             </div>
                                         )}
-                                        <div className={isBlurred ? "blur-sm pointer-events-none select-none" : ""}>
+                                        <div className={isBlurred ? "blur-sm pointer-events-none select-none space-y-4" : "space-y-4"}>
                                         {/* Card Top Row — Workbench fix HP */}
                                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                             <div className="flex min-w-0 flex-1 items-center gap-4">
@@ -537,9 +537,9 @@ export default function CandidateSearchPage() {
                                             </div>
                                         </div>
 
-                                        {/* Bidang minat kandidat */}
+                                        {/* Bidang minat kandidat — tambah jarak di HP */}
                                         {candidate.interests?.length > 0 && (
-                                            <div className="flex flex-wrap items-center gap-1.5">
+                                            <div className="flex flex-wrap items-center gap-1.5 mt-4">
                                                 <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Minat:</span>
                                                 {candidate.interests.map((key) => {
                                                     const it = INTEREST_LABELS[key];
