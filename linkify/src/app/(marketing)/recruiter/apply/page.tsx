@@ -4,7 +4,8 @@ import MaxWidthWrapper from "@/components/global/max-width-wrapper";
 import { useApi } from "@/hooks/use-api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 type ReqStatus = {
@@ -17,6 +18,7 @@ type ReqStatus = {
 export default function RecruiterApplyPage() {
     const { withAuth, authReady, isSignedIn, isLoaded } = useApi();
     const qc = useQueryClient();
+    const router = useRouter();
 
     const [form, setForm] = useState({
         company_name: "",
@@ -76,18 +78,22 @@ export default function RecruiterApplyPage() {
         );
     }
 
+    useEffect(() => {
+        if (isLoaded && !isSignedIn) {
+            router.replace("/auth/sign-up?redirect_url=/recruiter/apply");
+        }
+    }, [isLoaded, isSignedIn, router]);
+
     if (!isSignedIn) {
         return (
             <MaxWidthWrapper className="py-16">
                 <div className="mx-auto max-w-xl rounded-xl border border-border p-8 text-center">
                     <h1 className="text-2xl font-semibold">Daftar sebagai Recruiter</h1>
-                    <p className="mt-2 text-sm text-muted-foreground">Silakan login dulu untuk mengajukan pendaftaran recruiter.</p>
-                    <Link href="/auth/sign-in?redirect_url=/recruiter/apply" className="mt-6 inline-flex rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:brightness-110">
-                        Masuk / Daftar
+                    <p className="mt-2 text-sm text-muted-foreground">Buat akun untuk mengajukan pendaftaran recruiter.</p>
+                    <Link href="/auth/sign-up?redirect_url=/recruiter/apply" className="mt-6 inline-flex rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:brightness-110">
+                        Daftar
                     </Link>
-                    <p className="mt-3 text-xs text-muted-foreground">
-                        Belum punya akun? <Link href="/auth/sign-up?redirect_url=/recruiter/apply" className="text-primary hover:underline">Daftar</Link>
-                    </p>
+                    <p className="mt-3 font-mono text-[11px] text-muted-foreground">Sudah ada akun? Hubungi admin jika kendala.</p>
                 </div>
             </MaxWidthWrapper>
         );
