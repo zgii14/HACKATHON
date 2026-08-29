@@ -96,11 +96,15 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
                         <p className="font-mono text-[11px] text-muted-foreground">{expired ? "Buat ulang QR" : "Berlaku 5 menit"}</p>
                     </div>
                     <div className="space-y-3">
-                        <div className="rounded-lg border border-border bg-muted/30 p-3">
-                            <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Order ID</p>
-                            <p className="mt-1 font-mono text-xs font-medium">{orderId}</p>
-                            <p className="mt-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Nominal</p>
-                            <p className="text-sm font-bold">Rp {amount.toLocaleString("id-ID")}</p>
+                        <div className="rounded-md border border-border/50 bg-card px-3 py-2.5">
+                            <div className="flex items-center justify-between gap-3">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Order ID</span>
+                                <span className="font-mono text-[10px] font-medium">{orderId}</span>
+                            </div>
+                            <div className="mt-2 flex items-center justify-between gap-3 border-t border-border/50 pt-2">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Nominal</span>
+                                <span className="text-sm font-bold">Rp {amount.toLocaleString("id-ID")}</span>
+                            </div>
                         </div>
                         <div className="flex gap-2">
                             <code className="flex-1 truncate rounded border border-border bg-background px-2 py-1.5 font-mono text-[10px]">{qrString.slice(0, 28)}...</code>
