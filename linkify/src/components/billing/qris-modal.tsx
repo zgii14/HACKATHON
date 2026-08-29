@@ -92,11 +92,11 @@ export function QrisModal({ open, onClose, onConfirm, amount, plan, isPending }:
                         <p className="font-mono text-[10px] text-muted-foreground">{expired ? "Buat ulang" : "Berlaku 5 menit"}</p>
                     </div>
                     <div className="space-y-2.5">
-                        <div className="flex items-center justify-between rounded-md border border-border/50 bg-muted/20 px-3 py-2">
+                        <div className="flex items-center justify-between rounded-md border border-border/50 bg-card px-3 py-2.5">
                             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Order ID</span>
                             <span className="font-mono text-xs font-medium">{orderId}</span>
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between rounded-md border border-border/50 bg-card px-3 py-2.5">
                             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Nominal</span>
                             <span className="text-sm font-bold">Rp {amount.toLocaleString("id-ID")}</span>
                         </div>
