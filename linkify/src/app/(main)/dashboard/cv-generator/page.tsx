@@ -1,91 +1,30 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { PageHeader, SecTitle } from "@/components/dashboard/ui";
+import { EmptyState, PageHeader, Reveal, SecTitle, Spotlight } from "@/components/dashboard/ui";
+import { CertsSection } from "@/components/cv-generator/CertsSection";
+import { ContactSection } from "@/components/cv-generator/ContactSection";
+import { EducationSection } from "@/components/cv-generator/EducationSection";
+import { OrgSection } from "@/components/cv-generator/OrgSection";
+import { SkillsSection } from "@/components/cv-generator/SkillsSection";
+import { TrainingSection } from "@/components/cv-generator/TrainingSection";
+import { WorkSection } from "@/components/cv-generator/WorkSection";
 import { useApi } from "@/hooks/use-api";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-    Plus,
-    Trash2,
-    Save,
-    CheckCircle2,
-    AlertCircle
-} from "lucide-react";
-import {
-    Document,
-    Packer,
-    Paragraph,
-    TextRun,
-    AlignmentType,
-    convertInchesToTwip,
-    Table,
-    TableRow,
-    TableCell,
-    WidthType,
-    BorderStyle
-} from "docx";
-import { saveAs } from "file-saver";
-import { useEffect, useState } from "react";
+import { useCvForm } from "@/hooks/useCvForm";
+import { generateWordCV } from "@/lib/cv/docx";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle2, Save } from "lucide-react";
 import { toast } from "react-toastify";
-
-// ── Types ──
-type EducationItem = {
-    institution: string;
-    location: string;
-    major: string;
-    degree: string;
-    period: string;
-    gpa: string;
-};
-
-type ExperienceItem = {
-    company: string;
-    role: string;
-    location: string;
-    period: string;
-    bullets: string[];
-};
-
-type OrgItem = {
-    organization: string;
-    role: string;
-    location: string;
-    period: string;
-    bullets: string[];
-};
-
-type TrainingItem = {
-    title: string;
-    provider: string;
-    location: string;
-    period: string;
-    bullets: string[];
-};
-
-type CVData = {
-    summary?: string;
-    education?: EducationItem[];
-    work_experience?: ExperienceItem[];
-    org_experience?: OrgItem[];
-    training?: TrainingItem[];
-    skills?: {
-        soft_skills?: string[];
-        hard_skills?: string[];
-        languages?: string[];
-    };
-    certifications?: string[];
-    email?: string;
-    linkedin?: string;
-};
 
 type Profile = {
     github_username: string | null;
     bio_full_name: string | null;
+    bio_birth_place: string | null;
+    bio_birth_date: string | null;
     bio_address: string | null;
     bio_phone: string | null;
     cv_skills: string[] | null;
     merged_skills: string[] | null;
-    cv_data: CVData | null;
+    cv_data: any | null;
     cv_filename: string | null;
     cv_uploaded_at: string | null;
     cv_preference: "form" | "original" | null;
@@ -94,854 +33,135 @@ type Profile = {
 export default function CVGeneratorPage() {
     const { withAuth, withAuthBlob, authReady } = useApi();
     const qc = useQueryClient();
-
-    // ── Form States ──
-    const [fullName, setFullName] = useState("");
-    const [phone, setPhone] = useState("");
-    const [email, setEmail] = useState("");
-    const [address, setAddress] = useState("");
-    const [linkedin, setLinkedin] = useState("");
-    const [github, setGithub] = useState("");
-    const [summary, setSummary] = useState("");
-
-    const [education, setEducation] = useState<EducationItem[]>([]);
-    const [workExperience, setWorkExperience] = useState<ExperienceItem[]>([]);
-    const [orgExperience, setOrgExperience] = useState<OrgItem[]>([]);
-    const [training, setTraining] = useState<TrainingItem[]>([]);
-
-    const [softSkills, setSoftSkills] = useState("");
-    const [hardSkills, setHardSkills] = useState("");
-    const [languages, setLanguages] = useState("");
-    const [certifications, setCertifications] = useState<string[]>([]);
-
-    // ── Fetch Profile ──
-    const { data: profile, isLoading } = useQuery({
+    const { data: profile, isLoading, isError, error, refetch } = useQuery({
         queryKey: ["profile"],
         queryFn: () => withAuth<Profile | null>("/me/profile"),
         enabled: authReady,
         staleTime: 5 * 60 * 1000,
     });
-
-    // Populate data when profile finishes loading
-    useEffect(() => {
-        if (!profile) return;
-        
-        // Basic Info
-        setFullName(profile.bio_full_name || "");
-        setPhone(profile.bio_phone || "");
-        setAddress(profile.bio_address || "");
-        setGithub(profile.github_username ? `https://github.com/${profile.github_username}` : "");
-        
-        // Fallback or read from clerk/database
-        if (profile.cv_data) {
-            const cd = profile.cv_data;
-            setSummary(cd.summary || "");
-            setEducation(cd.education || []);
-            setWorkExperience(cd.work_experience || []);
-            setOrgExperience(cd.org_experience || []);
-            setTraining(cd.training || []);
-            
-            // Skills
-            setSoftSkills(cd.skills?.soft_skills?.join(", ") || "");
-            setHardSkills(cd.skills?.hard_skills?.join(", ") || "");
-            setLanguages(cd.skills?.languages?.join(", ") || "");
-            
-            // Certificates
-            setCertifications(cd.certifications || []);
-
-            // Set email & linkedin from cd
-            setEmail(cd.email || "");
-            setLinkedin(cd.linkedin || "");
-        } else {
-            // Default blank states
-            setSummary("");
-            setEducation([]);
-            setWorkExperience([]);
-            setOrgExperience([]);
-            setTraining([]);
-            setSoftSkills("");
-            setHardSkills(profile.merged_skills?.join(", ") || "");
-            setLanguages("Bahasa Indonesia (Native), English (Intermediate)");
-            setCertifications([]);
-            setEmail("");
-            setLinkedin("");
-        }
-    }, [profile]);
-
-    // ── Save Mutation ──
+    const form = useCvForm(profile as any);
     const saveMutation = useMutation({
-        mutationFn: async (payload: CVData) => {
-            // 1. Save cv_data JSON
-            await withAuth("/me/profile/cv-data", {
-                method: "PUT",
-                body: JSON.stringify(payload),
-            });
-            // 2. Save basic bio data fields
-            await withAuth("/me/biodata", {
-                method: "PATCH",
-                body: JSON.stringify({
-                    bio_full_name: fullName,
-                    bio_phone: phone,
-                    bio_address: address,
-                }),
-            });
+        mutationFn: async () => {
+            await withAuth("/me/profile/cv-data", { method: "PUT", body: JSON.stringify(form.getPayload()) });
+            try {
+                await withAuth("/me/biodata", { method: "PATCH", body: JSON.stringify(form.getBiodataPayload()) });
+            } catch (err: any) {
+                throw new Error(err?.message ? `CV tersimpan tetapi biodata gagal: ${err.message} — silakan coba simpan ulang.` : "CV tersimpan tetapi biodata gagal disimpan — silakan coba lagi.");
+            }
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["profile"] });
+            qc.invalidateQueries({ queryKey: ["biodata"] });
+            qc.invalidateQueries({ queryKey: ["skill-gap"] });
             toast.success("Riwayat CV berhasil disimpan ke database!");
         },
-        onError: (err: any) => {
-            toast.error(err.message || "Gagal menyimpan data.");
-        },
+        onError: (err: any) => toast.error(err.message || "Gagal menyimpan data."),
     });
-
-    // ── Preferensi versi CV yang dikirim ke recruiter (form | original) ──
     const cvPref = profile?.cv_preference ?? "form";
     const prefMutation = useMutation({
-        mutationFn: (preference: "form" | "original") =>
-            withAuth("/me/cv-preference", { method: "PATCH", body: JSON.stringify({ preference }) }),
+        mutationFn: (preference: "form" | "original") => withAuth("/me/cv-preference", { method: "PATCH", body: JSON.stringify({ preference }) }),
         onSuccess: (_d, preference) => {
             qc.invalidateQueries({ queryKey: ["profile"] });
-            toast.success(
-                preference === "form"
-                    ? "Recruiter akan menerima CV versi form (ATS)."
-                    : "Recruiter akan menerima PDF asli yang kamu upload."
-            );
+            toast.success(preference === "form" ? "Recruiter akan menerima CV versi form (ATS)." : "Recruiter akan menerima PDF asli yang kamu upload.");
         },
         onError: (err: any) => toast.error(err.message || "Gagal mengubah preferensi."),
     });
-
     const previewSentCV = async () => {
+        if (!authReady) return toast.error("Auth belum siap — silakan tunggu sebentar.");
         try {
             const blob = await withAuthBlob("/me/cv/download");
-            window.open(URL.createObjectURL(blob), "_blank");
-        } catch {
-            toast.error("Gagal membuka preview CV.");
-        }
+            const url = URL.createObjectURL(blob);
+            const win = window.open(url, "_blank", "noopener");
+            if (!win) { URL.revokeObjectURL(url); return toast.error("Pop-up diblokir — izinkan pop-up untuk melihat preview."); }
+            setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        } catch (err: any) { toast.error(err?.message || "Gagal membuka preview CV."); }
     };
-
-    // ── Kelengkapan data diri (dipakai di CV & saat melamar) ──
-    const bioFields: [string, string][] = [
-        ["cv-fullname", fullName],
-        ["cv-phone", phone],
-        ["cv-email", email],
-        ["cv-address", address],
-    ];
-    const bioFilledCount = bioFields.filter(([, v]) => v.trim()).length;
-    const bioComplete = bioFilledCount === bioFields.length;
-
-    // Data diri di form berbeda dari yang tersimpan di DB → perlu klik "Simpan riwayat"
-    const bioDirty = !!profile && (
-        (fullName || "") !== (profile.bio_full_name || "") ||
-        (phone || "") !== (profile.bio_phone || "") ||
-        (address || "") !== (profile.bio_address || "")
-    );
-    // Highlight tombol simpan saat data diri sudah lengkap tapi belum disimpan
-    const highlightSave = bioComplete && bioDirty;
-
     const gotoBio = () => {
         document.getElementById("cv-contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
-        const firstEmpty = bioFields.find(([, v]) => !v.trim());
-        if (firstEmpty) {
-            setTimeout(() => document.getElementById(firstEmpty[0])?.focus(), 420);
-        }
+        const firstEmpty = form.bioFields.find(([, v]) => !v.trim());
+        if (firstEmpty) setTimeout(() => document.getElementById(firstEmpty[0])?.focus(), 420);
     };
-
-    const getPayload = (): CVData => {
-        return {
-            summary,
-            education,
-            work_experience: workExperience,
-            org_experience: orgExperience,
-            training,
-            skills: {
-                soft_skills: softSkills.split(",").map((s) => s.trim()).filter(Boolean),
-                hard_skills: hardSkills.split(",").map((s) => s.trim()).filter(Boolean),
-                languages: languages.split(",").map((s) => s.trim()).filter(Boolean),
-            },
-            certifications: certifications.filter((c) => c.trim()),
-            email,
-            linkedin,
-        };
-    };
-
-    const handleSave = () => {
-        saveMutation.mutate(getPayload());
-    };
-
-    // ── Array Operations Helpers ──
-    const addEducation = () => {
-        setEducation([
-            ...education,
-            { institution: "", location: "", major: "", degree: "", period: "", gpa: "" }
-        ]);
-    };
-
-    const removeEducation = (idx: number) => {
-        setEducation(education.filter((_, i) => i !== idx));
-    };
-
-    const addWork = () => {
-        setWorkExperience([
-            ...workExperience,
-            { company: "", role: "", location: "", period: "", bullets: [""] }
-        ]);
-    };
-
-    const removeWork = (idx: number) => {
-        setWorkExperience(workExperience.filter((_, i) => i !== idx));
-    };
-
-    const handleWorkBulletChange = (workIdx: number, bulletIdx: number, val: string) => {
-        const updated = [...workExperience];
-        updated[workIdx].bullets[bulletIdx] = val;
-        setWorkExperience(updated);
-    };
-
-    const addWorkBullet = (workIdx: number) => {
-        const updated = [...workExperience];
-        updated[workIdx].bullets.push("");
-        setWorkExperience(updated);
-    };
-
-    const removeWorkBullet = (workIdx: number, bulletIdx: number) => {
-        const updated = [...workExperience];
-        updated[workIdx].bullets = updated[workIdx].bullets.filter((_, i) => i !== bulletIdx);
-        setWorkExperience(updated);
-    };
-
-    const addOrg = () => {
-        setOrgExperience([
-            ...orgExperience,
-            { organization: "", role: "", location: "", period: "", bullets: [""] }
-        ]);
-    };
-
-    const removeOrg = (idx: number) => {
-        setOrgExperience(orgExperience.filter((_, i) => i !== idx));
-    };
-
-    const handleOrgBulletChange = (orgIdx: number, bulletIdx: number, val: string) => {
-        const updated = [...orgExperience];
-        updated[orgIdx].bullets[bulletIdx] = val;
-        setOrgExperience(updated);
-    };
-
-    const addOrgBullet = (orgIdx: number) => {
-        const updated = [...orgExperience];
-        updated[orgIdx].bullets.push("");
-        setOrgExperience(updated);
-    };
-
-    const removeOrgBullet = (orgIdx: number, bulletIdx: number) => {
-        const updated = [...orgExperience];
-        updated[orgIdx].bullets = updated[orgIdx].bullets.filter((_, i) => i !== bulletIdx);
-        setOrgExperience(updated);
-    };
-
-    const addTraining = () => {
-        setTraining([
-            ...training,
-            { title: "", provider: "", location: "", period: "", bullets: [""] }
-        ]);
-    };
-
-    const removeTraining = (idx: number) => {
-        setTraining(training.filter((_, i) => i !== idx));
-    };
-
-    const handleTrainingBulletChange = (tIdx: number, bulletIdx: number, val: string) => {
-        const updated = [...training];
-        updated[tIdx].bullets[bulletIdx] = val;
-        setTraining(updated);
-    };
-
-    const addTrainingBullet = (tIdx: number) => {
-        const updated = [...training];
-        updated[tIdx].bullets.push("");
-        setTraining(updated);
-    };
-
-    const removeTrainingBullet = (tIdx: number, bulletIdx: number) => {
-        const updated = [...training];
-        updated[tIdx].bullets = updated[tIdx].bullets.filter((_, i) => i !== bulletIdx);
-        setTraining(updated);
-    };
-
-    const addCertificate = () => {
-        setCertifications([...certifications, ""]);
-    };
-
-    const handleCertChange = (idx: number, val: string) => {
-        const updated = [...certifications];
-        updated[idx] = val;
-        setCertifications(updated);
-    };
-
-    const removeCertificate = (idx: number) => {
-        setCertifications(certifications.filter((_, i) => i !== idx));
-    };
-
-    // ── DOCX Generation Logic (Harvard ATS Rozagi Layout) ──
-    const generateWordCV = async () => {
-        const FONT = "Times New Roman";
-        const SIZE_NAME = 32; // 16pt
-        const SIZE_SECTION = 22; // 11pt
-        const SIZE_BODY = 20; // 10pt
-
-        const borderNone = {
-            top: { style: BorderStyle.NONE, size: 0, color: "auto" },
-            bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
-            left: { style: BorderStyle.NONE, size: 0, color: "auto" },
-            right: { style: BorderStyle.NONE, size: 0, color: "auto" },
-            insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" },
-            insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" }
-        };
-
-        const createSectionHeader = (title: string) => {
-            return new Paragraph({
-                heading: "Heading 1" as any,
-                border: {
-                    bottom: {
-                        color: "A0A0A0",
-                        space: 3,
-                        style: BorderStyle.SINGLE,
-                        size: 6,
-                    }
-                },
-                spacing: { before: 180, after: 80 },
-                children: [
-                    new TextRun({
-                        text: title.toUpperCase(),
-                        font: FONT,
-                        size: SIZE_SECTION,
-                        bold: true,
-                        color: "1D1D1F"
-                    })
-                ]
-            });
-        };
-
-        const elements: any[] = [];
-
-        // 1. HEADER SECTION (Centered Name & Metadata)
-        elements.push(
-            new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 60 },
-                children: [
-                    new TextRun({
-                        text: fullName || "NAMA LENGKAP",
-                        font: FONT,
-                        size: SIZE_NAME,
-                        bold: true,
-                    })
-                ]
-            })
-        );
-
-        const contactParts = [
-            phone && phone.trim(),
-            email && email.trim(),
-            linkedin && linkedin.trim(),
-            github && github.trim()
-        ].filter(Boolean);
-
-        elements.push(
-            new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 120 },
-                children: [
-                    new TextRun({
-                        text: contactParts.join("  |  "),
-                        font: FONT,
-                        size: SIZE_BODY,
-                    })
-                ]
-            })
-        );
-
-        if (address) {
-            elements.push(
-                new Paragraph({
-                    alignment: AlignmentType.CENTER,
-                    spacing: { after: 180 },
-                    children: [
-                        new TextRun({
-                            text: address,
-                            font: FONT,
-                            size: SIZE_BODY,
-                        })
-                    ]
-                })
-            );
-        }
-
-        // 2. SUMMARY
-        if (summary) {
-            elements.push(
-                new Paragraph({
-                    alignment: AlignmentType.JUSTIFIED,
-                    spacing: { after: 120 },
-                    children: [
-                        new TextRun({
-                            text: summary,
-                            font: FONT,
-                            size: SIZE_BODY,
-                        })
-                    ]
-                })
-            );
-        }
-
-        // 3. EDUCATION
-        if (education.length > 0) {
-            elements.push(createSectionHeader("Pendidikan"));
-            education.forEach((edu) => {
-                const table = new Table({
-                    width: { size: 100, type: WidthType.PERCENTAGE },
-                    borders: borderNone,
-                    rows: [
-                        new TableRow({
-                            children: [
-                                new TableCell({
-                                    width: { size: 70, type: WidthType.PERCENTAGE },
-                                    borders: borderNone,
-                                    children: [
-                                        new Paragraph({
-                                            spacing: { after: 20 },
-                                            children: [
-                                                new TextRun({
-                                                    text: `${edu.institution} – ${edu.location}`,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                    bold: true
-                                                })
-                                            ]
-                                        }),
-                                        new Paragraph({
-                                            spacing: { after: 60 },
-                                            children: [
-                                                new TextRun({
-                                                    text: `${edu.degree}, ${edu.major}` + (edu.gpa ? `, IPK: ${edu.gpa}` : ""),
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                    italics: true
-                                                })
-                                            ]
-                                        })
-                                    ]
-                                }),
-                                new TableCell({
-                                    width: { size: 30, type: WidthType.PERCENTAGE },
-                                    borders: borderNone,
-                                    children: [
-                                        new Paragraph({
-                                            alignment: AlignmentType.RIGHT,
-                                            children: [
-                                                new TextRun({
-                                                    text: edu.period,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                })
-                                            ]
-                                        })
-                                    ]
-                                })
-                            ]
-                        })
-                    ]
-                });
-                elements.push(table);
-            });
-        }
-
-        // 4. WORK EXPERIENCE
-        if (workExperience.length > 0) {
-            elements.push(createSectionHeader("Pengalaman Kerja"));
-            workExperience.forEach((work) => {
-                const table = new Table({
-                    width: { size: 100, type: WidthType.PERCENTAGE },
-                    borders: borderNone,
-                    rows: [
-                        new TableRow({
-                            children: [
-                                new TableCell({
-                                    width: { size: 70, type: WidthType.PERCENTAGE },
-                                    borders: borderNone,
-                                    children: [
-                                        new Paragraph({
-                                            spacing: { after: 20 },
-                                            children: [
-                                                new TextRun({
-                                                    text: `${work.company} – ${work.location}`,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                    bold: true
-                                                })
-                                            ]
-                                        }),
-                                        new Paragraph({
-                                            spacing: { after: 60 },
-                                            children: [
-                                                new TextRun({
-                                                    text: work.role,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                    italics: true
-                                                })
-                                            ]
-                                        })
-                                    ]
-                                }),
-                                new TableCell({
-                                    width: { size: 30, type: WidthType.PERCENTAGE },
-                                    borders: borderNone,
-                                    children: [
-                                        new Paragraph({
-                                            alignment: AlignmentType.RIGHT,
-                                            children: [
-                                                new TextRun({
-                                                    text: work.period,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                })
-                                            ]
-                                        })
-                                    ]
-                                })
-                            ]
-                        })
-                    ]
-                });
-                elements.push(table);
-
-                // Bullets
-                work.bullets.forEach((b) => {
-                    if (!b.trim()) return;
-                    elements.push(
-                        new Paragraph({
-                            bullet: { level: 0 },
-                            spacing: { before: 20, after: 20 },
-                            children: [
-                                new TextRun({
-                                    text: b.trim(),
-                                    font: FONT,
-                                    size: SIZE_BODY
-                                })
-                            ]
-                        })
-                    );
-                });
-            });
-        }
-
-        // 5. ORGANIZATIONAL EXPERIENCE
-        if (orgExperience.length > 0) {
-            elements.push(createSectionHeader("Pengalaman Organisasi"));
-            orgExperience.forEach((org) => {
-                const table = new Table({
-                    width: { size: 100, type: WidthType.PERCENTAGE },
-                    borders: borderNone,
-                    rows: [
-                        new TableRow({
-                            children: [
-                                new TableCell({
-                                    width: { size: 70, type: WidthType.PERCENTAGE },
-                                    borders: borderNone,
-                                    children: [
-                                        new Paragraph({
-                                            spacing: { after: 20 },
-                                            children: [
-                                                new TextRun({
-                                                    text: `${org.organization} – ${org.location}`,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                    bold: true
-                                                })
-                                            ]
-                                        }),
-                                        new Paragraph({
-                                            spacing: { after: 60 },
-                                            children: [
-                                                new TextRun({
-                                                    text: org.role,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                    italics: true
-                                                })
-                                            ]
-                                        })
-                                    ]
-                                }),
-                                new TableCell({
-                                    width: { size: 30, type: WidthType.PERCENTAGE },
-                                    borders: borderNone,
-                                    children: [
-                                        new Paragraph({
-                                            alignment: AlignmentType.RIGHT,
-                                            children: [
-                                                new TextRun({
-                                                    text: org.period,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                })
-                                            ]
-                                        })
-                                    ]
-                                })
-                            ]
-                        })
-                    ]
-                });
-                elements.push(table);
-
-                org.bullets.forEach((b) => {
-                    if (!b.trim()) return;
-                    elements.push(
-                        new Paragraph({
-                            bullet: { level: 0 },
-                            spacing: { before: 20, after: 20 },
-                            children: [
-                                new TextRun({
-                                    text: b.trim(),
-                                    font: FONT,
-                                    size: SIZE_BODY
-                                })
-                            ]
-                        })
-                    );
-                });
-            });
-        }
-
-        // 6. TRAINING / PELATIHAN
-        if (training.length > 0) {
-            elements.push(createSectionHeader("Pelatihan"));
-            training.forEach((t) => {
-                const table = new Table({
-                    width: { size: 100, type: WidthType.PERCENTAGE },
-                    borders: borderNone,
-                    rows: [
-                        new TableRow({
-                            children: [
-                                new TableCell({
-                                    width: { size: 70, type: WidthType.PERCENTAGE },
-                                    borders: borderNone,
-                                    children: [
-                                        new Paragraph({
-                                            spacing: { after: 20 },
-                                            children: [
-                                                new TextRun({
-                                                    text: `${t.title} – ${t.location}`,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                    bold: true
-                                                })
-                                            ]
-                                        }),
-                                        new Paragraph({
-                                            spacing: { after: 60 },
-                                            children: [
-                                                new TextRun({
-                                                    text: t.provider,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                    italics: true
-                                                })
-                                            ]
-                                        })
-                                    ]
-                                }),
-                                new TableCell({
-                                    width: { size: 30, type: WidthType.PERCENTAGE },
-                                    borders: borderNone,
-                                    children: [
-                                        new Paragraph({
-                                            alignment: AlignmentType.RIGHT,
-                                            children: [
-                                                new TextRun({
-                                                    text: t.period,
-                                                    font: FONT,
-                                                    size: SIZE_BODY,
-                                                })
-                                            ]
-                                        })
-                                    ]
-                                })
-                            ]
-                        })
-                    ]
-                });
-                elements.push(table);
-
-                t.bullets.forEach((b) => {
-                    if (!b.trim()) return;
-                    elements.push(
-                        new Paragraph({
-                            bullet: { level: 0 },
-                            spacing: { before: 20, after: 20 },
-                            children: [
-                                new TextRun({
-                                    text: b.trim(),
-                                    font: FONT,
-                                    size: SIZE_BODY
-                                })
-                            ]
-                        })
-                    );
-                });
-            });
-        }
-
-        // 7. SKILLS (Soft, Hard, Language)
-        const hasSkills = softSkills || hardSkills || languages;
-        if (hasSkills) {
-            elements.push(createSectionHeader("Keahlian"));
-            if (softSkills) {
-                elements.push(
-                    new Paragraph({
-                        spacing: { before: 30, after: 30 },
-                        children: [
-                            new TextRun({ text: "Soft Skills: ", font: FONT, size: SIZE_BODY, bold: true }),
-                            new TextRun({ text: softSkills, font: FONT, size: SIZE_BODY })
-                        ]
-                    })
-                );
-            }
-            if (hardSkills) {
-                elements.push(
-                    new Paragraph({
-                        spacing: { before: 30, after: 30 },
-                        children: [
-                            new TextRun({ text: "Hard Skills: ", font: FONT, size: SIZE_BODY, bold: true }),
-                            new TextRun({ text: hardSkills, font: FONT, size: SIZE_BODY })
-                        ]
-                    })
-                );
-            }
-            if (languages) {
-                elements.push(
-                    new Paragraph({
-                        spacing: { before: 30, after: 30 },
-                        children: [
-                            new TextRun({ text: "Language: ", font: FONT, size: SIZE_BODY, bold: true }),
-                            new TextRun({ text: languages, font: FONT, size: SIZE_BODY })
-                        ]
-                    })
-                );
-            }
-        }
-
-        // 8. CERTIFICATES
-        if (certifications.length > 0) {
-            elements.push(createSectionHeader("Sertifikat"));
-            certifications.forEach((cert) => {
-                if (!cert.trim()) return;
-                elements.push(
-                    new Paragraph({
-                        bullet: { level: 0 },
-                        spacing: { before: 20, after: 20 },
-                        children: [
-                            new TextRun({
-                                text: cert.trim(),
-                                font: FONT,
-                                size: SIZE_BODY
-                            })
-                        ]
-                    })
-                );
-            });
-        }
-
-        // Document wrapper
-        const doc = new Document({
-            styles: {
-                default: {
-                    document: {
-                        run: {
-                            font: FONT,
-                        },
-                        paragraph: {
-                            spacing: {
-                                line: 276, // 1.15 line spacing (1.15 * 240 dxa)
-                            }
-                        }
-                    }
-                }
-            },
-            sections: [
-                {
-                    properties: {
-                        page: {
-                            margin: {
-                                top: convertInchesToTwip(1),
-                                right: convertInchesToTwip(1),
-                                bottom: convertInchesToTwip(1),
-                                left: convertInchesToTwip(1)
-                            }
-                        }
-                    },
-                    children: elements
-                }
-            ]
+    const handleDownload = async () => {
+        await generateWordCV({
+            fullName: form.fullName,
+            phone: form.phone,
+            email: form.email,
+            address: form.address,
+            linkedin: form.linkedin,
+            githubUrl: form.githubUrl,
+            summary: form.summary,
+            education: form.education,
+            workExperience: form.workExperience.map((w) => ({
+                company: w.company,
+                role: w.role,
+                location: w.location,
+                period: w.period,
+                bullets: w.bullets.map((b) => b.text),
+            })),
+            orgExperience: form.orgExperience.map((o) => ({
+                organization: o.organization,
+                role: o.role,
+                location: o.location,
+                period: o.period,
+                bullets: o.bullets.map((b) => b.text),
+            })),
+            training: form.training.map((t) => ({
+                title: t.title,
+                provider: t.provider,
+                location: t.location,
+                period: t.period,
+                bullets: t.bullets.map((b) => b.text),
+            })),
+            softSkills: form.softSkills,
+            hardSkills: form.hardSkills,
+            languages: form.languages,
+            certifications: form.certifications.map((c) => c.value),
         });
-
-        // Trigger download
-        try {
-            const blob = await Packer.toBlob(doc);
-            const filename = `CV-${fullName.replace(/\s+/g, "-") || "Resume"}.docx`;
-            saveAs(blob, filename);
-            toast.success("CV profesional berhasil diunduh sebagai .docx!");
-        } catch (e) {
-            toast.error("Gagal mendownload berkas CV.");
-            console.error(e);
-        }
     };
-
-    if (isLoading) {
-        return (
-            <div className="space-y-4 max-w-3xl">
-                <div className="h-8 w-48 rounded-md bg-muted animate-pulse" />
-                <div className="h-64 rounded-md border bg-muted/20 animate-pulse" />
+    if (isLoading) return <div className="max-w-3xl space-y-4"><div className="h-8 w-48 rounded-md bg-muted" /><div className="h-64 rounded-md border bg-muted/20" /></div>;
+    if (isError) return (
+        <div className="w-full max-w-3xl">
+            <PageHeader crumb="dasbor / profil / cv generator" title="AI CV Generator" sub="Tinjau, lengkapi, dan unduh CV profesional yang ATS-friendly (Harvard CV Style)." />
+            <div className="pt-8">
+                <EmptyState title="Gagal memuat profil">{(error as any)?.message || "Terjadi kesalahan saat memuat data."}</EmptyState>
+                <div className="mt-4 flex justify-center">
+                    <button onClick={() => refetch()} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110">Coba lagi</button>
+                </div>
             </div>
-        );
-    }
-
+        </div>
+    );
     return (
         <div className="w-full max-w-3xl pb-16">
-
             <PageHeader
                 crumb="dasbor / profil / cv generator"
                 title="AI CV Generator"
                 sub="Tinjau, lengkapi, dan unduh CV profesional yang ATS-friendly (Harvard CV Style)."
                 right={
                     <div className="flex items-center gap-3">
+                        {form.highlightSave ? (
+                            <Spotlight className="inline-block rounded-md">
+                                <button
+                                    onClick={() => saveMutation.mutate()}
+                                    disabled={!authReady || saveMutation.isPending}
+                                    title="Data diri belum disimpan — klik untuk menyimpan"
+                                    className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground shadow-sm ring-2 ring-primary/30 transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                                >
+                                    {saveMutation.isPending ? "Menyimpan…" : <><Save className="size-3.5" /> Simpan data diri</>}
+                                </button>
+                            </Spotlight>
+                        ) : (
+                            <button
+                                onClick={() => saveMutation.mutate()}
+                                disabled={!authReady || saveMutation.isPending}
+                                className="text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                {saveMutation.isPending ? "Menyimpan…" : "Simpan riwayat"}
+                            </button>
+                        )}
                         <button
-                            onClick={handleSave}
-                            disabled={saveMutation.isPending}
-                            title={highlightSave ? "Data diri belum disimpan — klik untuk menyimpan" : undefined}
-                            className={
-                                highlightSave
-                                    ? "inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground shadow-sm ring-2 ring-primary/30 transition animate-pulse hover:brightness-110 hover:animate-none active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-                                    : "text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            }
-                        >
-                            {saveMutation.isPending ? (
-                                "Menyimpan…"
-                            ) : highlightSave ? (
-                                <>
-                                    <Save className="size-3.5" />
-                                    Simpan data diri
-                                </>
-                            ) : (
-                                "Simpan riwayat"
-                            )}
-                        </button>
-                        <button
-                            onClick={generateWordCV}
-                            disabled={!bioComplete}
-                            title={!bioComplete ? "Lengkapi data diri dulu" : undefined}
+                            onClick={handleDownload}
+                            disabled={!authReady || !form.bioComplete}
+                            title={!authReady ? "Auth belum siap" : !form.bioComplete ? "Lengkapi data diri dulu" : undefined}
                             className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
                         >
                             Unduh CV (.docx)
@@ -949,737 +169,131 @@ export default function CVGeneratorPage() {
                     </div>
                 }
             />
-
-            {/* ── Nudge: arahkan lengkapi data diri dulu (dipakai di CV & lamaran) ── */}
-            {!bioComplete && (
-                <div className="mt-5 rounded-md border border-amber-500/40 bg-amber-500/[0.06] p-4">
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-2.5">
-                            <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-500" />
-                            <div>
-                                <p className="text-[13px] font-bold tracking-tight">
-                                    Lengkapi data diri dulu
-                                    <span className="ml-2 font-mono text-[11px] font-semibold text-amber-600 dark:text-amber-500">
-                                        {bioFilledCount}/{bioFields.length} terisi
-                                    </span>
-                                </p>
-                                <p className="mt-0.5 text-[12px] text-muted-foreground">
-                                    Nama, telepon, email, dan alamat dipakai di CV dan saat kamu melamar. Isi dulu sebelum mengunduh atau memilih versi CV.
-                                </p>
-                            </div>
-                        </div>
+            {!form.bioComplete && (
+                <Reveal delay={0.05} className="pt-6">
+                    <p className="border-l-2 border-primary bg-primary/[0.05] px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+                        <span className="font-semibold text-foreground">Lengkapi data diri dulu — {form.bioFilledCount}/{form.bioFields.length} terisi.</span> Nama, telepon, email, dan alamat dipakai di CV dan saat kamu melamar. Isi dulu sebelum mengunduh atau memilih versi CV.{" "}
                         <button
                             onClick={gotoBio}
-                            className="shrink-0 rounded-md bg-primary px-3 py-1.5 text-[11.5px] font-bold text-primary-foreground transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             Isi sekarang →
                         </button>
-                    </div>
-                </div>
+                    </p>
+                </Reveal>
             )}
-
-            {/* ── Pilihan versi CV yang dikirim ke recruiter saat melamar ── */}
-            <div className="pt-8 space-y-4">
-                <SecTitle title="CV yang dikirim saat melamar" meta={
-                    <button
-                        onClick={previewSentCV}
-                        disabled={!bioComplete}
-                        title={!bioComplete ? "Lengkapi data diri dulu" : undefined}
-                        className="shrink-0 rounded-md border border-border px-3 py-1.5 text-[11.5px] font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        Preview CV terkirim
-                    </button>
-                } />
-                <p className="-mt-1 text-xs text-muted-foreground">
-                    Pilih versi CV yang akan diterima recruiter ketika kamu melamar lowongan.
-                </p>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                    {/* Opsi form (ATS) */}
-                    <button
-                        type="button"
-                        onClick={() => prefMutation.mutate("form")}
-                        disabled={prefMutation.isPending || !bioComplete}
-                        title={!bioComplete ? "Lengkapi data diri dulu" : undefined}
-                        className={`rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                            cvPref === "form"
-                                ? "border-primary/60 bg-primary/[0.05]"
-                                : "border-border hover:border-muted-foreground"
-                        }`}
-                    >
-                        <div className="flex items-center justify-between">
-                            <span className="text-[12.5px] font-bold">Versi form (ATS)</span>
-                            <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-primary">
-                                disarankan
-                            </span>
-                        </div>
-                        <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
-                            CV terstruktur ramah ATS dari data di bawah. <span className="text-amber-600 dark:text-amber-500">Pastikan sudah kamu cek</span> — hasil ekstraksi AI bisa keliru.
-                        </p>
-                    </button>
-
-                    {/* Opsi PDF asli */}
-                    <button
-                        type="button"
-                        onClick={() => prefMutation.mutate("original")}
-                        disabled={prefMutation.isPending || !profile?.cv_filename || !bioComplete}
-                        title={!bioComplete ? "Lengkapi data diri dulu" : undefined}
-                        className={`rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                            cvPref === "original"
-                                ? "border-primary/60 bg-primary/[0.05]"
-                                : "border-border hover:border-muted-foreground"
-                        }`}
-                    >
-                        <div className="flex items-center justify-between">
-                            <span className="text-[12.5px] font-bold">CV asli saya</span>
-                            {cvPref === "original" && (
-                                <CheckCircle2 className="size-3.5 text-primary" />
-                            )}
-                        </div>
-                        <p className="mt-1 truncate text-[11.5px] leading-relaxed text-muted-foreground">
-                            {profile?.cv_filename
-                                ? `PDF asli: ${profile.cv_filename}`
-                                : "Belum ada PDF asli — upload CV dulu di onboarding."}
-                        </p>
-                    </button>
-                </div>
-            </div>
-
-            {/* Main Form container */}
-            <div className="space-y-8 pt-2">
-                
-                {/* 1. DATA DIRI (BIO) */}
-                <div
-                    id="cv-contact"
-                    className={`space-y-4 scroll-mt-20 ${
-                        bioComplete ? "" : "rounded-md border border-amber-500/40 bg-amber-500/[0.02] px-4 py-4"
-                    }`}
-                >
+            <Reveal delay={0.12} className="pt-8">
+                <section>
                     <SecTitle
-                        title="1. Informasi Kontak"
-                        meta={!bioComplete ? (
-                            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-500">
-                                wajib
-                            </span>
-                        ) : undefined}
+                        title="CV yang dikirim saat melamar"
+                        meta={
+                            <button
+                                onClick={previewSentCV}
+                                disabled={!authReady || !form.bioComplete}
+                                title={!authReady ? "Auth belum siap" : !form.bioComplete ? "Lengkapi data diri dulu" : undefined}
+                                className="shrink-0 rounded-md border border-border px-3 py-1.5 text-[11.5px] font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Preview CV terkirim
+                            </button>
+                        }
                     />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Nama Lengkap</label>
-                            <input
-                                id="cv-fullname"
-                                value={fullName}
-                                onChange={(e) => setFullName(e.target.value)}
-                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="Masukkan nama..."
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Nomor Telepon</label>
-                            <input
-                                id="cv-phone"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="Contoh: +628..."
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Email</label>
-                            <input
-                                id="cv-email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="nama@email.com"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">URL LinkedIn</label>
-                            <input
-                                value={linkedin}
-                                onChange={(e) => setLinkedin(e.target.value)}
-                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="www.linkedin.com/in/username"
-                            />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">URL GitHub</label>
-                            <input
-                                value={github}
-                                onChange={(e) => setGithub(e.target.value)}
-                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="https://github.com/username"
-                            />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Alamat Domisili</label>
-                            <input
-                                id="cv-address"
-                                value={address}
-                                onChange={(e) => setAddress(e.target.value)}
-                                className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="Tulis alamat singkat..."
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* 2. RINGKASAN PROFIL */}
-                <div className="space-y-3">
-                    <SecTitle title="2. Ringkasan Profesional (Summary)" />
-                    <textarea
-                        value={summary}
-                        onChange={(e) => setSummary(e.target.value)}
-                        rows={4}
-                        className="w-full text-sm rounded-md border border-border bg-background px-3 py-2.5 leading-relaxed transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                        placeholder="Tulis ringkasan singkat profil Anda..."
-                    />
-                </div>
-
-                {/* 3. PENDIDIKAN */}
-                <div className="space-y-4">
-                    <SecTitle title="3. Riwayat Pendidikan" meta={
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={addEducation}
-                            className="h-7 text-[10px] gap-1 px-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                    <p className="pt-3 text-xs text-muted-foreground">Pilih versi CV yang akan diterima recruiter ketika kamu melamar lowongan.</p>
+                    <div className="grid gap-4 pt-4 sm:grid-cols-2">
+                        <button
+                            type="button"
+                            onClick={() => prefMutation.mutate("form")}
+                            disabled={prefMutation.isPending || !authReady}
+                            className={`rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${cvPref === "form" ? "border-primary/60 bg-primary/[0.05]" : "border-border hover:border-muted-foreground"}`}
                         >
-                            <Plus className="w-3 h-3" /> Tambah Sekolah
-                        </Button>
-                    } />
-
-                    <div className="space-y-4">
-                        {education.map((edu, idx) => (
-                            <div key={idx} className="relative rounded-md border border-border bg-muted/20 p-4 space-y-3">
-                                <button
-                                    onClick={() => removeEducation(idx)}
-                                    className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                                
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Nama Universitas / Sekolah</label>
-                                        <input
-                                            value={edu.institution}
-                                            onChange={(e) => {
-                                                const u = [...education];
-                                                u[idx].institution = e.target.value;
-                                                setEducation(u);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Universitas Bengkulu"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Lokasi</label>
-                                        <input
-                                            value={edu.location}
-                                            onChange={(e) => {
-                                                const u = [...education];
-                                                u[idx].location = e.target.value;
-                                                setEducation(u);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Bengkulu, Indonesia"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Gelar / Bidang Studi</label>
-                                        <input
-                                            value={edu.degree}
-                                            onChange={(e) => {
-                                                const u = [...education];
-                                                u[idx].degree = e.target.value;
-                                                setEducation(u);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Mahasiswa, Informatika"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Jurusan / Fokus</label>
-                                        <input
-                                            value={edu.major}
-                                            onChange={(e) => {
-                                                const u = [...education];
-                                                u[idx].major = e.target.value;
-                                                setEducation(u);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Rekayasa Perangkat Lunak"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Periode (Tanggal)</label>
-                                        <input
-                                            value={edu.period}
-                                            onChange={(e) => {
-                                                const u = [...education];
-                                                u[idx].period = e.target.value;
-                                                setEducation(u);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Agu 2022 - Sekarang"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">IPK / Rata-rata</label>
-                                        <input
-                                            value={edu.gpa}
-                                            onChange={(e) => {
-                                                const u = [...education];
-                                                u[idx].gpa = e.target.value;
-                                                setEducation(u);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: 3.86/4.00"
-                                        />
-                                    </div>
-                                </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-[12.5px] font-bold">Versi form (ATS)</span>
+                                <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-primary">disarankan</span>
                             </div>
-                        ))}
-                        {education.length === 0 && (
-                            <p className="text-xs text-muted-foreground italic text-center py-3">Belum ada riwayat pendidikan.</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* 4. PENGALAMAN KERJA */}
-                <div className="space-y-4">
-                    <SecTitle title="4. Pengalaman Kerja" meta={
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={addWork}
-                            className="h-7 text-[10px] gap-1 px-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
-                        >
-                            <Plus className="w-3 h-3" /> Tambah Kerja
-                        </Button>
-                    } />
-
-                    <div className="space-y-4">
-                        {workExperience.map((work, idx) => (
-                            <div key={idx} className="relative rounded-md border border-border bg-muted/20 p-4 space-y-3">
-                                <button
-                                    onClick={() => removeWork(idx)}
-                                    className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                                
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Nama Perusahaan / Organisasi</label>
-                                        <input
-                                            value={work.company}
-                                            onChange={(e) => {
-                                                const w = [...workExperience];
-                                                w[idx].company = e.target.value;
-                                                setWorkExperience(w);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Coding Camp 2026"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Lokasi</label>
-                                        <input
-                                            value={work.location}
-                                            onChange={(e) => {
-                                                const w = [...workExperience];
-                                                w[idx].location = e.target.value;
-                                                setWorkExperience(w);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Bengkulu, Indonesia"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Jabatan / Posisi</label>
-                                        <input
-                                            value={work.role}
-                                            onChange={(e) => {
-                                                const w = [...workExperience];
-                                                w[idx].role = e.target.value;
-                                                setWorkExperience(w);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: AI Engineer"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Periode (Tanggal)</label>
-                                        <input
-                                            value={work.period}
-                                            onChange={(e) => {
-                                                const w = [...workExperience];
-                                                w[idx].period = e.target.value;
-                                                setWorkExperience(w);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Jan 2026 - Sekarang"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 pt-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-semibold text-muted-foreground">Deskripsi Tugas / Pencapaian</label>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => addWorkBullet(idx)}
-                                            className="h-6 text-[9px] text-primary px-2 hover:bg-primary/5"
-                                        >
-                                            + Tambah Poin
-                                        </Button>
-                                    </div>
-                                    
-                                    {work.bullets.map((b, bIdx) => (
-                                        <div key={bIdx} className="flex gap-2 items-center">
-                                            <input
-                                                value={b}
-                                                onChange={(e) => handleWorkBulletChange(idx, bIdx, e.target.value)}
-                                                className="flex-1 text-xs rounded-md border border-border bg-background px-3 py-1.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                                placeholder="Tulis kontribusi..."
-                                            />
-                                            <button
-                                                onClick={() => removeWorkBullet(idx, bIdx)}
-                                                className="text-muted-foreground hover:text-rose-500 transition-colors"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                        {workExperience.length === 0 && (
-                            <p className="text-xs text-muted-foreground italic text-center py-3">Belum ada riwayat pekerjaan.</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* 5. PENGALAMAN ORGANISASI */}
-                <div className="space-y-4">
-                    <SecTitle title="5. Pengalaman Organisasi" meta={
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={addOrg}
-                            className="h-7 text-[10px] gap-1 px-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
-                        >
-                            <Plus className="w-3 h-3" /> Tambah Organisasi
-                        </Button>
-                    } />
-
-                    <div className="space-y-4">
-                        {orgExperience.map((org, idx) => (
-                            <div key={idx} className="relative rounded-md border border-border bg-muted/20 p-4 space-y-3">
-                                <button
-                                    onClick={() => removeOrg(idx)}
-                                    className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                                
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Nama Organisasi</label>
-                                        <input
-                                            value={org.organization}
-                                            onChange={(e) => {
-                                                const o = [...orgExperience];
-                                                o[idx].organization = e.target.value;
-                                                setOrgExperience(o);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: MOSTANEER"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Lokasi</label>
-                                        <input
-                                            value={org.location}
-                                            onChange={(e) => {
-                                                const o = [...orgExperience];
-                                                o[idx].location = e.target.value;
-                                                setOrgExperience(o);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Universitas Bengkulu"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Divisi / Peran</label>
-                                        <input
-                                            value={org.role}
-                                            onChange={(e) => {
-                                                const o = [...orgExperience];
-                                                o[idx].role = e.target.value;
-                                                setOrgExperience(o);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Anggota Keuangan"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Periode (Tanggal)</label>
-                                        <input
-                                            value={org.period}
-                                            onChange={(e) => {
-                                                const o = [...orgExperience];
-                                                o[idx].period = e.target.value;
-                                                setOrgExperience(o);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Jan 2023 - Des 2023"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 pt-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-semibold text-muted-foreground">Deskripsi Tugas / Kontribusi</label>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => addOrgBullet(idx)}
-                                            className="h-6 text-[9px] text-primary px-2 hover:bg-primary/5"
-                                        >
-                                            + Tambah Poin
-                                        </Button>
-                                    </div>
-                                    
-                                    {org.bullets.map((b, bIdx) => (
-                                        <div key={bIdx} className="flex gap-2 items-center">
-                                            <input
-                                                value={b}
-                                                onChange={(e) => handleOrgBulletChange(idx, bIdx, e.target.value)}
-                                                className="flex-1 text-xs rounded-md border border-border bg-background px-3 py-1.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                                placeholder="Tulis kontribusi..."
-                                            />
-                                            <button
-                                                onClick={() => removeOrgBullet(idx, bIdx)}
-                                                className="text-muted-foreground hover:text-rose-500 transition-colors"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                        {orgExperience.length === 0 && (
-                            <p className="text-xs text-muted-foreground italic text-center py-3">Belum ada riwayat organisasi.</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* 6. PELATIHAN / TRAINING */}
-                <div className="space-y-4">
-                    <SecTitle title="6. Pelatihan & Bootcamp" meta={
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={addTraining}
-                            className="h-7 text-[10px] gap-1 px-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
-                        >
-                            <Plus className="w-3 h-3" /> Tambah Pelatihan
-                        </Button>
-                    } />
-
-                    <div className="space-y-4">
-                        {training.map((t, idx) => (
-                            <div key={idx} className="relative rounded-md border border-border bg-muted/20 p-4 space-y-3">
-                                <button
-                                    onClick={() => removeTraining(idx)}
-                                    className="absolute top-3 right-3 text-muted-foreground hover:text-rose-500 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                                
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Judul Pelatihan</label>
-                                        <input
-                                            value={t.title}
-                                            onChange={(e) => {
-                                                const tr = [...training];
-                                                tr[idx].title = e.target.value;
-                                                setTraining(tr);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Coding Camp 2025"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Penyelenggara / Provider</label>
-                                        <input
-                                            value={t.provider}
-                                            onChange={(e) => {
-                                                const tr = [...training];
-                                                tr[idx].provider = e.target.value;
-                                                setTraining(tr);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: DBS Foundation"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Lokasi</label>
-                                        <input
-                                            value={t.location}
-                                            onChange={(e) => {
-                                                const tr = [...training];
-                                                tr[idx].location = e.target.value;
-                                                setTraining(tr);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Bengkulu (Remote)"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Periode (Tanggal)</label>
-                                        <input
-                                            value={t.period}
-                                            onChange={(e) => {
-                                                const tr = [...training];
-                                                tr[idx].period = e.target.value;
-                                                setTraining(tr);
-                                            }}
-                                            className="w-full text-xs rounded-md border border-border bg-background px-3 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                            placeholder="Contoh: Feb 2025 - Juni 2025"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 pt-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-[10px] font-semibold text-muted-foreground">Deskripsi / Hasil Pelatihan</label>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => addTrainingBullet(idx)}
-                                            className="h-6 text-[9px] text-primary px-2 hover:bg-primary/5"
-                                        >
-                                            + Tambah Poin
-                                        </Button>
-                                    </div>
-                                    
-                                    {t.bullets.map((b, bIdx) => (
-                                        <div key={bIdx} className="flex gap-2 items-center">
-                                            <input
-                                                value={b}
-                                                onChange={(e) => handleTrainingBulletChange(idx, bIdx, e.target.value)}
-                                                className="flex-1 text-xs rounded-md border border-border bg-background px-3 py-1.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                                placeholder="Tulis detail..."
-                                            />
-                                            <button
-                                                onClick={() => removeTrainingBullet(idx, bIdx)}
-                                                className="text-muted-foreground hover:text-rose-500 transition-colors"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                        {training.length === 0 && (
-                            <p className="text-xs text-muted-foreground italic text-center py-3">Belum ada riwayat pelatihan.</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* 7. KEAHLIAN / SKILLS */}
-                <div className="space-y-4">
-                    <SecTitle title="7. Keahlian & Bahasa" />
-                    <div className="space-y-3">
-                        <div>
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Soft Skills (Pisahkan dengan koma)</label>
-                            <input
-                                value={softSkills}
-                                onChange={(e) => setSoftSkills(e.target.value)}
-                                className="w-full text-sm rounded-md border border-border bg-background px-3 py-2.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="Contoh: Manajemen Waktu, Berpikir Kritis, Komunikasi"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Hard Skills (Pisahkan dengan koma)</label>
-                            <input
-                                value={hardSkills}
-                                onChange={(e) => setHardSkills(e.target.value)}
-                                className="w-full text-sm rounded-md border border-border bg-background px-3 py-2.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="Contoh: Python, Machine Learning, Figma"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Bahasa (Pisahkan dengan koma)</label>
-                            <input
-                                value={languages}
-                                onChange={(e) => setLanguages(e.target.value)}
-                                className="w-full text-sm rounded-md border border-border bg-background px-3 py-2.5 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                placeholder="Contoh: Bahasa Indonesia (Native), English (Intermediate)"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* 8. SERTIFIKAT */}
-                <div className="space-y-4">
-                    <SecTitle title="8. Sertifikat Penghargaan" meta={
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={addCertificate}
-                            className="h-7 text-[10px] gap-1 px-2.5 hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
-                        >
-                            <Plus className="w-3 h-3" /> Tambah Sertifikat
-                        </Button>
-                    } />
-
-                    <div className="space-y-2">
-                        {certifications.map((cert, idx) => (
-                            <div key={idx} className="flex gap-2 items-center">
-                                <input
-                                    value={cert}
-                                    onChange={(e) => handleCertChange(idx, e.target.value)}
-                                    className="flex-1 text-xs rounded-md border border-border bg-background px-3.5 py-2 transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
-                                    placeholder="Contoh: Introduction to Git and GitHub (Dicoding) - 2024"
-                                />
-                                <button
-                                    onClick={() => removeCertificate(idx)}
-                                    className="text-muted-foreground hover:text-rose-500 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
-                        {certifications.length === 0 && (
-                            <p className="text-xs text-muted-foreground italic text-center py-3">Belum ada daftar sertifikat.</p>
-                        )}
-                    </div>
-                </div>
-
-                {/* Dynamic warning if profile has not synced */}
-                {(!profile?.cv_data) && (
-                    <div className="rounded-md border border-dashed border-violet-500/30 bg-violet-500/[0.03] p-4 flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-violet-400 mt-0.5 shrink-0" />
-                        <div>
-                            <p className="text-xs font-semibold text-violet-300">CV Ter-auto fill!</p>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
-                                Jika sebelumnya Anda sudah mengunggah CV PDF pada onboarding, sistem kami telah otomatis mengisi sebagian besar field di atas secara akurat menggunakan kecerdasan AI. Anda hanya perlu meninjau dan melengkapi informasi yang belum lengkap!
+                            <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+                                CV terstruktur ramah ATS dari data di bawah. <span className="text-amber-600 dark:text-amber-500">Pastikan sudah kamu cek</span> — hasil ekstraksi AI bisa keliru.
                             </p>
-                        </div>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => prefMutation.mutate("original")}
+                            disabled={prefMutation.isPending || !authReady || !profile?.cv_filename}
+                            title={!authReady ? "Auth belum siap" : !profile?.cv_filename ? "Upload CV terlebih dahulu" : undefined}
+                            className={`rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${cvPref === "original" ? "border-primary/60 bg-primary/[0.05]" : "border-border hover:border-muted-foreground"}`}
+                        >
+                            <div className="flex items-center justify-between">
+                                <span className="text-[12.5px] font-bold">CV asli saya</span>
+                                {cvPref === "original" && <CheckCircle2 className="size-3.5 text-primary" />}
+                            </div>
+                            <p className="mt-1 truncate text-[11.5px] leading-relaxed text-muted-foreground">
+                                {profile?.cv_filename ? `PDF asli: ${profile.cv_filename}` : "Belum ada PDF asli — upload CV dulu di onboarding."}
+                            </p>
+                        </button>
                     </div>
-                )}
-
-            </div>
+                    <div className="space-y-2 pt-3">
+                        {!profile?.cv_filename && (
+                            <p className="border-l-2 border-primary bg-primary/[0.05] px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+                                <span className="font-semibold text-foreground">Butuh PDF asli</span> — upload CV di onboarding untuk mengaktifkan opsi &quot;CV asli saya&quot;.
+                            </p>
+                        )}
+                        {!form.bioComplete && (
+                            <p className="border-l-2 border-primary bg-primary/[0.05] px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+                                <span className="font-semibold text-foreground">Data diri belum lengkap — {form.bioFilledCount}/{form.bioFields.length} terisi.</span> Lengkapi nama, telepon, email, dan alamat agar CV yang dikirim akurat.
+                            </p>
+                        )}
+                    </div>
+                </section>
+            </Reveal>
+            <ContactSection
+                fullName={form.fullName}
+                phone={form.phone}
+                email={form.email}
+                address={form.address}
+                linkedin={form.linkedin}
+                githubUsername={form.githubUsername}
+                githubUrl={form.githubUrl}
+                bioBirthPlace={form.bioBirthPlace}
+                bioBirthDate={form.bioBirthDate}
+                bioComplete={form.bioComplete}
+                onFullNameChange={form.setFullName}
+                onPhoneChange={form.setPhone}
+                onEmailChange={form.setEmail}
+                onAddressChange={form.setAddress}
+                onLinkedinChange={form.setLinkedin}
+            />
+            <Reveal delay={0.26} className="pt-8">
+                <section>
+                    <SecTitle title="2. Ringkasan Profesional (Summary)" />
+                    <div className="py-4">
+                        <textarea
+                            value={form.summary}
+                            onChange={(e) => form.setSummary(e.target.value)}
+                            rows={4}
+                            className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm leading-relaxed transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
+                            placeholder="Tulis ringkasan singkat profil Anda..."
+                        />
+                    </div>
+                </section>
+            </Reveal>
+            <EducationSection education={form.education} setEducation={form.setEducation} />
+            <WorkSection workExperience={form.workExperience} setWorkExperience={form.setWorkExperience} />
+            <OrgSection orgExperience={form.orgExperience} setOrgExperience={form.setOrgExperience} />
+            <TrainingSection training={form.training} setTraining={form.setTraining} />
+            <SkillsSection
+                softSkills={form.softSkills}
+                hardSkills={form.hardSkills}
+                languages={form.languages}
+                onSoftSkillsChange={form.setSoftSkills}
+                onHardSkillsChange={form.setHardSkills}
+                onLanguagesChange={form.setLanguages}
+            />
+            <CertsSection certifications={form.certifications} setCertifications={form.setCertifications} />
+            {profile?.cv_data && (
+                <Reveal delay={0.75} className="pt-8">
+                    <p className="border-l-2 border-primary bg-primary/[0.05] px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+                        <span className="font-semibold text-foreground">CV terisi otomatis.</span> Jika kamu sudah upload CV PDF di onboarding, sistem telah mengisi sebagian field via AI — tinjau dan lengkapi yang masih kosong.
+                    </p>
+                </Reveal>
+            )}
         </div>
     );
 }
