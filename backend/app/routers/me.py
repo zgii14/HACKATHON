@@ -16,6 +16,7 @@ from app.schemas import (
     CVDataSchema,
     InterestsPatch,
     ProfileOut,
+    RecruiterProfilePatch,
     RoadmapOut,
     RoadmapStepOut,
     RoadmapStepPatch,
@@ -157,6 +158,27 @@ def get_my_recruiter_request(
     rp = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
     if not rp:
         return None
+    out = RecruiterRequestOut.model_validate(rp)
+    out.user_email = user.email
+    return out
+
+
+@router.patch("/recruiter-profile", response_model=RecruiterRequestOut)
+def patch_my_recruiter_profile(
+    body: RecruiterProfilePatch,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user.role != "recruiter":
+        raise HTTPException(403, "Hanya recruiter yang dapat mengubah nama perusahaan.")
+    rp = db.query(RecruiterProfile).filter(RecruiterProfile.user_id == user.id).first()
+    if not rp:
+        raise HTTPException(404, "Profil recruiter tidak ditemukan.")
+    if rp.status != "approved":
+        raise HTTPException(403, "Hanya recruiter approved yang dapat mengubah nama.")
+    rp.company_name = body.company_name.strip()
+    db.commit()
+    db.refresh(rp)
     out = RecruiterRequestOut.model_validate(rp)
     out.user_email = user.email
     return out

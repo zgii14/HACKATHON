@@ -1,9 +1,13 @@
 "use client";
 
 import { cn } from "@/utils";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
-import { MessageCircle, Search } from "lucide-react";
+import { MessageCircle, Search, Trash2 } from "lucide-react";
+import { useApi } from "@/hooks/use-api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 export type Conv = {
     id: string;
@@ -15,6 +19,7 @@ export type Conv = {
     job_title: string | null;
     job_company: string | null;
     updated_at: string;
+    expires_at?: string | null;
     last_message: string | null;
     last_message_at: string | null;
     last_message_status: string | null;
@@ -36,6 +41,31 @@ export function ConversationList({
     search: string;
     onSearchChange: (v: string) => void;
 }) {
+    const { withAuth } = useApi();
+    const qc = useQueryClient();
+    const delConv = useMutation({
+        mutationFn: (id: string) => withAuth(`/chat/${id}`, { method: "DELETE" }),
+        onSuccess: () => {
+            toast.success("Chat dihapus untuk kedua sisi");
+            qc.invalidateQueries({ queryKey: ["chat-conversations"] });
+        },
+        onError: (e: any) => toast.error(e.message || "Gagal hapus"),
+    });
+    const handleDelete = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        const isDark = document.documentElement.classList.contains("dark");
+        const res = await Swal.fire({
+            title: "Hapus chat?",
+            text: "Chat akan terhapus untuk kedua sisi dan tidak bisa dipulihkan.",
+            icon: "warning",
+            theme: isDark ? "dark" : "light",
+            showCancelButton: true,
+            confirmButtonText: "Hapus",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#e11d48",
+        });
+        if (res.isConfirmed) delConv.mutate(id);
+    };
     const filtered = (convs ?? []).filter((c) => {
         if (!search.trim()) return true;
         const q = search.toLowerCase();
@@ -94,43 +124,48 @@ export function ConversationList({
                     const initials = (c.other_name ?? c.other_email ?? "?").slice(0, 2).toUpperCase();
                     const time = c.last_message_at ? format(new Date(c.last_message_at), "HH:mm", { locale: id }) : "";
                     const dateLabel = c.last_message_at ? format(new Date(c.last_message_at), "d MMM", { locale: id }) : "";
-                    // show time if today else date
                     const isToday = c.last_message_at ? new Date(c.last_message_at).toDateString() === new Date().toDateString() : false;
+                    const expiresLabel = c.expires_at ? `Sisa ${formatDistanceToNow(new Date(c.expires_at), { locale: id })}` : null;
                     return (
-                        <button
+                        <div
                             key={c.id}
-                            onClick={() => onSelect(c.id)}
                             className={cn(
-                                "flex w-full items-center gap-3 border-b border-border/50 px-3 py-3 text-left transition-colors hover:bg-muted/40",
-                                active && "bg-violet-500/5 hover:bg-violet-500/5"
+                                "group flex w-full items-center gap-3 border-b border-border/50 px-3 py-3 text-left transition-colors hover:bg-muted/40",
+                                active && "bg-violet-500/5"
                             )}
                         >
-                            <div className="relative shrink-0">
-                                <div className="flex size-9 items-center justify-center rounded-full bg-violet-600 text-[11px] font-bold text-white">
-                                    {initials}
+                            <button onClick={() => onSelect(c.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                                <div className="relative shrink-0">
+                                    <div className="flex size-9 items-center justify-center rounded-full bg-violet-600 text-[11px] font-bold text-white">
+                                        {initials}
+                                    </div>
+                                    {c.unread_count > 0 && (
+                                        <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow-sm">
+                                            {c.unread_count > 9 ? "9+" : c.unread_count}
+                                        </span>
+                                    )}
                                 </div>
-                                {c.unread_count > 0 && (
-                                    <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow-sm">
-                                        {c.unread_count > 9 ? "9+" : c.unread_count}
-                                    </span>
-                                )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-baseline justify-between gap-2">
-                                    <span className="truncate text-xs font-semibold text-foreground">{c.other_name || c.other_email || c.other_user_id.slice(0, 8)}</span>
-                                    <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{isToday ? time : dateLabel}</span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-baseline justify-between gap-2">
+                                        <span className="truncate text-xs font-semibold text-foreground">{c.other_name || c.other_email || c.other_user_id.slice(0, 8)}</span>
+                                        <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{isToday ? time : dateLabel}</span>
+                                    </div>
+                                    {c.job_title && (
+                                        <p className="truncate text-[10px] font-medium text-violet-600 dark:text-violet-300">Re: {c.job_title}{c.job_company ? ` · ${c.job_company}` : ""}</p>
+                                    )}
+                                    {c.other_company && !c.job_title && (
+                                        <p className="truncate text-[10px] text-muted-foreground">{c.other_company}</p>
+                                    )}
+                                    <p className={cn("truncate text-xs", c.unread_count > 0 ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                                        {c.last_message || "—"}
+                                    </p>
+                                    {expiresLabel && <p className="font-mono text-[10px] text-amber-600">{expiresLabel} lagi</p>}
                                 </div>
-                                {c.job_title && (
-                                    <p className="truncate text-[10px] font-medium text-violet-600 dark:text-violet-300">Re: {c.job_title}{c.job_company ? ` · ${c.job_company}` : ""}</p>
-                                )}
-                                {c.other_company && !c.job_title && (
-                                    <p className="truncate text-[10px] text-muted-foreground">{c.other_company}</p>
-                                )}
-                                <p className={cn("truncate text-xs", c.unread_count > 0 ? "font-semibold text-foreground" : "text-muted-foreground")}>
-                                    {c.last_message || "—"}
-                                </p>
-                            </div>
-                        </button>
+                            </button>
+                            <button onClick={(e) => handleDelete(e, c.id)} className="hidden shrink-0 rounded p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 group-hover:flex" title="Hapus chat">
+                                <Trash2 className="size-3.5" />
+                            </button>
+                        </div>
                     );
                 })}
             </div>

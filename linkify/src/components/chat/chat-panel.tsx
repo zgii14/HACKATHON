@@ -5,12 +5,15 @@ import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { ArrowLeft, MessageCircleMore } from "lucide-react";
+import { ArrowLeft, MessageCircleMore, Trash2 } from "lucide-react";
 import { ConversationList, type Conv } from "@/components/chat/conversation-list";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { ChatInput } from "@/components/chat/chat-input";
 import { DateSeparator, shouldShowDateSeparator } from "@/components/chat/date-separator";
 import { useAuth } from "@clerk/nextjs";
+import Swal from "sweetalert2";
+import { formatDistanceToNow } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 
 type Message = {
     id: string;
@@ -77,6 +80,54 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
         },
         onError: (e: Error) => toast.error(e.message),
     });
+
+    const delConv = useMutation({
+        mutationFn: () => withAuth(`/chat/${selectedId}`, { method: "DELETE" }),
+        onSuccess: () => {
+            toast.success("Chat dihapus untuk kedua sisi");
+            setSelectedId(null);
+            qc.invalidateQueries({ queryKey: ["chat-conversations"] });
+        },
+        onError: (e: any) => toast.error(e.message || "Gagal hapus"),
+    });
+    const delMsg = useMutation({
+        mutationFn: (msgId: string) => withAuth(`/chat/${selectedId}/messages/${msgId}`, { method: "DELETE" }),
+        onSuccess: () => {
+            toast.success("Pesan dihapus");
+            qc.invalidateQueries({ queryKey: ["chat-messages", selectedId] });
+            qc.invalidateQueries({ queryKey: ["chat-conversations"] });
+        },
+        onError: (e: any) => toast.error(e.message || "Gagal hapus"),
+    });
+
+    const handleDeleteConv = async () => {
+        const isDark = document.documentElement.classList.contains("dark");
+        const res = await Swal.fire({
+            title: "Hapus chat?",
+            text: "Chat akan terhapus untuk kedua sisi dan tidak bisa dipulihkan.",
+            icon: "warning",
+            theme: isDark ? "dark" : "light",
+            showCancelButton: true,
+            confirmButtonText: "Hapus",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#e11d48",
+        });
+        if (res.isConfirmed) delConv.mutate();
+    };
+    const handleDeleteMsg = async (msgId: string) => {
+        const isDark = document.documentElement.classList.contains("dark");
+        const res = await Swal.fire({
+            title: "Hapus pesan?",
+            text: "Pesan akan terhapus untuk kedua sisi.",
+            icon: "warning",
+            theme: isDark ? "dark" : "light",
+            showCancelButton: true,
+            confirmButtonText: "Hapus",
+            cancelButtonText: "Batal",
+            confirmButtonColor: "#e11d48",
+        });
+        if (res.isConfirmed) delMsg.mutate(msgId);
+    };
 
     const handleSend = () => {
         if (!input.trim() || !selectedId) return;
@@ -152,10 +203,14 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
                                     <p className="truncate text-[11px] text-muted-foreground">
                                         {selectedConv?.other_company ?? selectedConv?.job_company ?? "—"}
                                         {selectedConv?.job_title ? ` · Re: ${selectedConv.job_title}` : ""}
+                                        {selectedConv?.expires_at ? ` · Sisa ${formatDistanceToNow(new Date(selectedConv.expires_at), { locale: localeId })}` : ""}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-1">
+                                <button onClick={handleDeleteConv} className="rounded p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600" title="Hapus chat (2 sisi)">
+                                    <Trash2 className="size-4" />
+                                </button>
                                 {onClose && (
                                     <button onClick={onClose} className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted">
                                         Tutup
@@ -181,17 +236,24 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
                                 const isMine = selectedConv ? m.sender_id !== selectedConv.other_user_id : !!userId && m.sender_id === userId;
                                 const replyRef = m.reply_to_id ? messages?.find((x) => x.id === m.reply_to_id) ?? null : null;
                                 return (
-                                    <div key={m.id} onDoubleClick={() => setReplyTo(m)} title="Double click untuk balas">
-                                        <MessageBubble
-                                            body={m.body}
-                                            createdAt={m.created_at}
-                                            isMine={isMine}
-                                            status={m.status}
-                                            replyTo={replyRef ? { body: replyRef.body } : null}
-                                            jobTitle={selectedConv?.job_title}
-                                            jobCompany={selectedConv?.job_company}
-                                            isFirstOfGroup={idx === 0 || renderedMessages[idx - 1]?.type === "sep"}
-                                        />
+                                    <div key={m.id} onDoubleClick={() => setReplyTo(m)} title="Double click untuk balas" className="group flex items-center gap-1">
+                                        <div className="flex-1">
+                                            <MessageBubble
+                                                body={m.body}
+                                                createdAt={m.created_at}
+                                                isMine={isMine}
+                                                status={m.status}
+                                                replyTo={replyRef ? { body: replyRef.body } : null}
+                                                jobTitle={selectedConv?.job_title}
+                                                jobCompany={selectedConv?.job_company}
+                                                isFirstOfGroup={idx === 0 || renderedMessages[idx - 1]?.type === "sep"}
+                                            />
+                                        </div>
+                                        {isMine && (
+                                            <button onClick={() => handleDeleteMsg(m.id)} className="hidden rounded p-1 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 group-hover:flex" title="Hapus pesan">
+                                                <Trash2 className="size-3.5" />
+                                            </button>
+                                        )}
                                     </div>
                                 );
                             })}

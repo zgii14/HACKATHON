@@ -21,6 +21,8 @@ type Job = {
     min_education: string | null;
     min_experience: string | null;
     work_type: string | null;
+    created_at?: string | null;
+    is_closed?: boolean;
 };
 
 function FilterChip({

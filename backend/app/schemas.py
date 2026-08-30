@@ -120,6 +120,10 @@ class RecruiterRequestOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class RecruiterProfilePatch(BaseModel):
+    company_name: str = Field(..., min_length=3, max_length=255)
+
+
 class RoleUpdate(BaseModel):
     role: str
 

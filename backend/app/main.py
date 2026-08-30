@@ -250,6 +250,13 @@ async def lifespan(app: FastAPI):
         conn.execute(text("ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS screened_at TIMESTAMPTZ NULL"))
         conn.commit()
 
+    # DDL Migration: expires_at for chat TTL 4 hari
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ NULL"))
+        # backfill existing rows
+        conn.execute(text("UPDATE conversations SET expires_at = created_at + INTERVAL '4 days' WHERE expires_at IS NULL"))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)

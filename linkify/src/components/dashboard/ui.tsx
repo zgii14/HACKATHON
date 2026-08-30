@@ -4,6 +4,8 @@
 // Satu sumber kebenaran untuk semua page dashboard biar seragam.
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { formatDistanceToNow } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -206,6 +208,7 @@ export type JobRowData = {
     salary?: string | null;
     work_type?: string | null;
     min_experience?: string | null;
+    created_at?: string | null;
 };
 
 export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: number; index?: number }) {
@@ -413,7 +416,12 @@ export function JobCard({
                     </div>
                 )}
 
-                <div className="mt-4 flex items-center justify-between gap-3 border-t border-border pt-3">
+                {job.created_at && (
+                    <div className="mt-3 flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+                        <span className="size-1 rounded-full bg-emerald-500" /> Dipost {formatDistanceToNow(new Date(job.created_at), { addSuffix: true, locale: localeId })}
+                    </div>
+                )}
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
                     <span className="truncate font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
                         {job.work_type || (job.is_remote ? "Remote" : "On-site")}
                         {job.min_experience ? ` · ${job.min_experience}` : ""}

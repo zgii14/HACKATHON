@@ -46,6 +46,16 @@ def _check_chat_quota(db: Session, user: User):
         )
 
 
+def _is_expired(conv: Conversation) -> bool:
+    if not conv.expires_at:
+        return False
+    from datetime import timezone
+    exp = conv.expires_at
+    if exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+    return exp < datetime.now(timezone.utc)
+
+
 def _resolve_other_display(db: Session, other_id: UUID, viewing_role: str):
     """Return (other_name, other_email, other_company, avatar_hint) for list."""
     other = db.query(User).filter(User.id == other_id).first()
@@ -130,10 +140,12 @@ def start_conversation(
     if user.role == "recruiter":
         _check_chat_quota(db, user)
 
+    from datetime import timezone
     conv = Conversation(
         recruiter_id=recruiter_id,
         candidate_id=candidate_id,
         job_id=body.job_id,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=4),
     )
     db.add(conv)
     db.commit()
@@ -145,7 +157,7 @@ def start_conversation(
         conv.updated_at = datetime.utcnow()
         db.commit()
 
-    return {"conversation_id": conv.id, "created": True}
+    return {"conversation_id": conv.id, "created": True, "expires_at": conv.expires_at}
 
 
 @router.get("/conversations", response_model=list[dict])
@@ -153,10 +165,13 @@ def list_conversations(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    from datetime import timezone
+    now = datetime.now(timezone.utc)
+    # lazy TTL filter — hapus yang sudah lewat 4 hari dari hasil list
     if user.role == "recruiter":
-        convs = db.query(Conversation).filter(Conversation.recruiter_id == user.id).order_by(Conversation.updated_at.desc()).all()
+        convs = db.query(Conversation).filter(Conversation.recruiter_id == user.id, (Conversation.expires_at.is_(None)) | (Conversation.expires_at > now)).order_by(Conversation.updated_at.desc()).all()
     else:
-        convs = db.query(Conversation).filter(Conversation.candidate_id == user.id).order_by(Conversation.updated_at.desc()).all()
+        convs = db.query(Conversation).filter(Conversation.candidate_id == user.id, (Conversation.expires_at.is_(None)) | (Conversation.expires_at > now)).order_by(Conversation.updated_at.desc()).all()
 
     out = []
     for c in convs:
@@ -186,6 +201,7 @@ def list_conversations(
             "job_title": job_title,
             "job_company": job_company,
             "updated_at": c.updated_at,
+            "expires_at": c.expires_at,
             "last_message": last_msg.body if last_msg else None,
             "last_message_at": last_msg.created_at if last_msg else c.created_at,
             "last_message_status": last_msg.status if last_msg else None,
@@ -221,11 +237,12 @@ def start_admin_chat(
     if existing:
         return {"conversation_id": existing.id, "created": False}
     _check_chat_quota(db, user)
-    conv = Conversation(recruiter_id=user.id, candidate_id=admin.id, job_id=None)
+    from datetime import timezone
+    conv = Conversation(recruiter_id=user.id, candidate_id=admin.id, job_id=None, expires_at=datetime.now(timezone.utc) + timedelta(days=4))
     db.add(conv)
     db.commit()
     db.refresh(conv)
-    return {"conversation_id": conv.id, "created": True}
+    return {"conversation_id": conv.id, "created": True, "expires_at": conv.expires_at}
 
 
 @router.get("/{conversation_id}/messages", response_model=list[dict])
@@ -237,6 +254,8 @@ def get_messages(
     conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conv:
         raise HTTPException(404, "Percakapan tidak ditemukan.")
+    if _is_expired(conv):
+        raise HTTPException(404, "Percakapan sudah kedaluwarsa (4 hari) dan terhapus.")
     if user.id not in (conv.recruiter_id, conv.candidate_id):
         raise HTTPException(403, "Bukan peserta percakapan ini.")
     # auto-mark read: pesan dari lawan yang masih sent → read saat dibuka
@@ -259,6 +278,8 @@ def mark_read(
     conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conv:
         raise HTTPException(404, "Percakapan tidak ditemukan.")
+    if _is_expired(conv):
+        raise HTTPException(404, "Percakapan sudah kedaluwarsa.")
     if user.id not in (conv.recruiter_id, conv.candidate_id):
         raise HTTPException(403, "Bukan peserta percakapan ini.")
     updated = db.query(Message).filter(
@@ -284,6 +305,8 @@ def send_message(
     conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     if not conv:
         raise HTTPException(404, "Percakapan tidak ditemukan.")
+    if _is_expired(conv):
+        raise HTTPException(404, "Percakapan sudah kedaluwarsa.")
     if user.id not in (conv.recruiter_id, conv.candidate_id):
         raise HTTPException(403, "Bukan peserta percakapan ini.")
     # validasi reply_to_id kalau ada
@@ -297,3 +320,45 @@ def send_message(
     db.commit()
     db.refresh(msg)
     return {"id": msg.id, "status": msg.status, "created_at": msg.created_at}
+
+
+@router.delete("/{conversation_id}", response_model=dict)
+def delete_conversation(
+    conversation_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if not conv:
+        raise HTTPException(404, "Percakapan tidak ditemukan.")
+    if _is_expired(conv):
+        raise HTTPException(404, "Percakapan sudah kedaluwarsa.")
+    if user.id not in (conv.recruiter_id, conv.candidate_id):
+        raise HTTPException(403, "Bukan peserta percakapan ini.")
+    db.delete(conv)
+    db.commit()
+    return {"deleted": str(conversation_id)}
+
+
+@router.delete("/{conversation_id}/messages/{message_id}", response_model=dict)
+def delete_message(
+    conversation_id: UUID,
+    message_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    conv = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if not conv:
+        raise HTTPException(404, "Percakapan tidak ditemukan.")
+    if _is_expired(conv):
+        raise HTTPException(404, "Percakapan sudah kedaluwarsa.")
+    if user.id not in (conv.recruiter_id, conv.candidate_id):
+        raise HTTPException(403, "Bukan peserta percakapan ini.")
+    msg = db.query(Message).filter(Message.id == message_id, Message.conversation_id == conversation_id).first()
+    if not msg:
+        raise HTTPException(404, "Pesan tidak ditemukan.")
+    if msg.sender_id != user.id:
+        raise HTTPException(403, "Hanya pengirim yang bisa menghapus pesan.")
+    db.delete(msg)
+    db.commit()
+    return {"deleted": str(message_id)}
