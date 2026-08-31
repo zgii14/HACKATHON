@@ -86,6 +86,9 @@ class Job(Base):
     location: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_remote: Mapped[bool] = mapped_column(Boolean, default=False)
     apply_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    # Kategori bidang eksplisit, mis. ["backend","fullstack"].
+    # SUMBER TUNGGAL relevansi minat kandidat — jangan derive dari skill overlap.
+    categories: Mapped[list | None] = mapped_column(JSON, nullable=True)
     # ── Info tambahan dari scraping ───────────────────────────────────────────
     salary: Mapped[str | None] = mapped_column(String(255), nullable=True)          # "Rp 8 jt-10 jt"
     min_education: Mapped[str | None] = mapped_column(String(255), nullable=True)   # "Minimal Sarjana (S1)"

@@ -15,6 +15,7 @@ from app.routers import applications
 from app.seed import reseed_jobs, seed_jobs_if_empty
 from app.database import get_db
 from app.services import scraper_service
+from app.services.job_category import backfill_job_categories
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,15 @@ async def lifespan(app: FastAPI):
         """))
         conn.commit()
 
+    # DDL Migration: kategori bidang job — sumber tunggal relevansi minat kandidat.
+    # HARUS dijalankan sebelum INSERT demo job di bawah (INSERT menyebut kolom ini).
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE jobs
+            ADD COLUMN IF NOT EXISTS categories JSONB
+        """))
+        conn.commit()
+
     # DDL Migration: tambah kolom bio data untuk surat lamaran
     with engine.connect() as conn:
         for col, col_type in [
@@ -135,8 +145,8 @@ async def lifespan(app: FastAPI):
         # Seed a test job for this recruiter
         job_id = "550e8400-e29b-41d4-a716-446655440001"
         conn.execute(text(f"""
-            INSERT INTO jobs (id, title, company, description, required_skills, location, is_remote, recruiter_id)
-            VALUES ('{job_id}', 'Senior React Developer', 'GitHire Enterprise', 'We are looking for a Senior React Developer with deep knowledge in TypeScript and State Management.', '["React", "TypeScript", "Tailwind CSS", "Redux"]', 'Bengkulu, Indonesia', TRUE, '{recruiter_id}')
+            INSERT INTO jobs (id, title, company, description, required_skills, categories, location, is_remote, recruiter_id)
+            VALUES ('{job_id}', 'Senior React Developer', 'GitHire Enterprise', 'We are looking for a Senior React Developer with deep knowledge in TypeScript and State Management.', '["React", "TypeScript", "Tailwind CSS", "Redux"]', '["frontend"]', 'Bengkulu, Indonesia', TRUE, '{recruiter_id}')
             ON CONFLICT (id) DO NOTHING;
         """))
         conn.commit()
@@ -266,6 +276,16 @@ async def lifespan(app: FastAPI):
             seed_candidates_if_empty(db)
         except Exception as e:
             logger.warning("[seed] candidates seed fail: %s", e)
+
+        # Backfill kategori untuk job lama (recruiter/scrape/seed versi lama).
+        # Idempoten: hanya baris yang kategorinya belum terpakai.
+        try:
+            touched = backfill_job_categories(db)
+            if touched:
+                logger.warning("[migration] backfill kategori job: %d baris", touched)
+        except Exception as e:
+            db.rollback()
+            logger.warning("[migration] backfill kategori gagal: %s", e)
     finally:
         db.close()
     yield

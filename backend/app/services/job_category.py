@@ -105,3 +105,25 @@ def classify_job_categories(title: str, required_skills) -> list[str]:
     if top < MIN_VOTES:
         return sorted({max(scores, key=lambda c: (scores[c], c))})
     return sorted({c for c, v in scores.items() if v == top})
+
+
+def backfill_job_categories(db) -> int:
+    """Isi categories untuk job lama (recruiter/scrape/seed versi lama).
+
+    Idempoten: hanya menyentuh baris yang kategorinya belum terpakai, jadi aman
+    dipanggil tiap startup. Return jumlah baris yang diproses.
+
+    Filter dilakukan di Python, BUKAN di SQL: kolom JSON menyimpan None sebagai
+    JSON 'null' (bukan SQL NULL) sehingga `IS NULL` melewatkan baris tersebut,
+    dan perbandingan `== []` bergantung dialek. Tabel jobs kecil dan ini hanya
+    jalan sekali saat startup.
+    """
+    from app.models import Job
+
+    pending = [job for job in db.query(Job).all() if not sanitize_categories(job.categories)]
+    for job in pending:
+        job.categories = classify_job_categories(job.title, job.required_skills)
+    if pending:
+        db.commit()
+    return len(pending)
+
