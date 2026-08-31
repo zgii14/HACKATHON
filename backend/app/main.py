@@ -260,6 +260,12 @@ async def lifespan(app: FastAPI):
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)
+        # Seed 5 dummy kandidat tambahan (real GitHub fetch via GITHUB_TOKEN, nama dummy)
+        try:
+            from app.seed_candidates import seed_candidates_if_empty
+            seed_candidates_if_empty(db)
+        except Exception as e:
+            logger.warning("[seed] candidates seed fail: %s", e)
     finally:
         db.close()
     yield
@@ -305,6 +311,19 @@ def admin_reseed(
         raise HTTPException(status_code=403, detail="Forbidden: invalid or missing admin secret")
     total = reseed_jobs(db)
     return {"ok": True, "total_jobs": total, "pesan": f"{total} lowongan berhasil di-seed ulang"}
+
+
+@app.post("/admin/reseed-candidates")
+def admin_reseed_candidates(
+    x_admin_secret: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    admin_secret = settings.admin_secret
+    if not admin_secret or x_admin_secret != admin_secret:
+        raise HTTPException(status_code=403, detail="Forbidden: invalid or missing admin secret")
+    from app.seed_candidates import reseed_candidates
+    total = reseed_candidates(db)
+    return {"ok": True, "total_candidates": total, "pesan": f"{total} kandidat dummy berhasil di-seed ulang"}
 
 
 class ScrapeRequest(BaseModel):
