@@ -25,6 +25,7 @@ type Profile = {
 
 type SkillGap = {
     weak_skills: string[];
+    unproven_demand: { skill: string; canonical_skill: string; job_count: number }[];
     github_backed_count: number;
     verified_skill_count: number;
     has_profile: boolean;
@@ -299,18 +300,20 @@ export default function ProfilePage() {
                 </section>
             </Reveal>
 
-            {/* Perlu diperkuat */}
-            {gap && gap.weak_skills.length > 0 && (
+            {/* Perlu bukti GitHub */}
+            {gap && (gap.unproven_demand?.length ?? 0) > 0 && (
                 <Reveal delay={0.4} className="pt-10">
-                    <section aria-label="Skill perlu diperkuat">
-                        <SecTitle title="Perlu diperkuat" meta={`${gap.weak_skills.length} belum terverifikasi`} />
+                    <section aria-label="Skill tanpa bukti GitHub">
+                        <SecTitle title="Belum ada bukti GitHub" meta={`${gap.unproven_demand.length} skill diminta pasar`} />
                         <div className="mt-3 flex flex-wrap gap-1.5">
-                            {gap.weak_skills.map((s) => (
-                                <span key={s} className="rounded-md border border-warning/40 px-2 py-1 text-[12px] text-warning">{s}</span>
+                            {gap.unproven_demand.map((s) => (
+                                <span key={s.canonical_skill} className="rounded-md border border-warning/40 px-2 py-1 text-[12px] text-warning">
+                                    {s.skill}
+                                </span>
                             ))}
                         </div>
                         <p className="mt-3 border-l-2 border-warning/50 pl-3 text-[12.5px] leading-relaxed text-muted-foreground">
-                            Buat project open-source yang memakai teknologi ini. Recruiter lebih percaya bukti kode dibanding klaim di CV.
+                            Nama skill ini tidak muncul di bahasa atau topic repo GitHub-mu. Publikasikan project yang memakainya agar recruiter punya bukti kode.
                         </p>
                     </section>
                 </Reveal>

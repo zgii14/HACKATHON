@@ -27,6 +27,8 @@ type Job = {
 
 type SkillGap = {
     missing_skills: string[];
+    missing_skill_count: number;
+    unproven_demand: { skill: string; canonical_skill: string; job_count: number }[];
     has_profile: boolean;
     user_skill_count: number;
     total_job_skills: number;
@@ -131,8 +133,8 @@ export default function DashboardHomePage() {
     const githubBacked = gap?.github_backed_count ?? 0;
     // Hanya skill dengan bukti commit yang boleh dilabeli "verified"
     const verifiedCount = gap?.verified_skill_count ?? 0;
-    const gapCount = gap?.missing_skills.length ?? 0;
-    const weakCount = gap?.weak_skills?.length ?? 0;
+    const gapCount = gap?.missing_skill_count ?? 0;
+    const weakCount = gap?.unproven_demand?.length ?? 0;
     const topMatches = (recommended ?? []).slice(0, 5);
     const primaryMatch = topMatches[0];
 
