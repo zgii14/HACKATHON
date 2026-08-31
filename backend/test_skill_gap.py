@@ -98,5 +98,63 @@ class SplitGapTests(unittest.TestCase):
         self.assertEqual((missing, unproven), ([], []))
 
 
+class SeedDataRegressionTests(unittest.TestCase):
+    """Regresi terhadap bug asli, diuji dengan data seed nyata.
+
+    Bug lama: coverage dihitung (total_skill_unik - min(15, missing)) / total,
+    sehingga profil backend 5 skill tampil 80% padahal formula sebenarnya 7%.
+    Bug lama: filter minat ">=1 skill overlap" menarik 47 dari 56 lowongan.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        from app.seed import DUMMY_JOBS
+        from app.services.market_scope import resolve_scope_from_jobs
+
+        class SeedJob:
+            def __init__(self, row):
+                self.title = row["title"]
+                self.required_skills = row["required_skills"]
+                self.categories = row["categories"]
+
+        cls.jobs = [SeedJob(row) for row in DUMMY_JOBS]
+        cls.resolve = staticmethod(resolve_scope_from_jobs)
+        cls.backend_profile = canonical_set(["Python", "FastAPI", "PostgreSQL", "Git", "Docker"])
+
+    def test_backend_interest_no_longer_matches_almost_the_whole_market(self):
+        scope = self.resolve(self.jobs, ["backend"], "auto")
+        self.assertEqual(scope.effective_mode, "interests")
+        self.assertLess(len(scope.jobs), 20, "minat backend tidak boleh menarik hampir semua lowongan")
+        self.assertEqual(len(scope.jobs), 17)
+
+    def test_data_and_ai_jobs_are_not_pulled_into_backend_scope(self):
+        titles = {j.title for j in self.resolve(self.jobs, ["backend"], "auto").jobs}
+        self.assertNotIn("Junior Data Analyst", titles)
+        self.assertNotIn("NLP Engineer", titles)
+        self.assertNotIn("iOS Developer (Swift)", titles)
+
+    def test_profile_matching_a_seed_job_exactly_is_counted_ready(self):
+        scope = self.resolve(self.jobs, ["backend"], "auto")
+        readiness = compute_readiness(self.backend_profile, scope.jobs)
+        self.assertGreaterEqual(readiness.ready_jobs, 1)
+        self.assertEqual(readiness.relevant_jobs, len(scope.jobs))
+
+    def test_gap_count_is_not_capped_at_fifteen(self):
+        scope = self.resolve(self.jobs, [], "all")
+        missing, _ = split_gap(self.backend_profile, set(), aggregate_demand(scope.jobs))
+        self.assertGreater(len(missing), 15, "jumlah gap harus penuh, bukan terpotong 15")
+
+    def test_display_slice_stays_bounded_while_count_stays_full(self):
+        scope = self.resolve(self.jobs, [], "all")
+        missing, _ = split_gap(self.backend_profile, set(), aggregate_demand(scope.jobs))
+        self.assertEqual(len(missing[:15]), 15)
+        self.assertNotEqual(len(missing), len(missing[:15]))
+
+    def test_closed_jobs_are_excluded_from_scope(self):
+        active = [j for j in self.jobs if j.title != "Junior Backend Developer"]
+        titles = {j.title for j in self.resolve(active, ["backend"], "auto").jobs}
+        self.assertNotIn("Junior Backend Developer", titles)
+
+
 if __name__ == "__main__":
     unittest.main()

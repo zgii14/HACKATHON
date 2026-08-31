@@ -15,55 +15,47 @@ from app.schemas import (
     BioDataPatch,
     CVDataSchema,
     InterestsPatch,
+    ModeInfoOut,
     ProfileOut,
+    ReadinessOut,
     RecruiterProfilePatch,
     RoadmapOut,
     RoadmapStepOut,
     RoadmapStepPatch,
     RoleUpdate,
     CVPreferenceUpdate,
+    SkillDemandItem,
     SkillGapOut,
     UserOut,
 )
 from app.services import roadmap_service
-from app.services.matching import jaccard_score, normalize_skill
+from app.services.market_scope import resolve_market_scope
+from app.services.matching import jaccard_score
+from app.services.skill_gap import (
+    aggregate_demand,
+    canonical_set,
+    compute_readiness,
+    split_gap,
+)
 
 router = APIRouter(prefix="/me", tags=["me"])
 
-# ── Mapping: bidang minat → canonical skill keywords ─────────────────────────
-INTEREST_SKILL_MAP: dict[str, set[str]] = {
-    "backend":    {"python", "fastapi", "django", "flask", "node.js", "go", "java",
-                   "spring boot", "php", "laravel", "rust", "rest api", "graphql",
-                   "grpc", "microservices", "rabbitmq", "kafka"},
-    "frontend":   {"javascript", "typescript", "react", "vue", "angular", "next.js",
-                   "nuxt.js", "svelte", "html", "css", "tailwind css", "vite"},
-    "fullstack":  {"javascript", "typescript", "react", "node.js", "postgresql",
-                   "mongodb", "rest api", "docker", "python"},
-    "mobile":     {"flutter", "dart", "react native", "kotlin", "android", "swift",
-                   "ios", "firebase"},
-    "ai_ml":      {"machine learning", "deep learning", "tensorflow", "pytorch",
-                   "scikit-learn", "nlp", "computer vision", "pandas",
-                   "hugging face", "llm", "generative ai"},
-    "data":       {"sql", "pandas", "apache spark", "bigquery", "dbt", "airflow",
-                   "power bi", "tableau", "data warehouse", "etl", "postgresql"},
-    "devops":     {"docker", "kubernetes", "aws", "gcp", "azure", "terraform",
-                   "linux", "ci/cd", "bash", "nginx", "prometheus", "grafana"},
-    "qa":         {"selenium", "playwright", "jest", "postman", "cypress",
-                   "pytest", "rest api", "testing", "jmeter"},
-    "security":   {"linux", "bash", "networking", "penetration testing",
-                   "siem", "cybersecurity", "firewall"},
-    "blockchain": {"solidity", "web3.js", "ethers.js", "hardhat", "smart contract"},
-    "game":       {"unity", "c#", "unreal", "ar kit", "opengl"},
-    "iot":        {"c", "c++", "mqtt", "embedded"},
-}
 
+def _github_skill_names(profile: CandidateProfile) -> list[str]:
+    """Nama skill yang muncul di data GitHub (bahasa + topics).
 
-def _get_interest_skills(interests: list[str]) -> set[str]:
-    """Gabungkan semua skill dari kategori minat yang dipilih user."""
-    result: set[str] = set()
-    for cat in interests:
-        result.update(INTEREST_SKILL_MAP.get(cat, set()))
-    return result
+    CATATAN: ini bukan verifikasi kepemilikan atau kemahiran — hanya kemunculan
+    nama. Verifikasi bukti commit ada di profile.verified_skills.
+    """
+    signals = profile.github_signals or {}
+    langs = signals.get("languages")
+    topics = signals.get("topics")
+    names: list[str] = []
+    if isinstance(langs, dict):
+        names.extend(str(k) for k in langs)
+    if isinstance(topics, list):
+        names.extend(str(t).replace("-", " ") for t in topics)
+    return names
 
 
 @router.get("", response_model=UserOut)
@@ -347,126 +339,65 @@ def update_biodata(
 def get_skill_gap(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    mode: str = Query(default="auto", description="'auto' (interests jika ada), 'interests', atau 'all'"),
+    mode: str = Query(default="auto", description="'auto', 'interests', atau 'all'"),
 ):
+    """Kesiapan kandidat terhadap lowongan relevan yang AKTIF.
+
+    Skor utama = berapa lowongan yang requirement-nya sudah terpenuhi minimal
+    threshold. JANGAN kembali ke coverage union-of-skills: metrik itu menghukum
+    kandidat karena tidak menguasai stack alternatif yang tidak diminta lowongan
+    relevannya, dan dulu dihitung dari daftar missing yang sudah dipotong 15.
+    """
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
     if not profile or not profile.merged_skills:
-        return SkillGapOut(missing_skills=[], has_profile=False)
+        return SkillGapOut(has_profile=False)
 
-    all_jobs = db.query(Job).all()
-
-    # ── Tentukan mode efektif ─────────────────────────────────────────────
     user_interests: list[str] = list(profile.interests or [])
-    has_interests = bool(user_interests)
-    effective_mode = mode
-    if mode == "auto":
-        effective_mode = "interests" if has_interests else "all"
+    scope = resolve_market_scope(db, user_interests, mode)
 
-    # ── Filter job berdasarkan minat (jika mode=interests) ────────────────
-    if effective_mode == "interests" and has_interests:
-        interest_skills = _get_interest_skills(user_interests)
-        effective_jobs = [
-            job for job in all_jobs
-            if {normalize_skill(s) for s in (job.required_skills or [])} & interest_skills
+    user_canon = canonical_set(profile.merged_skills)
+    github_canon = canonical_set(_github_skill_names(profile))
+
+    demand = aggregate_demand(scope.jobs)
+    readiness = compute_readiness(user_canon, scope.jobs)
+    missing, unproven = split_gap(user_canon, github_canon, demand)
+
+    def to_items(items) -> list[SkillDemandItem]:
+        return [
+            SkillDemandItem(skill=i.label, canonical_skill=i.canonical, job_count=i.job_count)
+            for i in items
         ]
-        if not effective_jobs:          # fallback jika tidak ada job yang cocok
-            effective_jobs = all_jobs
-            effective_mode = "all"
-    else:
-        effective_jobs = all_jobs
-        effective_mode = "all"
 
-    # ── Hitung frekuensi skill dari job yang efektif ───────────────────────
-    skill_freq: dict[str, int] = {}
-    for job in effective_jobs:
-        for s in (job.required_skills or []):
-            key = s.strip().lower()
-            skill_freq[key] = skill_freq.get(key, 0) + 1
-
-    # ── Klasifikasi skill user berdasarkan sumber ──────────────────────────
-    STRONG_BYTES_THRESHOLD = 3000  # bytes di GitHub → dianggap skill "kuat"
-
-    gh_signals = profile.github_signals or {}
-    
-    _langs_raw = gh_signals.get("languages")
-    gh_langs: dict[str, int] = _langs_raw if isinstance(_langs_raw, dict) else {}
-    
-    _topics_raw = gh_signals.get("topics")
-    gh_topics: list[str] = _topics_raw if isinstance(_topics_raw, list) else []
-
-    # Deteksi format data lama vs baru:
-    # - Format lama: nilai = jumlah repo ({"Python": 3, "JavaScript": 1}) → max ~100
-    # - Format baru: nilai = byte count  ({"Python": 82000, ...})          → max ribuan
-    # Jika max value < 1000 → kemungkinan format lama → skip threshold "strong"
-    max_lang_value = max(gh_langs.values()) if gh_langs else 0
-    is_bytes_format = max_lang_value >= 1000
-
-    # Normalisasi nama bahasa GitHub ke lowercase (untuk perbandingan)
-    gh_strong: set[str] = set()   # GitHub language dengan banyak kode (hanya format baru)
-    gh_all: set[str] = set()      # Semua skill yang ada bukti GitHub-nya
-
-    for lang, value in gh_langs.items():
-        norm = lang.strip().lower()
-        gh_all.add(norm)
-        # Hanya klasifikasikan "strong" jika data dalam format bytes
-        if is_bytes_format and value >= STRONG_BYTES_THRESHOLD:
-            gh_strong.add(norm)
-        elif not is_bytes_format:
-            # Format lama: tidak bisa tahu "seberapa kuat", anggap semua moderate
-            # (tidak masukkan ke gh_strong, tapi tetap gh_all = terbukti di GitHub)
-            pass
-
-    for topic in gh_topics:
-        gh_all.add(topic.strip().lower().replace("-", " "))
-
-    # Normalisasi menggunakan SKILL_ALIASES agar alias diperhitungkan ("js" → "javascript")
-
-    # Set skill yang ada bukti GitHub (normalized)
-    gh_all_norm: set[str] = {normalize_skill(s) for s in gh_all}
-
-    # Skill user yang TIDAK ada di GitHub sama sekali → "cv_only"
-    # Hitung dari set ternormalisasi agar duplikat case-variant tidak menggelembungkan angka
-    merged_norm: set[str] = {normalize_skill(s) for s in profile.merged_skills}
-    cv_only_norm: set[str] = {norm for norm in merged_norm if norm not in gh_all_norm}
-
-    github_backed_count = len(merged_norm) - len(cv_only_norm)
-
-    # Skill dengan bukti commit. Berbeda dari github_backed_count di atas yang
-    # hanya mencocokkan nama skill dengan bahasa/topics GitHub.
     verified_skills: list = profile.verified_skills or []
 
-    # ── Missing skills: skill job yang user tidak punya sama sekali ────────
-    user_skills = {normalize_skill(s) for s in profile.merged_skills}
-    missing_with_freq = [
-        {"skill": s, "job_count": count}
-        for s, count in skill_freq.items()
-        if normalize_skill(s) not in user_skills
-    ]
-    missing_with_freq.sort(key=lambda x: x["job_count"], reverse=True)
-    missing_skills = [item["skill"] for item in missing_with_freq[:15]]
-
-    # ── Weak skills: CV-only skills yang dibutuhkan setidaknya 1 job ───────
-    # Ini bukan "missing" tapi "perlu diperdalam" — ada klaim tapi belum terbukti di GitHub
-    weak_with_freq = [
-        {"skill": s, "job_count": count}
-        for s, count in skill_freq.items()
-        if normalize_skill(s) in cv_only_norm  # user punya (dari CV) tapi tidak ada di GitHub
-    ]
-    weak_with_freq.sort(key=lambda x: x["job_count"], reverse=True)
-    weak_skills = [item["skill"] for item in weak_with_freq]
-
     return SkillGapOut(
-        missing_skills=missing_skills,
         has_profile=True,
-        skill_freq=[{"skill": item["skill"], "job_count": item["job_count"]} for item in missing_with_freq[:10]],
-        user_skill_count=len(user_skills),
-        total_job_skills=len(skill_freq),
-        weak_skills=weak_skills,
-        github_backed_count=github_backed_count,
+        readiness=ReadinessOut(
+            ready_jobs=readiness.ready_jobs,
+            relevant_jobs=readiness.relevant_jobs,
+            median_coverage_pct=readiness.median_coverage_pct,
+            threshold_pct=readiness.threshold_pct,
+        ),
+        mode_info=ModeInfoOut(
+            requested=scope.requested_mode,
+            effective=scope.effective_mode,
+            fallback_reason=scope.fallback_reason,
+        ),
+        missing_skill_count=len(missing),
+        missing_skills=[i.label for i in missing[:15]],
+        missing_demand=to_items(missing[:10]),
+        unproven_demand=to_items(unproven[:10]),
+        user_skill_count=len(user_canon),
+        market_skill_count=len(demand),
+        github_backed_count=len(user_canon & github_canon),
         verified_skill_count=len(verified_skills),
         verified_skills=verified_skills,
-        mode=effective_mode,
         interests=user_interests,
+        # ── mirror deprecated untuk consumer yang belum migrasi ──
+        skill_freq=[{"skill": i.label, "job_count": i.job_count} for i in missing[:10]],
+        weak_skills=[i.label for i in unproven],
+        total_job_skills=len(demand),
+        mode=scope.effective_mode,
     )
 
 
@@ -597,23 +528,16 @@ def get_roadmap(
     - Tanpa job_id: roadmap generik berdasarkan gap vs lowongan relevan (filter by interests jika ada)
     - Dengan job_id: roadmap spesifik untuk lowongan yang dipilih
     """
-    # Untuk roadmap generik: filter job berdasarkan minat user agar konsisten dengan skill-gap page.
-    # Per-job roadmap tidak perlu filter ini.
+    # Untuk roadmap generik: scope IDENTIK dengan /me/skill-gap agar prioritas
+    # belajar di kedua halaman tidak pernah berbeda definisi (dan job tutup
+    # tidak ikut membentuk gap).
     effective_jobs = None
     if not job_id:
-        profile_for_interests = db.query(CandidateProfile).filter(
+        profile_for_scope = db.query(CandidateProfile).filter(
             CandidateProfile.user_id == user.id
         ).first()
-        if profile_for_interests:
-            user_interests = list(profile_for_interests.interests or [])
-            if user_interests:
-                all_jobs = db.query(Job).all()
-                interest_skills = _get_interest_skills(user_interests)
-                filtered = [
-                    j for j in all_jobs
-                    if {normalize_skill(s) for s in (j.required_skills or [])} & interest_skills
-                ]
-                effective_jobs = filtered if filtered else all_jobs
+        interests = list(profile_for_scope.interests or []) if profile_for_scope else []
+        effective_jobs = resolve_market_scope(db, interests, "auto").jobs
 
     try:
         fp, steps_raw, _cached = roadmap_service.ensure_roadmap_generated(
