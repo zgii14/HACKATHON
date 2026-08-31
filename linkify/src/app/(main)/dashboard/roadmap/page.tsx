@@ -4,6 +4,7 @@
 
 import { BarFill, EASE_OUT } from "@/components/dashboard/ui";
 import { useApi } from "@/hooks/use-api";
+import { confirmDestructive } from "@/lib/confirm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
@@ -18,6 +19,7 @@ type Step = {
     resources?: string[];
     target?: string;
     completed: boolean;
+    quiz_passed?: boolean;
 };
 type Roadmap = {
     fingerprint: string | null;
@@ -83,24 +85,29 @@ function RoadmapContent() {
     const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
     const [activeQuizIdx, setActiveQuizIdx] = useState<number | null>(null);
-    const [quizQuestions, setQuizQuestions] = useState<{ question: string; options: string[]; correct_index: number }[] | null>(null);
+    const [quizQuestions, setQuizQuestions] = useState<{ question: string; options: string[] }[] | null>(null);
+    const [quizToken, setQuizToken] = useState<string | null>(null);
+    const [quizTotal, setQuizTotal] = useState(5);
     const [loadingQuiz, setLoadingQuiz] = useState(false);
     const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
     const [userAnswers, setUserAnswers] = useState<number[]>([]);
-    const [quizResult, setQuizResult] = useState<{ finished: boolean; passed: boolean; score: number } | null>(null);
+    const [quizResult, setQuizResult] = useState<{ finished: boolean; passed: boolean; score: number; total: number } | null>(null);
 
     const startQuiz = async (index: number) => {
         setActiveQuizIdx(index);
         setLoadingQuiz(true);
         setQuizQuestions(null);
+        setQuizToken(null);
         setCurrentQuestionIdx(0);
         setUserAnswers([]);
         setQuizResult(null);
         try {
             const url = jobId ? `/me/roadmap/quiz?step_index=${index}&job_id=${jobId}` : `/me/roadmap/quiz?step_index=${index}`;
-            const data = await withAuth<{ quiz: any[] }>(url);
+            const data = await withAuth<{ quiz: { question: string; options: string[] }[]; quiz_token: string; total: number }>(url);
             if (data?.quiz && data.quiz.length > 0) {
                 setQuizQuestions(data.quiz);
+                setQuizToken(data.quiz_token);
+                setQuizTotal(data.total || data.quiz.length);
             } else {
                 toast.error("Gagal mendapatkan soal kuis dari AI.");
                 setActiveQuizIdx(null);
@@ -113,22 +120,52 @@ function RoadmapContent() {
         }
     };
 
+    // Grading dilakukan SERVER (kunci jawaban tidak pernah ada di client).
+    const submitQuiz = useMutation({
+        mutationFn: async ({ token, answers }: { token: string; answers: number[] }) => {
+            const url = jobId ? `/me/roadmap/quiz/submit?job_id=${jobId}` : "/me/roadmap/quiz/submit";
+            return withAuth<{ score: number; total: number; passed: boolean }>(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quiz_token: token, answers }),
+            });
+        },
+        onSuccess: (res) => {
+            setQuizResult({ finished: true, passed: res.passed, score: res.score, total: res.total });
+            qc.invalidateQueries({ queryKey: ["xp"] });
+            if (!res.passed) {
+                toast.error(`Belum lulus (${res.score}/${res.total}). Baca materi lalu coba lagi.`, { autoClose: 4000 });
+                return;
+            }
+            const updated = qc.setQueryData<Roadmap>(["roadmap", jobId ?? "generic"], (old) => {
+                if (!old) return old;
+                return {
+                    ...old,
+                    steps: old.steps.map((s) =>
+                        s.index === activeQuizIdx ? { ...s, completed: true, quiz_passed: true } : s
+                    ),
+                };
+            });
+            qc.invalidateQueries({ queryKey: ["bookmarks"] });
+            const allDone = updated ? updated.steps.every((s) => s.completed) : false;
+            toast.success(
+                allDone
+                    ? "Semua langkah selesai! Bonus +200 XP. Kamu siap apply!"
+                    : "Jawaban 100% benar. +50 XP",
+                { autoClose: 5000 }
+            );
+        },
+        onError: (e: any) => toast.error(e.message || "Gagal mengirim jawaban."),
+    });
+
     const handleAnswerSelect = (optionIdx: number) => {
+        if (submitQuiz.isPending) return;
         const nextAnswers = [...userAnswers, optionIdx];
         setUserAnswers(nextAnswers);
         if (currentQuestionIdx + 1 < (quizQuestions?.length ?? 0)) {
             setCurrentQuestionIdx((prev) => prev + 1);
         } else {
-            let correctCount = 0;
-            quizQuestions?.forEach((q, i) => {
-                if (nextAnswers[i] === q.correct_index) correctCount++;
-            });
-            const passed = correctCount === (quizQuestions?.length ?? 0);
-            setQuizResult({ finished: true, passed, score: correctCount });
-            if (passed) {
-                patch.mutate({ index: activeQuizIdx!, completed: true });
-                toast.success("Hebat! Jawabanmu 100% benar.");
-            }
+            if (quizToken) submitQuiz.mutate({ token: quizToken, answers: nextAnswers });
         }
     };
 
@@ -186,6 +223,13 @@ function RoadmapContent() {
         onError: (e: Error) => toast.error(`Gagal reset: ${e.message}`),
     });
 
+    const { data: xp } = useQuery({
+        queryKey: ["xp"],
+        queryFn: () => withAuth<{ total_xp: number; level: number; tier: string; next_threshold: number; progress_pct: number }>("/me/xp"),
+        enabled: authReady,
+        staleTime: 30_000,
+    });
+
     const completedCount = data?.steps.filter((s) => s.completed).length ?? 0;
     const totalCount = data?.steps.length ?? 0;
     const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -222,10 +266,17 @@ function RoadmapContent() {
                     <h1 className="mt-2 text-[22px] font-bold tracking-tight">Roadmap belajar</h1>
                     <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
                         {data?.job_title
-                            ? `Untuk posisi ${data.job_title} di ${data.job_company ?? ""}. Centang lingkaran atau lulus kuis AI untuk menyelesaikan langkah.`
-                            : "Berdasarkan skill gap vs semua lowongan. Centang lingkaran atau lulus kuis AI untuk menyelesaikan langkah."}
+                            ? `Untuk posisi ${data.job_title} di ${data.job_company ?? ""}. Lulus kuis AI (semua jawaban benar) untuk menyelesaikan langkah.`
+                            : "Berdasarkan skill gap vs semua lowongan. Lulus kuis AI (semua jawaban benar) untuk menyelesaikan langkah."}
                     </p>
                 </div>
+                {xp && (
+                    <div className="shrink-0 self-start rounded-md border border-primary/30 bg-primary/[0.06] px-3 py-2 text-right font-mono text-[11px] leading-tight text-muted-foreground md:self-auto">
+                        <span className="text-[15px] font-bold text-primary">⚡ {xp.total_xp} XP</span>
+                        <br />
+                        Lv{xp.level} · {xp.tier} <span className="opacity-70">· {xp.progress_pct}%</span>
+                    </div>
+                )}
                 <button
                     onClick={() => reset.mutate()}
                     disabled={reset.isPending || isLoading}
@@ -284,9 +335,17 @@ function RoadmapContent() {
                             return (
                                 <div key={step.index} className="relative flex items-start gap-4">
                                     <button
-                                        onClick={() => patch.mutate({ index: step.index, completed: !isCompleted })}
-                                        disabled={patch.isPending}
-                                        title={isCompleted ? "Klik untuk batalkan" : "Klik untuk selesaikan"}
+                                        onClick={async () => {
+                                            if (!isCompleted) return;
+                                            const ok = await confirmDestructive({
+                                                title: "Batal selesaikan langkah?",
+                                                text: "State kuis direset; kamu harus lulus kuis lagi untuk menyelesaikan kembali.",
+                                                confirmText: "Ya, batal",
+                                            });
+                                            if (ok) patch.mutate({ index: step.index, completed: false });
+                                        }}
+                                        disabled={patch.isPending || !isCompleted}
+                                        title={isCompleted ? "Batal selesaikan" : "Selesaikan dengan lulus kuis di bawah"}
                                         className={`relative z-10 grid size-8 shrink-0 place-items-center rounded-full border-2 font-mono text-[12px] font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                                             isCompleted
                                                 ? "border-success bg-success text-primary-foreground"
@@ -350,7 +409,7 @@ function RoadmapContent() {
                                                         {loadingQuiz ? (
                                                             <div className="flex items-center gap-2 py-2">
                                                                 <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                                                                <p className="font-mono text-[12px] text-muted-foreground">Gemini menyusun 3 pertanyaan…</p>
+                                                                <p className="font-mono text-[12px] text-muted-foreground">Gemini menyusun 5 pertanyaan…</p>
                                                             </div>
                                                         ) : quizQuestions && quizResult?.finished ? (
                                                             <motion.div
@@ -363,7 +422,7 @@ function RoadmapContent() {
                                                                     <span className={`font-mono text-[11px] font-semibold ${quizResult.passed ? "text-success" : "text-destructive"}`}>
                                                                         {quizResult.passed ? "✓ VERIFIKASI BERHASIL" : "✗ BELUM LULUS"}
                                                                     </span>
-                                                                    <span className="font-mono text-[11px] text-muted-foreground">skor {quizResult.score}/3</span>
+                                                                    <span className="font-mono text-[11px] text-muted-foreground">skor {quizResult.score}/{quizResult.total}</span>
                                                                 </div>
                                                                 <p className="text-[12.5px] leading-relaxed text-muted-foreground">
                                                                     {quizResult.passed
@@ -412,7 +471,8 @@ function RoadmapContent() {
                                                                             <button
                                                                                 key={oIdx}
                                                                                 onClick={() => handleAnswerSelect(oIdx)}
-                                                                                className="group flex items-center gap-2.5 rounded-md border border-border px-3 py-2.5 text-left text-[13px] font-medium transition-colors hover:border-primary/50 hover:bg-primary/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                                                disabled={submitQuiz.isPending}
+                                                                                className="group flex items-center gap-2.5 rounded-md border border-border px-3 py-2.5 text-left text-[13px] font-medium transition-colors hover:border-primary/50 hover:bg-primary/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                                                                             >
                                                                                 <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted font-mono text-[10px] font-bold text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
                                                                                     {String.fromCharCode(65 + oIdx)}
