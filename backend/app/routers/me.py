@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -17,6 +18,9 @@ from app.schemas import (
     InterestsPatch,
     ModeInfoOut,
     ProfileOut,
+    QuizIssueOut,
+    QuizSubmitIn,
+    QuizSubmitOut,
     ReadinessOut,
     RecruiterProfilePatch,
     RoadmapOut,
@@ -27,10 +31,28 @@ from app.schemas import (
     SkillDemandItem,
     SkillGapOut,
     UserOut,
+    XpOut,
 )
 from app.services import roadmap_service
 from app.services.market_scope import resolve_market_scope
 from app.services.matching import jaccard_score
+from app.services.quiz import (
+    MAX_ATTEMPTS,
+    QUIZ_SIZE,
+    authorize_step_completion,
+    grade_quiz,
+    is_quiz_expired,
+    normalize_quiz,
+    public_quiz,
+    quiz_token,
+)
+from app.services.xp import (
+    ROADMAP_BONUS_STEP_INDEX,
+    XP_REWARD_ROADMAP,
+    XP_REWARD_STEP,
+    grant_xp,
+    xp_summary,
+)
 from app.services.skill_gap import (
     aggregate_demand,
     canonical_set,
@@ -39,6 +61,44 @@ from app.services.skill_gap import (
 )
 
 router = APIRouter(prefix="/me", tags=["me"])
+
+
+def _roadmap_entry(profile: CandidateProfile, cache_key: str) -> tuple[list, str | None]:
+    """Ambil (steps, fingerprint) dari cache roadmap. Backward compat format lama."""
+    cached_all = profile.roadmap_cached or {}
+    if cache_key == "_generic" and "_generic" not in cached_all and "steps" in cached_all:
+        return cached_all.get("steps") or [], None
+    entry = cached_all.get(cache_key, {})
+    return entry.get("steps") or [], entry.get("fp")
+
+
+def _get_or_create_progress(db: Session, user_id, cache_key: str, step_index: int) -> RoadmapProgress:
+    row = (
+        db.query(RoadmapProgress)
+        .filter(
+            RoadmapProgress.user_id == user_id,
+            RoadmapProgress.roadmap_key == cache_key,
+            RoadmapProgress.step_index == step_index,
+        )
+        .first()
+    )
+    if row is None:
+        row = RoadmapProgress(user_id=user_id, roadmap_key=cache_key, step_index=step_index)
+        db.add(row)
+        db.flush()
+    return row
+
+
+def _match_token_row(provided_token: str, row_map: dict, raw_steps: list, user_id, cache_key: str) -> RoadmapProgress | None:
+    """Cari baris progress yang token-nya cocok dengan kuis yang diterbitkan."""
+    for idx, _ in enumerate(raw_steps):
+        row = row_map.get(idx)
+        if row is None or not row.quiz_payload:
+            continue
+        expected = quiz_token(row.quiz_payload, user_id, cache_key, idx, row.quiz_issued_at)
+        if expected == provided_token:
+            return row
+    return None
 
 
 def _github_skill_names(profile: CandidateProfile) -> list[str]:
@@ -477,31 +537,24 @@ def get_bookmarks(
     return result
 
 
-@router.get("/roadmap/quiz")
+@router.get("/roadmap/quiz", response_model=QuizIssueOut)
 def get_roadmap_step_quiz(
     step_index: int = Query(..., description="Index langkah roadmap"),
     job_id: UUID | None = Query(default=None, description="UUID job target."),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Generate dynamic 3-question quiz for a specific roadmap step using Gemini AI.
+    """Terbitkan kuis 5 soal untuk satu langkah roadmap.
+
+    Kunci jawaban TIDAK pernah dikirim ke client. Client hanya dapat soal +
+    quiz_token; jawaban dinilai server via POST /me/roadmap/quiz/submit.
     """
     profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
     if not profile or not profile.roadmap_cached:
         raise HTTPException(400, "Silakan buat roadmap terlebih dahulu.")
 
-    cached_all = profile.roadmap_cached or {}
     cache_key = str(job_id) if job_id else "_generic"
-
-    # Backward compat: format lama (top-level "steps") hanya berlaku untuk
-    # roadmap generic — jangan dipakai saat request per-job walau key job absen
-    if cache_key == "_generic" and "_generic" not in cached_all and "steps" in cached_all:
-        raw_steps = cached_all.get("steps") or []
-    else:
-        entry = cached_all.get(cache_key, {})
-        raw_steps = entry.get("steps") or []
-
+    raw_steps, _fp = _roadmap_entry(profile, cache_key)
     if not raw_steps or step_index < 0 or step_index >= len(raw_steps):
         raise HTTPException(400, "Langkah roadmap tidak valid atau belum digenerate.")
 
@@ -510,11 +563,91 @@ def get_roadmap_step_quiz(
     step_description = step.get("description", "")
 
     from app.services.gemini_service import generate_step_quiz
-    quiz = generate_step_quiz(step_title, step_description)
-    if not quiz:
-        raise HTTPException(502, "Gagal men-generate kuis dengan AI. Silakan coba lagi.")
 
-    return {"quiz": quiz}
+    quiz = normalize_quiz(generate_step_quiz(step_title, step_description))
+    if len(quiz) != QUIZ_SIZE:
+        raise HTTPException(502, "Gagal men-generate kuis yang valid. Silakan coba lagi.")
+
+    issued_at = datetime.now(timezone.utc)
+    row = _get_or_create_progress(db, user.id, cache_key, step_index)
+    row.quiz_payload = quiz
+    row.quiz_issued_at = issued_at
+    row.quiz_attempts = 0
+    db.commit()
+
+    return QuizIssueOut(
+        quiz=public_quiz(quiz),
+        quiz_token=quiz_token(quiz, user.id, cache_key, step_index, issued_at),
+        total=len(quiz),
+    )
+
+
+@router.post("/roadmap/quiz/submit", response_model=QuizSubmitOut)
+def submit_roadmap_quiz(
+    body: QuizSubmitIn,
+    job_id: UUID | None = Query(default=None, description="UUID job target."),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Nilai kuis di server. Langkah HANYA lulus bila semua soal benar.
+
+    XP 50 diberikan sekali per (roadmap, step, fingerprint) via ledger anti-farm.
+    Jika langkah terakhir yang membuat seluruh roadmap selesai, bonus 200 XP.
+    """
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    if not profile or not profile.roadmap_cached:
+        raise HTTPException(400, "Silakan buat roadmap terlebih dahulu.")
+
+    cache_key = str(job_id) if job_id else "_generic"
+    raw_steps, fp = _roadmap_entry(profile, cache_key)
+    if not raw_steps:
+        raise HTTPException(400, "Roadmap belum pernah digenerate untuk lowongan ini.")
+
+    row = (
+        db.query(RoadmapProgress)
+        .filter(
+            RoadmapProgress.user_id == user.id,
+            RoadmapProgress.roadmap_key == cache_key,
+        )
+        .all()
+    )
+    row_map = {r.step_index: r for r in row}
+
+    # Keamanan: ambil baris yang token-nya cocok dengan kuis yang diterbitkan.
+    target = _match_token_row(body.quiz_token, row_map, raw_steps, user.id, cache_key)
+    if target is None or not target.quiz_payload:
+        raise HTTPException(400, "Kuis belum diterbitkan atau token tidak valid.")
+
+    expected = quiz_token(target.quiz_payload, user.id, cache_key, target.step_index, target.quiz_issued_at)
+    if body.quiz_token != expected:
+        raise HTTPException(400, "Token kuis tidak valid.")
+
+    if is_quiz_expired(target.quiz_issued_at, datetime.now(timezone.utc)):
+        raise HTTPException(400, "Kuis kedaluwarsa. Mulai ulang uji pemahaman.")
+
+    if target.quiz_passed:
+        raise HTTPException(400, "Langkah ini sudah pernah lulus.")
+
+    target.quiz_attempts = (target.quiz_attempts or 0) + 1
+    if target.quiz_attempts > MAX_ATTEMPTS:
+        db.commit()
+        raise HTTPException(429, "Terlalu banyak percobaan. Mulai ulang uji pemahaman.")
+
+    result = grade_quiz(target.quiz_payload, body.answers)
+
+    if result.passed:
+        target.quiz_passed = True
+        target.completed = True
+        # XP step (anti-farm: sekali per fingerprint)
+        grant_xp(db, user.id, cache_key, target.step_index, fp or "_", XP_REWARD_STEP)
+        # Bonus roadmap bila semua langkah kini selesai
+        if all((row_map.get(i) or RoadmapProgress()).completed for i in range(len(raw_steps))):
+            grant_xp(db, user.id, cache_key, ROADMAP_BONUS_STEP_INDEX, fp or "_", XP_REWARD_ROADMAP)
+    else:
+        target.quiz_passed = False
+        db.commit()
+
+    return QuizSubmitOut(score=result.score, total=result.total, passed=result.passed)
 
 
 @router.get("/roadmap", response_model=RoadmapOut)
@@ -558,7 +691,7 @@ def get_roadmap(
         )
         .all()
     )
-    done = {r.step_index: r.completed for r in progress_rows}
+    state = {r.step_index: r for r in progress_rows}
 
     steps: list[RoadmapStepOut] = []
     for i, item in enumerate(steps_raw):
@@ -566,6 +699,7 @@ def get_roadmap(
         desc = item.get("description", "")
         resources = item.get("resources", [])
         target = item.get("target", "")
+        row = state.get(i)
         steps.append(
             RoadmapStepOut(
                 index=i,
@@ -573,7 +707,8 @@ def get_roadmap(
                 description=desc if isinstance(desc, str) else "",
                 resources=resources if isinstance(resources, list) else [],
                 target=target if isinstance(target, str) else "",
-                completed=done.get(i, False),
+                completed=bool(row.completed) if row else False,
+                quiz_passed=bool(row.quiz_passed) if row else False,
             )
         )
 
@@ -607,43 +742,31 @@ def patch_roadmap_step(
     if not profile or not profile.roadmap_cached:
         raise HTTPException(400, "Silakan buat roadmap terlebih dahulu dengan membuka halaman roadmap")
 
-    # Ambil steps dari cache key yang sesuai (per-job atau generic)
-    cached_all = profile.roadmap_cached or {}
     cache_key = str(job_id) if job_id else "_generic"
-
-    # Backward compat: format lama (top-level "steps") hanya berlaku untuk
-    # roadmap generic — jangan dipakai saat request per-job walau key job absen
-    if cache_key == "_generic" and "_generic" not in cached_all and "steps" in cached_all:
-        raw_steps = cached_all.get("steps") or []
-    else:
-        entry = cached_all.get(cache_key, {})
-        raw_steps = entry.get("steps") or []
-
+    raw_steps, _fp = _roadmap_entry(profile, cache_key)
     if not raw_steps:
         raise HTTPException(400, "Roadmap belum pernah digenerate untuk lowongan ini.")
 
     if step_index < 0 or step_index >= len(raw_steps):
         raise HTTPException(400, "Indeks langkah roadmap tidak valid")
 
-    row = (
-        db.query(RoadmapProgress)
-        .filter(
-            RoadmapProgress.user_id == user.id,
-            RoadmapProgress.roadmap_key == cache_key,
-            RoadmapProgress.step_index == step_index,
+    row = _get_or_create_progress(db, user.id, cache_key, step_index)
+
+    # Gerbang inti: selesai HANYA bila quiz lulus penuh di server.
+    if not authorize_step_completion(body.completed, quiz_passed=bool(row.quiz_passed)):
+        raise HTTPException(
+            403,
+            "Langkah hanya bisa diselesaikan dengan lulus kuis (semua jawaban benar).",
         )
-        .first()
-    )
-    if not row:
-        row = RoadmapProgress(
-            user_id=user.id,
-            roadmap_key=cache_key,
-            step_index=step_index,
-            completed=body.completed,
-        )
-        db.add(row)
+
+    if body.completed:
+        row.completed = True
     else:
-        row.completed = body.completed
+        # Batal-selesai: reset state quiz — harus lulus quiz baru untuk selesai lagi.
+        row.completed = False
+        row.quiz_passed = False
+        row.quiz_payload = None
+        row.quiz_attempts = 0
     db.commit()
 
     item = raw_steps[step_index]
@@ -657,8 +780,20 @@ def patch_roadmap_step(
         description=desc if isinstance(desc, str) else "",
         resources=resources if isinstance(resources, list) else [],
         target=target if isinstance(target, str) else "",
-        completed=body.completed,
+        completed=row.completed,
+        quiz_passed=bool(row.quiz_passed),
     )
+
+
+@router.get("/xp", response_model=XpOut)
+def get_xp(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Ringkasan XP + level + tier. XP hanya berasal dari kuis yang lulus di server."""
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    total = profile.total_xp if profile else 0
+    return XpOut(**xp_summary(total))
 
 
 @router.delete("/roadmap/cache")

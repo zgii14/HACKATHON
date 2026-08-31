@@ -75,14 +75,19 @@ def quiz_token(
     step_index: int,
     issued_at: datetime | None,
 ) -> str:
-    """Token terikat ke quiz spesifik + konteks user/roadmap/step + waktu terbit."""
+    """Token terikat ke quiz spesifik + konteks user/roadmap/step + waktu terbit.
+
+    issued_at dinormalisasi ke UTC agar token tetap sama walau DB menyimpan
+    datetime tanpa timezone (SQLite) vs timezone-aware (Postgres).
+    """
+    issued = _as_utc(issued_at)
     payload = json.dumps(
         {
             "quiz": quiz,
             "user_id": str(user_id),
             "roadmap_key": roadmap_key,
             "step_index": step_index,
-            "issued_at": issued_at.isoformat() if issued_at else None,
+            "issued_at": issued.isoformat() if issued else None,
         },
         sort_keys=True,
         default=str,

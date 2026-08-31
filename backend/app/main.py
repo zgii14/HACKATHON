@@ -66,6 +66,45 @@ async def lifespan(app: FastAPI):
         """))
         conn.commit()
 
+    # DDL Migration: kolom kuis server-authoritative + XP gamifikasi
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE roadmap_progress
+            ADD COLUMN IF NOT EXISTS quiz_payload JSON NULL
+        """))
+        conn.execute(text("""
+            ALTER TABLE roadmap_progress
+            ADD COLUMN IF NOT EXISTS quiz_issued_at TIMESTAMPTZ NULL
+        """))
+        conn.execute(text("""
+            ALTER TABLE roadmap_progress
+            ADD COLUMN IF NOT EXISTS quiz_passed BOOLEAN NOT NULL DEFAULT FALSE
+        """))
+        conn.execute(text("""
+            ALTER TABLE roadmap_progress
+            ADD COLUMN IF NOT EXISTS quiz_attempts INTEGER NOT NULL DEFAULT 0
+        """))
+        conn.execute(text("""
+            ALTER TABLE candidate_profiles
+            ADD COLUMN IF NOT EXISTS total_xp INTEGER NOT NULL DEFAULT 0
+        """))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS xp_earnings (
+                id UUID PRIMARY KEY,
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                roadmap_key VARCHAR(64) NOT NULL DEFAULT '_generic',
+                step_index INTEGER NOT NULL,
+                fingerprint VARCHAR(32) NOT NULL,
+                amount INTEGER NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_earning
+            ON xp_earnings (user_id, roadmap_key, step_index, fingerprint)
+        """))
+        conn.commit()
+
     # DDL Migration: tambah kolom interests ke candidate_profiles
     with engine.connect() as conn:
         conn.execute(text("""

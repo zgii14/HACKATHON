@@ -69,6 +69,8 @@ class CandidateProfile(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    # ── Gamifikasi belajar (dari quiz roadmap yang lulus, server-verified) ──
+    total_xp: Mapped[int] = mapped_column(Integer, default=0)
 
     user: Mapped["User"] = relationship("User", back_populates="profile")
 
@@ -116,11 +118,46 @@ class RoadmapProgress(Base):
     roadmap_key: Mapped[str] = mapped_column(String(64), default="_generic", server_default="_generic")
     step_index: Mapped[int] = mapped_column(Integer)
     completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    # ── Kuis server-authoritative: langkah hanya lulus bila quiz benar semua ──
+    quiz_payload: Mapped[list | None] = mapped_column(JSON, nullable=True)          # soal + kunci, TIDAK pernah dikirim ke client
+    quiz_issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    quiz_passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    quiz_attempts: Mapped[int] = mapped_column(Integer, default=0)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
     __table_args__ = (UniqueConstraint("user_id", "roadmap_key", "step_index", name="uq_user_roadmap_step"),)
+
+
+class XpEarning(Base):
+    """Ledger XP anti-farm. Kunci unik mencegah XP ganda untuk aksi yang sama.
+
+    step_index = ROADMAP_BONUS_STEP_INDEX (-1) menandai bonus selesaikan roadmap.
+    Reset cache tanpa perubahan konten -> fingerprint sama -> tidak dapat XP lagi.
+    """
+
+    __tablename__ = "xp_earnings"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    roadmap_key: Mapped[str] = mapped_column(String(64), default="_generic")
+    step_index: Mapped[int] = mapped_column(Integer)
+    fingerprint: Mapped[str] = mapped_column(String(32))
+    amount: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "roadmap_key", "step_index", "fingerprint", name="uq_xp_earning"
+        ),
+    )
 
 
 class JobApplication(Base):

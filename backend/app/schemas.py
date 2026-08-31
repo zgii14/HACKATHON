@@ -247,6 +247,8 @@ class RoadmapStepOut(BaseModel):
     resources: list[str] = Field(default_factory=list)
     target: str = ""
     completed: bool = False
+    # Quiz server-authoritative: lulus penuh (semua soal benar).
+    quiz_passed: bool = False
 
 
 class RoadmapOut(BaseModel):
@@ -259,6 +261,31 @@ class RoadmapOut(BaseModel):
 
 class RoadmapStepPatch(BaseModel):
     completed: bool
+
+
+class QuizIssueOut(BaseModel):
+    quiz: list[dict]            # TANPA correct_index — kunci jawaban tidak pernah keluar server
+    quiz_token: str
+    total: int
+
+
+class QuizSubmitIn(BaseModel):
+    quiz_token: str
+    answers: list[int]
+
+
+class QuizSubmitOut(BaseModel):
+    score: int
+    total: int
+    passed: bool
+
+
+class XpOut(BaseModel):
+    total_xp: int = 0
+    level: int = 1
+    tier: str = "Pemula"
+    next_threshold: int = 0
+    progress_pct: int = 0
 
 
 class MatchExplain(BaseModel):
