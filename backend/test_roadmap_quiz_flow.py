@@ -177,6 +177,19 @@ class QuizFlowTests(unittest.TestCase):
         self.assertEqual(out.tier, "Pemula")
         self.assertEqual(out.next_threshold, 250)
 
+    def test_cannot_access_step_out_of_order(self):
+        # Step 1 tidak bisa diakses sebelum step 0 selesai
+        with self.assertRaises(Exception) as ctx:
+            self.issue(1)
+        self.assertIn("403", str(ctx.exception) or type(ctx.exception).__name__)
+
+        # Selesaikan step 0
+        out0 = self.issue(0)
+        self.submit(out0.quiz_token, [0, 0, 0, 0, 0])
+
+        # Sekarang step 1 bisa diakses
+        out1 = self.issue(1)
+        self.assertEqual(out1.total, 5)
 
 if __name__ == "__main__":
     unittest.main()

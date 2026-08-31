@@ -562,6 +562,20 @@ def get_roadmap_step_quiz(
     step_title = step.get("title", f"Langkah {step_index + 1}")
     step_description = step.get("description", "")
 
+    # Kunci akses: langkah N hanya bisa diuji jika langkah N-1 sudah selesai.
+    if step_index > 0:
+        prev_row = (
+            db.query(RoadmapProgress)
+            .filter(
+                RoadmapProgress.user_id == user.id,
+                RoadmapProgress.roadmap_key == cache_key,
+                RoadmapProgress.step_index == step_index - 1,
+            )
+            .first()
+        )
+        if not prev_row or not prev_row.completed:
+            raise HTTPException(403, "Selesaikan langkah sebelumnya terlebih dahulu.")
+
     from app.services.gemini_service import generate_step_quiz
 
     quiz = normalize_quiz(generate_step_quiz(step_title, step_description))
@@ -617,6 +631,12 @@ def submit_roadmap_quiz(
     target = _match_token_row(body.quiz_token, row_map, raw_steps, user.id, cache_key)
     if target is None or not target.quiz_payload:
         raise HTTPException(400, "Kuis belum diterbitkan atau token tidak valid.")
+
+    # Gembok keamanan: langkah N hanya bisa dikirim bila langkah N-1 masih berstatus selesai.
+    if target.step_index > 0:
+        prev_row = row_map.get(target.step_index - 1)
+        if not prev_row or not prev_row.completed:
+            raise HTTPException(403, "Selesaikan langkah sebelumnya terlebih dahulu.")
 
     expected = quiz_token(target.quiz_payload, user.id, cache_key, target.step_index, target.quiz_issued_at)
     if body.quiz_token != expected:

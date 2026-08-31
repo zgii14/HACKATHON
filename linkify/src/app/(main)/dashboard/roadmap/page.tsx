@@ -393,9 +393,14 @@ function RoadmapContent() {
                                                 {activeQuizIdx !== step.index ? (
                                                     <button
                                                         onClick={() => startQuiz(step.index)}
-                                                        className="rounded-md border border-primary/40 px-3 py-1.5 text-[12px] font-semibold text-primary transition-colors hover:bg-primary/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                        disabled={!isCurrent}
+                                                        className={`rounded-md border px-3 py-1.5 text-[12px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                                                            isCurrent
+                                                                ? "border-primary/40 text-primary hover:bg-primary/[0.08]"
+                                                                : "cursor-not-allowed border-muted-foreground/30 text-muted-foreground/50"
+                                                        }`}
                                                     >
-                                                        ✦ Uji pemahaman (AI quiz)
+                                                        {isCurrent ? "✦ Uji pemahaman (AI quiz)" : "🔒 Terkunci. Selesaikan langkah sebelumnya."}
                                                     </button>
                                                 ) : (
                                                     <motion.div
