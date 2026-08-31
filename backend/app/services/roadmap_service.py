@@ -6,6 +6,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from app.models import CandidateProfile, Job, RoadmapProgress, User
 from app.services.gemini_service import generate_roadmap
+from app.services.market_scope import active_jobs
 from app.services.matching import skill_gap
 
 
@@ -37,8 +38,8 @@ def compute_gap_against_jobs(merged: list[str], jobs: list) -> list[str]:
 
 
 def compute_gap_against_market(db: Session, merged: list[str]) -> list[str]:
-    """Hitung skill gap terhadap SEMUA lowongan (roadmap generik, tanpa filter)."""
-    return compute_gap_against_jobs(merged, db.query(Job).all())
+    """Hitung skill gap terhadap seluruh lowongan AKTIF (lowongan tutup diabaikan)."""
+    return compute_gap_against_jobs(merged, active_jobs(db))
 
 
 def compute_gap_against_job(merged: list[str], job: Job) -> list[str]:
@@ -84,7 +85,9 @@ def ensure_roadmap_generated(
         market_version = None
     else:
         job = None
-        jobs_for_gap = effective_jobs if effective_jobs is not None else db.query(Job).all()
+        # Default aman: hanya lowongan aktif. Lowongan tutup tidak boleh
+        # membentuk gap maupun memicu regenerasi roadmap.
+        jobs_for_gap = effective_jobs if effective_jobs is not None else active_jobs(db)
         gap = compute_gap_against_jobs(merged, jobs_for_gap)
         roadmap_input_gap = gap
         # Sertakan ukuran market dalam fingerprint agar roadmap regenerate saat job baru masuk
