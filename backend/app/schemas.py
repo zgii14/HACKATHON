@@ -189,21 +189,55 @@ class SkillFreqItem(BaseModel):
     job_count: int
 
 
+class SkillDemandItem(BaseModel):
+    skill: str                 # label tampilan, mis. "PostgreSQL"
+    canonical_skill: str       # kunci pembanding, mis. "postgresql"
+    job_count: int
+
+
+class ReadinessOut(BaseModel):
+    """Kesiapan dihitung PER JOB, bukan terhadap union semua skill pasar."""
+
+    ready_jobs: int = 0
+    relevant_jobs: int = 0
+    median_coverage_pct: int = 0
+    threshold_pct: int = 70
+
+
+class ModeInfoOut(BaseModel):
+    requested: str = "auto"
+    effective: str = "all"
+    fallback_reason: str | None = None   # None | "no_interests" | "no_matching_jobs"
+
+
 class SkillGapOut(BaseModel):
-    missing_skills: list[str]
     has_profile: bool
-    skill_freq: list[SkillFreqItem] = Field(default_factory=list)
+    readiness: ReadinessOut = Field(default_factory=ReadinessOut)
+    mode_info: ModeInfoOut = Field(default_factory=ModeInfoOut)
+
+    # Jumlah gap PENUH. Jangan pernah menghitung metrik dari panjang
+    # missing_skills/missing_demand — keduanya dipotong untuk tampilan saja.
+    missing_skill_count: int = 0
+    missing_skills: list[str] = Field(default_factory=list)                 # top-15, display
+    missing_demand: list[SkillDemandItem] = Field(default_factory=list)     # top-10
+    # Skill yang dimiliki tapi namanya tidak muncul di data GitHub.
+    # Disjoint dengan missing_* di atas — render di seksi terpisah.
+    unproven_demand: list[SkillDemandItem] = Field(default_factory=list)    # top-10
+
     user_skill_count: int = 0
-    total_job_skills: int = 0
-    weak_skills: list[str] = Field(default_factory=list)
+    market_skill_count: int = 0
     # Skill yang namanya muncul di GitHub (bahasa/topics) — BUKAN hasil anti-cheat.
-    # Dipertahankan untuk backward compatibility; jangan dilabeli "verified" di UI.
     github_backed_count: int = 0
     # Skill yang lolos verifikasi bukti commit — ini yang boleh dilabeli "verified".
     verified_skill_count: int = 0
     verified_skills: list = Field(default_factory=list)
-    mode: str = "all"          # "interests" atau "all"
     interests: list[str] = Field(default_factory=list)
+
+    # ── Deprecated: hapus setelah semua consumer pindah ke field di atas ──
+    skill_freq: list[SkillFreqItem] = Field(default_factory=list)
+    weak_skills: list[str] = Field(default_factory=list)
+    total_job_skills: int = 0
+    mode: str = "all"
 
 
 class RoadmapStepOut(BaseModel):
