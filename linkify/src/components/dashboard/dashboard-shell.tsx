@@ -42,6 +42,27 @@ function GitHireIcon() {
     );
 }
 
+function GlobalXpBadge() {
+    const { withAuth, authReady } = useApi();
+    const { data: xp } = useQuery({
+        queryKey: ["xp"],
+        queryFn: () => withAuth<{ total_xp: number; level: number; tier: string; next_threshold: number; progress_pct: number }>("/me/xp"),
+        enabled: authReady,
+        staleTime: 30_000,
+    });
+
+    if (!xp || xp.total_xp === 0) return null;
+
+    return (
+        <div
+            title={`Level ${xp.level} ${xp.tier} · Progress ke level berikutnya: ${xp.progress_pct}%`}
+            className="mr-2 flex items-center rounded-full border border-primary/20 bg-primary/[0.08] px-2.5 py-1 text-[11px] font-bold text-primary transition-colors hover:bg-primary/[0.12] hover:border-primary/30 cursor-default"
+        >
+            ⚡ {xp.total_xp} XP
+        </div>
+    );
+}
+
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
@@ -373,8 +394,9 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     {/* Desktop: spacer kiri */}
                     <div className="hidden md:block" />
 
-                    {/* Theme toggle + UserButton */}
+                    {/* Global XP Badge + Theme toggle + UserButton */}
                     <div className="flex items-center gap-2">
+                        {authReady && profile && profile.role !== "recruiter" && <GlobalXpBadge />}
                         <ThemeToggle />
                         <UserButton
                             afterSignOutUrl="/"

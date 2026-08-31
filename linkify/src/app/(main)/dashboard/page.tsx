@@ -120,14 +120,6 @@ export default function DashboardHomePage() {
         retry: false,
     });
 
-    const { data: xp } = useQuery({
-        queryKey: ["xp"],
-        queryFn: () => withAuth<{ total_xp: number; level: number; tier: string; next_threshold: number; progress_pct: number }>("/me/xp"),
-        enabled: authReady && hasProfile,
-        staleTime: 30_000,
-        retry: false,
-    });
-
     if (!isLoaded || (authReady && profileLoading)) {
         return <LoadingOverview />;
     }
@@ -274,12 +266,6 @@ export default function DashboardHomePage() {
                             <span className="font-mono text-xs text-muted-foreground">/100</span>
                         </div>
                         <BarFill pct={readinessScore} className="mt-2 w-44 md:ml-auto" />
-                        {xp && (
-                            <div className="mt-2 inline-block rounded-md border border-primary/30 bg-primary/[0.06] px-2.5 py-1.5 font-mono text-[11px] leading-tight text-muted-foreground">
-                                <span className="font-bold text-primary">⚡ {xp.total_xp} XP</span>
-                                {" · "}Lv{xp.level} {xp.tier}
-                            </div>
-                        )}
                         {profile?.github_username && (
                             <Link
                                 href={`https://github.com/${profile.github_username}`}

@@ -223,13 +223,6 @@ function RoadmapContent() {
         onError: (e: Error) => toast.error(`Gagal reset: ${e.message}`),
     });
 
-    const { data: xp } = useQuery({
-        queryKey: ["xp"],
-        queryFn: () => withAuth<{ total_xp: number; level: number; tier: string; next_threshold: number; progress_pct: number }>("/me/xp"),
-        enabled: authReady,
-        staleTime: 30_000,
-    });
-
     const completedCount = data?.steps.filter((s) => s.completed).length ?? 0;
     const totalCount = data?.steps.length ?? 0;
     const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -270,13 +263,6 @@ function RoadmapContent() {
                             : "Berdasarkan skill gap vs semua lowongan. Lulus kuis AI (semua jawaban benar) untuk menyelesaikan langkah."}
                     </p>
                 </div>
-                {xp && (
-                    <div className="shrink-0 self-start rounded-md border border-primary/30 bg-primary/[0.06] px-3 py-2 text-right font-mono text-[11px] leading-tight text-muted-foreground md:self-auto">
-                        <span className="text-[15px] font-bold text-primary">⚡ {xp.total_xp} XP</span>
-                        <br />
-                        Lv{xp.level} · {xp.tier} <span className="opacity-70">· {xp.progress_pct}%</span>
-                    </div>
-                )}
                 <button
                     onClick={() => reset.mutate()}
                     disabled={reset.isPending || isLoading}
