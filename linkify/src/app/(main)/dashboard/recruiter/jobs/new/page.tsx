@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
+import { INTERESTS } from "@/utils/constants/interests";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Briefcase, Save, Sparkles, AlertTriangle } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +29,10 @@ export default function NewJobPage() {
     const [skillsText, setSkillsText] = useState("");
     const [workType, setWorkType] = useState("Hybrid");
     const [description, setDescription] = useState("");
+    const [categories, setCategories] = useState<string[]>([]);
+
+    const toggleCategory = (key: string) =>
+        setCategories((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
     const createMutation = useMutation({
         mutationFn: (payload: any) =>
@@ -77,6 +82,7 @@ export default function NewJobPage() {
             location,
             salary,
             required_skills,
+            categories,
             work_type: workType,
             is_remote: workType === "Remote",
             description,
@@ -191,6 +197,27 @@ export default function NewJobPage() {
                                 placeholder="Contoh: Python, FastAPI, PostgreSQL, Docker"
                             />
                             <p className="text-[10px] text-muted-foreground mt-1">Sistem pencocokan AI akan menyaring profil kandidat berdasarkan kata kunci ini.</p>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="text-xs font-semibold text-muted-foreground block mb-1">Bidang (untuk pencocokan minat kandidat)</label>
+                            <div className="flex flex-wrap gap-1.5">
+                                {INTERESTS.map((c) => (
+                                    <button
+                                        key={c.key}
+                                        type="button"
+                                        onClick={() => toggleCategory(c.key)}
+                                        aria-pressed={categories.includes(c.key)}
+                                        className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                                            categories.includes(c.key)
+                                                ? "border-primary bg-primary/10 text-primary"
+                                                : "border-border text-muted-foreground hover:text-foreground"
+                                        }`}
+                                    >
+                                        {c.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1">Kosongkan untuk deteksi otomatis dari judul dan skill.</p>
                         </div>
                         <div className="md:col-span-2">
                             <label className="text-xs font-semibold text-muted-foreground block mb-1">Deskripsi Pekerjaan & Persyaratan*</label>

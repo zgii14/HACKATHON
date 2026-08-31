@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useApi } from "@/hooks/use-api";
+import { INTERESTS } from "@/utils/constants/interests";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
@@ -27,6 +28,10 @@ export default function EditJobPage() {
     const [skillsText, setSkillsText] = useState("");
     const [workType, setWorkType] = useState("Hybrid");
     const [description, setDescription] = useState("");
+    const [categories, setCategories] = useState<string[]>([]);
+
+    const toggleCategory = (key: string) =>
+        setCategories((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
     useEffect(() => {
         if (job) {
@@ -37,6 +42,7 @@ export default function EditJobPage() {
             setSkillsText((job.required_skills || []).join(", "));
             setWorkType(job.work_type || "Hybrid");
             setDescription(job.description || "");
+            setCategories(job.categories || []);
         }
     }, [job]);
 
@@ -59,7 +65,7 @@ export default function EditJobPage() {
         e.preventDefault();
         if (!canEdit) return toast.error("Edit hanya bisa dalam 24 jam setelah dipost.");
         mut.mutate({
-            title, company, location, salary, required_skills: skillsText.split(",").map((s) => s.trim()).filter(Boolean), work_type: workType, is_remote: workType === "Remote", description,
+            title, company, location, salary, required_skills: skillsText.split(",").map((s) => s.trim()).filter(Boolean), categories, work_type: workType, is_remote: workType === "Remote", description,
         });
     };
 
@@ -83,6 +89,27 @@ export default function EditJobPage() {
                     <div><label className="text-xs font-semibold text-muted-foreground">Gaji</label><input value={salary} onChange={(e) => setSalary(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 text-xs" /></div>
                 </div>
                 <div><label className="text-xs font-semibold text-muted-foreground">Skills (koma)</label><input value={skillsText} onChange={(e) => setSkillsText(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 text-xs" /></div>
+                <div>
+                    <label className="text-xs font-semibold text-muted-foreground">Bidang (untuk pencocokan minat kandidat)</label>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                        {INTERESTS.map((c) => (
+                            <button
+                                key={c.key}
+                                type="button"
+                                onClick={() => toggleCategory(c.key)}
+                                aria-pressed={categories.includes(c.key)}
+                                className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                                    categories.includes(c.key)
+                                        ? "border-primary bg-primary/10 text-primary"
+                                        : "border-border text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                {c.label}
+                            </button>
+                        ))}
+                    </div>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Kosongkan untuk deteksi otomatis dari judul dan skill.</p>
+                </div>
                 <div><label className="text-xs font-semibold text-muted-foreground">Deskripsi*</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={6} className="mt-1 w-full rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 text-xs" /></div>
                 <div className="flex justify-end gap-2">
                     <Link href="/dashboard/recruiter/jobs"><Button type="button" variant="outline" className="rounded-xl text-xs">Batal</Button></Link>

@@ -14,6 +14,7 @@ from app.models import CandidateProfile, Job, JobApplication, RecruiterProfile, 
 from app.schemas import ApplicationStatus
 from app.services.cv_pdf import render_cv_pdf
 from app.services.gemini_service import _call_gemini_with_retry
+from app.services.job_category import classify_job_categories, sanitize_categories
 from app.services.matching import jaccard_score, explain_match
 from app.services.screening import (
     PROMPT_VERSION,
@@ -36,6 +37,9 @@ class JobCreate(BaseModel):
     company: str
     description: str
     required_skills: list[str]
+    # Kategori bidang — sumber relevansi minat kandidat. Kosong = deteksi
+    # otomatis dari judul + skill via classifier.
+    categories: list[str] = []
     location: str | None = None
     is_remote: bool = False
     apply_url: str | None = None
@@ -131,12 +135,18 @@ def create_job(
     if count >= limit:
         raise HTTPException(429, f"Limit lowongan aktif tercapai ({count}/{limit}). Tutup lowongan lain atau upgrade ke Premium untuk 10 slot.")
 
+    # Kategori eksplisit dari recruiter; fallback ke classifier jika kosong/invalid.
+    categories = sanitize_categories(body.categories) or classify_job_categories(
+        body.title, body.required_skills
+    )
+
     new_job = Job(
         id=uuid.uuid4(),
         title=body.title,
         company=body.company,
         description=body.description,
         required_skills=body.required_skills,
+        categories=categories,
         location=body.location,
         is_remote=body.is_remote,
         apply_url=body.apply_url,
@@ -182,6 +192,9 @@ def update_job(
     job.company = body.company
     job.description = body.description
     job.required_skills = body.required_skills
+    job.categories = sanitize_categories(body.categories) or classify_job_categories(
+        body.title, body.required_skills
+    )
     job.location = body.location
     job.is_remote = body.is_remote
     job.apply_url = body.apply_url
@@ -281,6 +294,7 @@ def get_my_jobs(
             "location": job.location,
             "is_remote": job.is_remote,
             "required_skills": job.required_skills,
+            "categories": job.categories or [],
             "salary": job.salary,
             "work_type": job.work_type,
             "is_closed": bool(job.is_closed),
@@ -309,6 +323,7 @@ def get_my_job_detail(
         "company": job.company,
         "description": job.description,
         "required_skills": job.required_skills,
+        "categories": job.categories or [],
         "location": job.location,
         "is_remote": job.is_remote,
         "apply_url": job.apply_url,

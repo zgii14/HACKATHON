@@ -12,6 +12,7 @@ import time
 
 from sqlalchemy.orm import Session
 from app.models import Job
+from app.services.job_category import classify_job_categories
 
 # Railway/Linux production: set ke True jika tidak ada display (DISPLAY env var kosong)
 _IS_HEADLESS = os.environ.get("DISPLAY") is None or os.environ.get("RAILWAY_ENVIRONMENT") is not None
@@ -298,6 +299,11 @@ def run_scraping(
                     company=job_data["company"] or "Unknown",
                     description=job_data["description"] or job_data["title"],
                     required_skills=job_data["required_skills"],
+                    # Hasil scrape tak punya editor manusia — klasifikasi
+                    # otomatis; recruiter bisa koreksi lewat edit lowongan.
+                    categories=classify_job_categories(
+                        job_data["title"], job_data["required_skills"]
+                    ),
                     location=job_data["location"],
                     is_remote=job_data["is_remote"],
                     apply_url=clean_url,
