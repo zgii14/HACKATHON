@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -130,6 +131,78 @@ class RoleUpdate(BaseModel):
 
 class CVPreferenceUpdate(BaseModel):
     preference: str  # form | original
+
+
+class PortfolioProject(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    repo_name: str = Field(..., min_length=1, max_length=255)
+    url: str = Field(..., pattern=r"^https://github\.com/[^/\s]+/[^/\s]+/?$", max_length=2048)
+    description: str = Field(default="", max_length=1000)
+    tech_stack: list[str] = Field(default_factory=list, max_length=8)
+    stars: int = Field(default=0, ge=0)
+    own_commits: int = Field(default=0, ge=0)
+
+
+class PortfolioContactLink(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    value: str = Field(default="", max_length=2048)
+    enabled: bool = False
+
+
+class PortfolioContacts(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    github: PortfolioContactLink = Field(default_factory=PortfolioContactLink)
+    linkedin: PortfolioContactLink = Field(default_factory=PortfolioContactLink)
+    email: PortfolioContactLink = Field(default_factory=PortfolioContactLink)
+    whatsapp: PortfolioContactLink = Field(default_factory=PortfolioContactLink)
+    website: PortfolioContactLink = Field(default_factory=PortfolioContactLink)
+
+
+class PortfolioSections(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    projects: bool = True
+    skills: bool = True
+    experience: bool = True
+    education: bool = True
+    certifications: bool = True
+
+
+class PortfolioPatch(BaseModel):
+    model_config = {"extra": "forbid"}
+
+    name: str | None = Field(default=None, max_length=255)
+    headline: str | None = Field(default=None, max_length=255)
+    bio: str | None = Field(default=None, max_length=3000)
+    language: Literal["id", "en"] | None = None
+    theme: Literal["editorial", "developer", "professional"] | None = None
+    projects: list[PortfolioProject] | None = Field(default=None, max_length=6)
+    skills: list[str] | None = Field(default=None, max_length=50)
+    experience: list[CVDataExperience] | None = Field(default=None, max_length=20)
+    education: list[CVDataEducation] | None = Field(default=None, max_length=20)
+    certifications: list[str] | None = Field(default=None, max_length=30)
+    contacts: PortfolioContacts | None = None
+    sections: PortfolioSections | None = None
+    save_mode: Literal["draft", "publish"] = "draft"
+
+
+class PortfolioGenerateRequest(BaseModel):
+    language: Literal["id", "en"] = "id"
+    repo_names: list[str] | None = Field(default=None, max_length=6)
+
+
+class PortfolioOut(BaseModel):
+    public_id: str
+    status: Literal["draft", "published"]
+    draft_content: dict | None = None
+    published_content: dict | None = None
+    has_photo: bool = False
+    public_url: str
+    published_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class BioDataOut(BaseModel):

@@ -10,7 +10,7 @@ from sqlalchemy import text
 from app.auth import describe_admin_allowlist, describe_recruiter_allowlist
 from app.config import settings
 from app.database import Base, engine
-from app.routers import admin_recruiter, chat, jobs, me, profiles, recruiter
+from app.routers import admin_recruiter, chat, jobs, me, portfolio, profiles, recruiter
 from app.routers import applications
 from app.seed import reseed_jobs, seed_jobs_if_empty
 from app.database import get_db
@@ -232,6 +232,36 @@ async def lifespan(app: FastAPI):
         """))
         conn.commit()
 
+    # DDL Migration: draft dan snapshot publik portfolio kandidat
+    with engine.connect() as conn:
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS portfolios (
+                id UUID PRIMARY KEY,
+                user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                public_id VARCHAR(32) UNIQUE NOT NULL,
+                status VARCHAR(16) NOT NULL DEFAULT 'draft',
+                draft_content JSON NULL,
+                published_content JSON NULL,
+                draft_photo BYTEA NULL,
+                draft_photo_content_type VARCHAR(32) NULL,
+                published_photo BYTEA NULL,
+                published_photo_content_type VARCHAR(32) NULL,
+                published_at TIMESTAMPTZ NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS draft_content JSON NULL"))
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS published_content JSON NULL"))
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS draft_photo BYTEA NULL"))
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS draft_photo_content_type VARCHAR(32) NULL"))
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS published_photo BYTEA NULL"))
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS published_photo_content_type VARCHAR(32) NULL"))
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ NULL"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_portfolios_user ON portfolios(user_id)"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS idx_portfolios_public_id ON portfolios(public_id)"))
+        conn.commit()
+
     # DDL Migration: recruiter_profiles untuk pendaftaran recruiter (hidden footer)
     with engine.connect() as conn:
         conn.execute(text("""
@@ -352,6 +382,7 @@ app.include_router(applications.router)
 app.include_router(recruiter.router)
 app.include_router(admin_recruiter.router)
 app.include_router(chat.router)
+app.include_router(portfolio.router)
 
 
 @app.get("/health")
