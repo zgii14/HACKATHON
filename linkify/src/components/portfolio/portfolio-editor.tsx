@@ -10,8 +10,8 @@ import type {
     PortfolioContent,
     PortfolioLanguage,
     PortfolioRecord,
-    PortfolioTheme,
 } from "./types";
+import { ThemePreviewCards } from "./theme-preview-cards";
 
 type Repo = {
     name: string;
@@ -25,12 +25,6 @@ type Profile = {
     cv_data: Record<string, unknown> | null;
     github_signals: { repos_detail?: Repo[] } | null;
 };
-
-const THEMES: Array<{ value: PortfolioTheme; label: string; detail: string }> = [
-    { value: "editorial", label: "Editorial", detail: "Cerita dan personal brand" },
-    { value: "developer", label: "Developer", detail: "Proyek dan bukti GitHub" },
-    { value: "professional", label: "Professional", detail: "Ringkas dan mudah dipindai" },
-];
 
 const contactLabels = {
     github: "GitHub",
@@ -299,15 +293,9 @@ export function PortfolioEditor() {
 
                 <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
                     <section className="border border-border p-4">
-                        <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Tema</p>
-                        <div className="mt-3 space-y-2">
-                            {THEMES.map((theme) => (
-                                <button key={theme.value} className={`w-full rounded-md border p-3 text-left ${form.theme === theme.value ? "border-primary bg-primary/10" : "border-border"}`} onClick={() => setForm({ ...form, theme: theme.value })}>
-                                    <span className="block text-sm font-semibold">{theme.label}</span>
-                                    <span className="text-[11px] text-muted-foreground">{theme.detail}</span>
-                                </button>
-                            ))}
-                        </div>
+                        <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Pilih presentasi</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Lihat struktur portfolio sebelum kamu memilih tema.</p>
+                        <ThemePreviewCards content={form} onSelect={(theme) => setForm({ ...form, theme })} />
                     </section>
                     <section className="border border-border p-4">
                         <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Section tampil</p>
