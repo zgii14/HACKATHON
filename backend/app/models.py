@@ -34,6 +34,9 @@ class User(Base):
     profile: Mapped["CandidateProfile | None"] = relationship(
         "CandidateProfile", back_populates="user", uselist=False
     )
+    portfolio: Mapped["Portfolio | None"] = relationship(
+        "Portfolio", back_populates="user", uselist=False
+    )
 
 
 class CandidateProfile(Base):
@@ -73,6 +76,34 @@ class CandidateProfile(Base):
     total_xp: Mapped[int] = mapped_column(Integer, default=0)
 
     user: Mapped["User"] = relationship("User", back_populates="profile")
+
+
+class Portfolio(Base):
+    __tablename__ = "portfolios"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True
+    )
+    public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    status: Mapped[str] = mapped_column(String(16), default="draft", server_default="draft")
+    draft_content: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    published_content: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    draft_photo: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    draft_photo_content_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    published_photo: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    published_photo_content_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, server_default="now()"
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, server_default="now()"
+    )
+
+    user: Mapped["User"] = relationship("User", back_populates="portfolio")
 
 
 class Job(Base):

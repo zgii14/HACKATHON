@@ -50,6 +50,27 @@ def _headers(use_auth: bool = True) -> dict[str, str]:
     return h
 
 
+async def fetch_repo_readme(username: str, repo_name: str) -> str:
+    """Ambil README publik sebagai teks terbatas untuk bukti ringkasan portfolio."""
+    identifier = re.compile(r"^[A-Za-z0-9_.-]+$")
+    if not identifier.fullmatch(username or "") or not identifier.fullmatch(repo_name or ""):
+        return ""
+
+    headers = _headers(use_auth=True)
+    headers["Accept"] = "application/vnd.github.raw+json"
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.get(
+                f"https://api.github.com/repos/{username}/{repo_name}/readme",
+                headers=headers,
+            )
+        if not response.is_success:
+            return ""
+        return response.text[:12000]
+    except (httpx.HTTPError, UnicodeError):
+        return ""
+
+
 def _parse_last_page(link_header: str | None) -> int | None:
     """
     Ambil nomor halaman terakhir dari header Link GitHub (rel="last").
