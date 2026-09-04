@@ -1,6 +1,7 @@
 "use client";
 
 import { EmptyState, PageHeader, SecTitle } from "@/components/dashboard/ui";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useApi } from "@/hooks/use-api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
@@ -12,6 +13,7 @@ import type {
     PortfolioRecord,
 } from "./types";
 import { ThemePreviewCards } from "./theme-preview-cards";
+import { appendRepositoriesToProjects, createEmptyEducation, createEmptyExperience, getEligibleRepositories, getProjectSlots, MAX_PORTFOLIO_PROJECTS } from "./portfolio-editor-helpers";
 
 type Repo = {
     name: string;
@@ -44,6 +46,8 @@ export function PortfolioEditor() {
     const [language, setLanguage] = useState<PortfolioLanguage>("id");
     const [repoNames, setRepoNames] = useState<string[]>([]);
     const [busy, setBusy] = useState<string | null>(null);
+    const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+    const [pendingProjectNames, setPendingProjectNames] = useState<string[]>([]);
 
     const { data: profile, isLoading: profileLoading } = useQuery({
         queryKey: ["profile"],
@@ -57,6 +61,9 @@ export function PortfolioEditor() {
     });
 
     const repos = useMemo(() => profile?.github_signals?.repos_detail ?? [], [profile]);
+    const projectSlots = form ? getProjectSlots(form.projects) : 0;
+    const eligibleRepositories = form ? getEligibleRepositories(repos, form.projects) : [];
+    const pendingRepositories = eligibleRepositories.filter((repo) => pendingProjectNames.includes(repo.name));
 
     useEffect(() => {
         if (portfolio?.draft_content) setForm(portfolio.draft_content);
@@ -146,6 +153,24 @@ export function PortfolioEditor() {
             : current.length < 6 ? [...current, name] : current);
     };
 
+    const closeProjectPicker = () => {
+        setPendingProjectNames([]);
+        setProjectPickerOpen(false);
+    };
+
+    const togglePendingProject = (name: string) => {
+        setPendingProjectNames((current) => {
+            if (current.includes(name)) return current.filter((item) => item !== name);
+            return current.length < projectSlots ? [...current, name] : current;
+        });
+    };
+
+    const addPendingProjects = () => {
+        if (!form || pendingRepositories.length === 0) return;
+        setForm({ ...form, projects: appendRepositoriesToProjects(form.projects, pendingRepositories) });
+        closeProjectPicker();
+    };
+
     if (profileLoading || portfolioLoading) {
         return <div className="h-48 animate-pulse rounded-md bg-muted/40" />;
     }
@@ -224,7 +249,10 @@ export function PortfolioEditor() {
                     </section>
 
                     <section>
-                        <SecTitle title="Proyek GitHub" meta={`${form.projects.length}/6`} />
+                        <div className="flex items-end justify-between gap-3">
+                            <SecTitle title="Proyek GitHub" meta={`${form.projects.length}/${MAX_PORTFOLIO_PROJECTS}`} />
+                            {projectSlots > 0 && <button type="button" className={buttonClass} onClick={() => setProjectPickerOpen(true)}>+ Tambah proyek dari GitHub</button>}
+                        </div>
                         <div className="mt-3 divide-y divide-border border-y border-border">
                             {form.projects.map((project, index) => (
                                 <div key={project.repo_name} className="py-4">
@@ -237,6 +265,39 @@ export function PortfolioEditor() {
                                 </div>
                             ))}
                         </div>
+
+                        <Dialog open={projectPickerOpen} onOpenChange={(open) => open ? setProjectPickerOpen(true) : closeProjectPicker()}>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Tambah proyek dari GitHub</DialogTitle>
+                                    <DialogDescription>Tersisa {projectSlots} dari {MAX_PORTFOLIO_PROJECTS} slot</DialogDescription>
+                                </DialogHeader>
+                                {eligibleRepositories.length === 0 ? (
+                                    <p className="py-4 text-sm text-muted-foreground">Semua repository yang tersedia sudah ditambahkan ke portfolio.</p>
+                                ) : (
+                                    <div className="max-h-80 divide-y divide-border overflow-y-auto border-y border-border">
+                                        {eligibleRepositories.map((repo) => {
+                                            const selected = pendingProjectNames.includes(repo.name);
+                                            const disabled = !selected && pendingProjectNames.length >= projectSlots;
+                                            const languages = Object.keys(repo.languages ?? {});
+                                            return (
+                                                <label key={repo.name} className={`flex items-start gap-3 py-3 text-sm ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+                                                    <input type="checkbox" className="mt-0.5" checked={selected} disabled={disabled} onChange={() => togglePendingProject(repo.name)} />
+                                                    <span className="min-w-0 flex-1">
+                                                        <span className="block truncate font-medium">{repo.name}</span>
+                                                        <span className="mt-1 block text-xs text-muted-foreground">{languages.length ? languages.join(" · ") : "Bahasa tidak terdeteksi"} · ★ {repo.stars ?? 0} · {repo.own_commits ?? 0} commits</span>
+                                                    </span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                <DialogFooter>
+                                    <button type="button" className={buttonClass} onClick={closeProjectPicker}>Batal</button>
+                                    <button type="button" className="rounded-md bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50" disabled={pendingRepositories.length === 0} onClick={addPendingProjects}>Tambah {pendingRepositories.length} proyek</button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </section>
 
                     <section>
@@ -250,7 +311,10 @@ export function PortfolioEditor() {
                     </section>
 
                     <section>
-                        <SecTitle title="Pengalaman" />
+                        <div className="flex items-end justify-between gap-3">
+                            <SecTitle title="Pengalaman" />
+                            <button type="button" className={buttonClass} onClick={() => setForm({ ...form, experience: [...form.experience, createEmptyExperience()] })}>+ Tambah pengalaman</button>
+                        </div>
                         <div className="mt-3 space-y-4">
                             {form.experience.map((item, index) => (
                                 <div key={`${item.company}-${index}`} className="grid gap-2 border-b border-border pb-4 sm:grid-cols-2">
@@ -264,7 +328,10 @@ export function PortfolioEditor() {
                     </section>
 
                     <section>
-                        <SecTitle title="Pendidikan" />
+                        <div className="flex items-end justify-between gap-3">
+                            <SecTitle title="Pendidikan" />
+                            <button type="button" className={buttonClass} onClick={() => setForm({ ...form, education: [...form.education, createEmptyEducation()] })}>+ Tambah pendidikan</button>
+                        </div>
                         <div className="mt-3 space-y-4">
                             {form.education.map((item, index) => (
                                 <div key={`${item.institution}-${index}`} className="grid gap-2 border-b border-border pb-4 sm:grid-cols-2">
