@@ -23,11 +23,8 @@ import {
     ArrowRightIcon,
     BrainCircuitIcon,
     CheckCircle2Icon,
-    ExternalLinkIcon,
     FileTextIcon,
-    Globe2Icon,
     GithubIcon,
-    PaletteIcon,
     SearchIcon,
     SparklesIcon,
     StarIcon,
@@ -59,10 +56,10 @@ const PILLARS = [
     {
         icon: GithubIcon,
         no: "01",
-        title: "Portfolio dari bukti nyata",
-        description: "Project GitHub dan pengalaman di CV dirapikan AI menjadi portfolio publik yang bisa kamu edit dan bagikan.",
-        points: ["Sync GitHub", "Parse CV PDF", "Link publik"],
-        cta: { label: "Buat portfolio", href: "/dashboard/profile" },
+        title: "Profil kandidat dari kode nyata",
+        description: "Analisis otomatis repository, bahasa, dan topics GitHub-mu — digabung dengan CV lewat AI. Bukan klaim, tapi bukti.",
+        points: ["Sync GitHub", "Parse CV PDF", "Merged skill profile"],
+        cta: { label: "Mulai dari profil", href: "/dashboard/profile" },
     },
     {
         icon: BrainCircuitIcon,
@@ -83,43 +80,37 @@ const PILLARS = [
 ];
 
 const STATS = [
-    { value: "<5m", label: "Portfolio siap publish" },
-    { value: "2", label: "Sumber data digabung" },
-    { value: "3", label: "Tema portfolio" },
     { value: "100+", label: "Lowongan IT aktif" },
+    { value: "2", label: "Sumber data digabung" },
+    { value: "6", label: "Fitur AI terintegrasi" },
+    { value: "<60s", label: "Profil siap dinilai" },
 ];
 
 const STEPS = [
     {
         no: "01",
         title: "Sync",
-        description: "Hubungkan GitHub dan unggah CV. AI menyatukan pengalaman dan project-mu ke satu profil.",
-        point: "CV + GitHub",
+        description: "Hubungkan GitHub dan unggah CV. AI menyatukan semuanya ke satu profil kandidat.",
+        point: "Analisis otomatis",
     },
     {
         no: "02",
-        title: "Review",
-        description: "Periksa hasil ekstraksi, edit bagian yang perlu, lalu pilih project yang paling ingin ditonjolkan.",
-        point: "Human in the loop",
+        title: "Match",
+        description: "Dapatkan skor kecocokan dan lihat celah keahlianmu.",
+        point: "Skor kecocokan",
     },
     {
         no: "03",
-        title: "Publish",
-        description: "Pilih tema dan dapatkan link portfolio publik yang siap dikirim ke recruiter atau dibagikan di job portal.",
-        point: "Link publik",
+        title: "Improve",
+        description: "Ikuti roadmap belajar personal per lowongan.",
+        point: "Roadmap belajar",
     },
     {
         no: "04",
-        title: "Match & apply",
-        description: "Temukan lowongan yang sesuai, pahami skill gap, dan lamar dengan profil yang sudah punya bukti.",
-        point: "Job portal",
+        title: "Apply",
+        description: "Unduh CV berstandar ATS, lamar, atau terima undangan interview langsung.",
+        point: "End-to-end hiring",
     },
-];
-
-const PORTFOLIO_THEMES = [
-    { name: "Editorial", label: "Bold type · selected work", accent: "bg-orange-300", canvas: "bg-[#f4eee5]", text: "text-[#1e1b18]" },
-    { name: "Developer", label: "Terminal · proof of work", accent: "bg-emerald-400", canvas: "bg-[#101411]", text: "text-white" },
-    { name: "Maxfolio", label: "Minimal · visual story", accent: "bg-violet-400", canvas: "bg-[#17151f]", text: "text-white" },
 ];
 
 const MOCK_MATCHES = [
@@ -145,11 +136,11 @@ const HomePage = async () => {
                     <div>
                         <AnimationContainer delay={0.08}>
                             <h1 className="font-heading text-6xl font-medium leading-[0.95] tracking-[-0.03em] sm:text-7xl lg:text-[104px]">
-                                From CV + GitHub,{" "}
+                                From code,{" "}
                                 <span className="font-serif italic">
                                     to{" "}
                                     <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                                        portfolio.
+                                        career.
                                     </span>
                                 </span>
                             </h1>
@@ -157,7 +148,7 @@ const HomePage = async () => {
 
                         <AnimationContainer delay={0.16}>
                             <p className={`mt-8 max-w-md text-lg leading-relaxed ${MUTED}`}>
-                                Ubah pengalaman dari CV dan project GitHub menjadi portfolio publik yang bisa kamu edit, pilih temanya, dan kirim ke recruiter.
+                                Satu platform untuk menilai kesiapan Anda, menemukan lowongan yang tepat, dan membangun karir pertama Anda.
                             </p>
                         </AnimationContainer>
 
@@ -167,18 +158,18 @@ const HomePage = async () => {
                                     href={ctaHref}
                                     className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 transition hover:bg-violet-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                                 >
-                                    Buat Portfolio Gratis
+                                    {ctaLabel}
                                     <ArrowRightIcon className="h-4 w-4" />
                                 </Link>
                                 <SmoothScrollLink
-                                    href="#portfolio-preview"
+                                    href="#how-it-works"
                                     className={`inline-flex items-center gap-2 rounded-full border ${BORDER} px-6 py-3 text-sm font-semibold transition hover:border-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400`}
                                 >
-                                    Lihat Contoh Portfolio
+                                    Cara Kerja
                                 </SmoothScrollLink>
                             </div>
                             <p className={`mt-8 font-mono text-[12px] uppercase tracking-[0.08em] ${MUTED}`}>
-                                CV + GitHub · Review · 3 tema · Link publik
+                                GitHub signal · CV ATS · Match score · Roadmap AI
                             </p>
                         </AnimationContainer>
                     </div>
@@ -189,28 +180,12 @@ const HomePage = async () => {
                             <LandingOrb>
                                 <div className="relative">
                                     <LogoNetwork />
-                                    <div className="absolute left-1/2 top-1/2 w-[min(82%,22rem)] -translate-x-1/2 -translate-y-1/2 rotate-[-3deg] rounded-2xl border border-white/15 bg-[#11121c]/90 p-4 shadow-2xl shadow-violet-950/50 backdrop-blur-xl transition-transform duration-500 hover:rotate-0 hover:scale-[1.02]">
-                                        <div className="flex items-center justify-between font-mono text-[9px] uppercase tracking-[0.16em] text-white/45">
-                                            <span>Live portfolio preview</span>
-                                            <span className="flex items-center gap-1.5 text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Published</span>
-                                        </div>
-                                        <div className="mt-5 flex items-end justify-between gap-3">
-                                            <div>
-                                                <p className="font-heading text-xl font-semibold tracking-[-0.04em] text-white">Your work, visible.</p>
-                                                <p className="mt-1 text-[11px] leading-5 text-white/55">CV + GitHub signals, in one public link.</p>
-                                            </div>
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-violet-200"><Globe2Icon className="h-4 w-4" /></div>
-                                        </div>
-                                        <div className="mt-5 grid grid-cols-3 gap-2">
-                                            {["Selected work", "Experience", "Contact"].map((item, i) => <span key={item} className={`rounded-md border border-white/10 px-2 py-2 text-center text-[9px] ${i === 0 ? "bg-violet-500/20 text-violet-200" : "bg-white/[0.03] text-white/45"}`}>{item}</span>)}
-                                        </div>
-                                    </div>
                                 </div>
                             </LandingOrb>
                             <div className={`mt-6 flex items-center justify-between border-t ${BORDER} pt-5 font-mono text-[11px] uppercase tracking-[0.07em] ${MUTED}`}>
-                                <span>CV</span>
-                                <span className="text-violet-400">→ portfolio</span>
-                                <span>→ opportunities</span>
+                                <span>code</span>
+                                <span className="text-violet-400">→ match</span>
+                                <span>→ career</span>
                             </div>
                         </div>
                     </AnimationContainer>
@@ -219,7 +194,7 @@ const HomePage = async () => {
 
             {/* ── Marquee ── */}
             <div className={`overflow-hidden border-y ${BORDER} py-3`}>
-                <div className="flex w-max animate-marquee items-center gap-8 [--duration:30s] [--gap:2rem] motion-reduce:animate-none">
+                <div className="flex w-max animate-marquee items-center gap-8 [--duration:30s] [--gap:2rem]">
                     {[0, 1].map((copy) => (
                         <div key={copy} className="flex items-center gap-8" aria-hidden={copy === 1}>
                             {MARQUEE_ITEMS.map((item, i) => (
@@ -232,48 +207,6 @@ const HomePage = async () => {
                     ))}
                 </div>
             </div>
-
-            {/* ── Portfolio showcase ── */}
-            <MaxWidthWrapper>
-                <section id="portfolio-preview" className="grid gap-10 border-b py-16 md:grid-cols-[0.8fr_1.2fr] md:gap-20 md:py-24">
-                    <div>
-                        <AnimationContainer>
-                            <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(01) Portfolio publik</p>
-                        </AnimationContainer>
-                        <AnimationContainer delay={0.08}>
-                            <h2 className="font-heading mt-5 text-4xl font-medium leading-[0.98] tracking-[-0.03em] md:text-6xl">
-                                Bukan sekadar profil. <span className="font-serif italic">Bukti.</span>
-                            </h2>
-                        </AnimationContainer>
-                        <AnimationContainer delay={0.16}>
-                            <p className={`mt-6 max-w-md text-[15px] leading-relaxed ${MUTED}`}>
-                                Data yang sudah kamu review berubah menjadi halaman publik dengan URL unik. Bagikan satu link yang menunjukkan apa yang kamu buat, bukan hanya apa yang kamu klaim.
-                            </p>
-                        </AnimationContainer>
-                        <AnimationContainer delay={0.24}>
-                            <div className="mt-8 flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.08em] text-white/55">
-                                <PaletteIcon className="h-4 w-4 text-violet-400" /> 3 tema siap pakai
-                            </div>
-                        </AnimationContainer>
-                    </div>
-                    <AnimationContainer delay={0.12} direction="right">
-                        <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-[#f4eee5] p-5 text-[#1e1b18] shadow-2xl shadow-black/30 sm:p-7">
-                            <div className="absolute right-[-4rem] top-[-4rem] h-40 w-40 rounded-full bg-orange-300/30 blur-3xl" />
-                            <div className="relative flex items-start justify-between border-b border-[#1e1b18]/15 pb-5">
-                                <div><p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#b45309]">githire.my.id/u/yourname</p><h3 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">A portfolio of considered work.</h3></div>
-                                <ExternalLinkIcon className="mt-1 h-4 w-4 shrink-0 text-[#b45309]" />
-                            </div>
-                            <div className="relative grid gap-4 py-6 sm:grid-cols-[1fr_0.8fr]">
-                                <div><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#b45309]">Selected work</p><p className="mt-3 font-heading text-2xl font-semibold tracking-[-0.04em]">Projects with a point of view.</p><p className="mt-3 max-w-sm text-sm leading-6 text-[#655e55]">Project dari GitHub, pengalaman dari CV, dan cerita yang kamu pilih sendiri.</p></div>
-                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-1"><div className="rounded-lg bg-[#1e1b18] p-3 text-white"><p className="font-mono text-[9px] uppercase text-white/50">01 · github</p><p className="mt-5 text-sm font-semibold">Project Atlas</p></div><div className="rounded-lg border border-[#1e1b18]/15 p-3"><p className="font-mono text-[9px] uppercase text-[#b45309]">02 · experience</p><p className="mt-5 text-sm font-semibold">Backend & AI</p></div></div>
-                            </div>
-                        </div>
-                    </AnimationContainer>
-                </section>
-                <section className="grid grid-cols-1 gap-3 border-b py-8 sm:grid-cols-3">
-                    {PORTFOLIO_THEMES.map((theme, i) => <AnimationContainer key={theme.name} delay={0.08 * i} direction={i === 0 ? "left" : i === 2 ? "right" : "up"}><div className={`group relative h-32 overflow-hidden rounded-xl border border-white/10 ${theme.canvas} p-4 transition-transform duration-500 hover:-translate-y-1`}><div className={`absolute right-3 top-3 h-2 w-2 rounded-full ${theme.accent}`} /><p className={`font-heading text-xl font-semibold tracking-[-0.04em] ${theme.text}`}>{theme.name}</p><p className={`mt-2 font-mono text-[9px] uppercase tracking-[0.1em] ${theme.text} opacity-50`}>{theme.label}</p><div className={`absolute bottom-4 left-4 h-1 w-16 rounded-full ${theme.accent} opacity-70`} /></div></AnimationContainer>)}
-                </section>
-            </MaxWidthWrapper>
 
             {/* ── Stats band ── */}
             <MaxWidthWrapper>
@@ -297,11 +230,11 @@ const HomePage = async () => {
                 <section id="features" className="grid gap-12 py-16 md:grid-cols-[240px_1fr] md:gap-24 md:py-24">
                     <div>
                         <AnimationContainer>
-                        <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(02) Satu profil, dua tujuan</p>
+                            <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(01) Yang kami bangun</p>
                         </AnimationContainer>
                         <AnimationContainer delay={0.1}>
                             <h2 className="font-heading mt-5 text-3xl font-medium leading-tight tracking-[-0.02em] md:text-4xl">
-                                Tunjukkan karya. Temukan peluang.
+                                Satu platform, dua sisi pasar.
                             </h2>
                         </AnimationContainer>
                     </div>
@@ -342,12 +275,12 @@ const HomePage = async () => {
                 </section>
             </MaxWidthWrapper>
 
-            {/* ── (03) Showcase: match score ── */}
+            {/* ── (02) Showcase: match score ── */}
             <MaxWidthWrapper>
                 <section className="grid items-center gap-16 py-16 md:grid-cols-2 md:gap-24 md:py-24">
                     <div>
                         <AnimationContainer>
-                            <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(03) Setelah portfolio siap</p>
+                            <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(02) Hasilnya</p>
                         </AnimationContainer>
                         <AnimationContainer delay={0.08}>
                             <h2 className="font-heading mt-5 text-4xl font-medium leading-tight tracking-[-0.02em] md:text-6xl">
@@ -426,12 +359,12 @@ const HomePage = async () => {
                 </section>
             </MaxWidthWrapper>
 
-            {/* ── (04) Cara kerja ── */}
+            {/* ── (03) Cara kerja ── */}
             <MaxWidthWrapper>
                 <section id="how-it-works" className="grid gap-12 py-16 md:grid-cols-[240px_1fr] md:gap-24 md:py-24">
                     <div>
                         <AnimationContainer>
-                            <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(04) Cara kerja</p>
+                            <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(03) Cara kerja</p>
                         </AnimationContainer>
                         <AnimationContainer delay={0.1}>
                             <h2 className="font-heading mt-5 text-3xl font-medium leading-tight tracking-[-0.02em] md:text-4xl">
@@ -468,7 +401,7 @@ const HomePage = async () => {
                 <section className="border-t py-20 md:py-32">
                     <div className="mx-auto max-w-3xl text-center">
                         <AnimationContainer>
-                            <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(05) Bukti pengguna</p>
+                            <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-violet-400">(04) Bukti pengguna</p>
                         </AnimationContainer>
                         <AnimationContainer delay={0.1} direction="scale">
                             <blockquote className="font-heading mt-8 text-2xl font-medium leading-snug tracking-[-0.01em] md:text-4xl">
@@ -499,18 +432,18 @@ const HomePage = async () => {
                 <section className="border-t py-20 text-center md:py-32">
                     <AnimationContainer>
                         <h2 className="font-heading mx-auto max-w-3xl text-5xl font-medium leading-[0.95] tracking-[-0.03em] md:text-7xl">
-                            Dari portfolio,{" "}
+                            Dari kode,{" "}
                             <span className="font-serif italic">
                                 jadi{" "}
-                                    <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                                    peluang.
+                                <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                                    karier.
                                 </span>
                             </span>
                         </h2>
                     </AnimationContainer>
                     <AnimationContainer delay={0.1}>
                         <p className={`mx-auto mt-7 max-w-md text-lg leading-relaxed ${MUTED}`}>
-                            Mulai dengan menghubungkan GitHub dan CV-mu. Dalam hitungan menit, kamu punya portfolio publik — lalu bisa menemukan posisi yang paling cocok.
+                            Mulai dengan menghubungkan GitHub dan CV-mu. Dalam hitungan menit, kamu tahu posisi apa yang paling cocok — dan apa yang harus dipelajari.
                         </p>
                     </AnimationContainer>
                     <AnimationContainer delay={0.2}>
@@ -519,14 +452,14 @@ const HomePage = async () => {
                                 href={ctaHref}
                                 className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 transition-all hover:bg-violet-500 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                             >
-                                Buat Portfolio Gratis
+                                {ctaLabel}
                                 <ArrowRightIcon className="h-4 w-4" />
                             </Link>
                             <Link
                                 href="/dashboard/jobs"
                                 className={`inline-flex items-center gap-2 rounded-full border ${BORDER} px-7 py-3.5 text-sm font-semibold transition-all hover:border-white/30 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400`}
                             >
-                                Jelajahi Lowongan
+                                Lihat 100+ Lowongan
                             </Link>
                         </div>
                     </AnimationContainer>
