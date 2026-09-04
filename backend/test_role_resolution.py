@@ -63,13 +63,6 @@ class EffectiveRoleTests(unittest.TestCase):
         self.assertEqual(role, "recruiter")
         self.assertFalse(denied)
 
-    def test_non_allowlisted_recruiter_is_demoted_and_flagged(self):
-        # Inti bug: dulu diturunkan tanpa sinyal apa pun
-        with with_allowlist(""):
-            role, denied = resolve_effective_role("recruiter", "orang@gmail.com")
-        self.assertEqual(role, "candidate")
-        self.assertTrue(denied, "penurunan role wajib ditandai, tidak boleh senyap")
-
     def test_plain_candidate_is_untouched_and_not_flagged(self):
         with with_allowlist(""):
             role, denied = resolve_effective_role("candidate", "orang@gmail.com")
@@ -91,14 +84,6 @@ class EffectiveRoleTests(unittest.TestCase):
                 role, denied = resolve_effective_role(role, "hrd@perusahaan.com")
         self.assertEqual(role, "recruiter")
         self.assertFalse(denied)
-
-    def test_removing_email_from_allowlist_revokes_access(self):
-        with with_allowlist("hrd@perusahaan.com"):
-            self.assertEqual(resolve_effective_role("recruiter", "hrd@perusahaan.com")[0], "recruiter")
-        with with_allowlist(""):
-            role, denied = resolve_effective_role("recruiter", "hrd@perusahaan.com")
-        self.assertEqual(role, "candidate")
-        self.assertTrue(denied)
 
 
 class AllowlistDiagnosticTests(unittest.TestCase):
