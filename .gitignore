@@ -88,3 +88,24 @@ githire_logos.html
 # ── Git Worktrees ─────────────────────────────────
 .worktrees/
 worktrees/
+
+# ── Local agent, audit, and experiment artifacts ───
+.agents/
+.opencode/
+.playwright-mcp/
+AGENTS.md
+skills-lock.json
+~/
+remotion-demo/
+remotion-demopubliclogo.png
+
+# ── Local documentation exports ────────────────────
+dokumentasi/Bukti_Produk_Digital_GitHire.docx
+dokumentasi/Laporan_Pengujian_Validasi_GitHire.docx
+dokumentasi/logo/
+
+# ── Local frontend previews and generated output ───
+linkify/build_out.txt
+linkify/src/app/editorial-audit/
+linkify/src/app/theme-check/
+linkify/tests/fixtures/
