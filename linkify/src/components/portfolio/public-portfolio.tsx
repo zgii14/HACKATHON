@@ -1,4 +1,6 @@
 import { getPublicThemePlan } from "./public-portfolio-theme";
+import { EditorialPortfolio } from "./editorial-portfolio";
+import { MaxfolioPortfolio } from "./maxfolio-portfolio";
 import type { PublicPortfolio, PublicPortfolioContent } from "./types";
 
 type SectionKey = keyof PublicPortfolioContent["sections"];
@@ -50,6 +52,10 @@ function Footer({ portfolio, className, brandClass }: Pick<LayoutProps, "portfol
 }
 
 function EditorialLayout({ portfolio, apiBase, contacts, sectionEnabled }: LayoutProps) {
+    if (getPublicThemePlan(portfolio.content.theme).key === "editorial") {
+        return <EditorialPortfolio portfolio={portfolio} apiBase={apiBase} contacts={contacts} />;
+    }
+
     const content = portfolio.content;
     const projects = content.projects ?? [];
     const experience = content.experience ?? [];
@@ -82,29 +88,8 @@ function EditorialLayout({ portfolio, apiBase, contacts, sectionEnabled }: Layou
 }
 
 function DeveloperLayout({ portfolio, apiBase, contacts, sectionEnabled }: LayoutProps) {
-    const content = portfolio.content;
-    const projects = content.projects ?? [];
-    const experience = content.experience ?? [];
-    const education = content.education ?? [];
-    const certifications = content.certifications ?? [];
-    const showSkills = sectionEnabled("skills") && (content.skills.length > 0 || portfolio.verified_skills.length > 0);
-
-    return (
-        <main lang={content.language} className="min-h-screen bg-[#0B1020] font-mono text-[#CBD5E1]">
-            <div className="mx-auto max-w-7xl px-5 py-6 sm:px-8 sm:py-10">
-                <header className="flex items-center justify-between border-b border-[#CBD5E1]/15 pb-4 text-[10px] uppercase tracking-[0.16em] text-[#94A3B8]"><span><span className="text-[#34D399]">●</span> githire / portfolio</span><span>public build</span></header>
-                <section className="grid gap-8 border-b border-[#CBD5E1]/15 py-10 md:grid-cols-[auto_minmax(0,1fr)] md:items-center md:py-16"><Photo portfolio={portfolio} apiBase={apiBase} imageClass="size-20 border border-[#A78BFA]/45 object-cover" fallbackClass="flex size-20 items-center justify-center border border-[#A78BFA]/45 bg-[#121A2B] text-2xl font-bold text-[#A78BFA]" /><div><p className="text-xs text-[#34D399]"><span className="text-[#A78BFA]">$</span> whoami</p><h1 className="mt-4 max-w-5xl text-4xl font-bold leading-[0.95] tracking-[-0.05em] text-white sm:text-6xl">{content.headline || content.name || "Developer portfolio"}</h1>{content.bio && <p className="mt-6 max-w-3xl font-sans text-base leading-7 text-[#94A3B8]">{content.bio}</p>}<Contacts contacts={contacts} wrapClass="mt-7 flex flex-wrap gap-x-5 gap-y-2" linkClass="text-xs font-semibold uppercase tracking-wide text-[#A78BFA] hover:text-[#34D399]" /></div></section>
-
-                {sectionEnabled("projects") && projects.length > 0 && <section className="border-b border-[#CBD5E1]/15 py-10"><div className="flex items-end justify-between"><div><p className="text-[11px] uppercase tracking-[0.18em] text-[#34D399]">./selected-work</p><h2 className="mt-2 text-2xl font-bold text-white">Proof of work</h2></div><span className="text-xs text-[#64748B]">{projects.length} repositories</span></div><div className="mt-6 grid gap-3 lg:grid-cols-3">{projects.map((project) => <a key={project.repo_name} href={project.url} target="_blank" rel="noreferrer" className="group border border-[#CBD5E1]/15 bg-[#121A2B] p-5 transition-colors duration-200 hover:border-[#A78BFA]/70 motion-reduce:transition-none"><p className="text-[10px] text-[#34D399]">repo / {project.repo_name}</p><h3 className="mt-5 text-lg font-bold text-white group-hover:text-[#A78BFA]">{project.repo_name}</h3><p className="mt-3 min-h-16 font-sans text-sm leading-6 text-[#94A3B8]">{project.description}</p><div className="mt-6 flex items-end justify-between gap-3 border-t border-[#CBD5E1]/10 pt-3 text-[10px] text-[#94A3B8]"><span className="max-w-[65%] truncate">{project.tech_stack.join(" / ")}</span><span className="shrink-0 text-[#34D399]">★ {project.stars} · {project.own_commits}</span></div></a>)}</div></section>}
-                {showSkills && <section className="border-b border-[#CBD5E1]/15 py-10"><p className="text-[11px] uppercase tracking-[0.18em] text-[#34D399]">./toolchain</p><div className="mt-5"><SkillCloud portfolio={portfolio} labelClass="text-[10px] uppercase tracking-wider text-[#64748B]" verifiedClass="border border-[#34D399]/35 bg-[#34D399]/5 px-2.5 py-1 text-xs font-semibold text-[#34D399]" skillClass="border border-[#CBD5E1]/20 px-2.5 py-1 text-xs text-[#CBD5E1]" /></div></section>}
-                <div className="grid gap-10 py-10 lg:grid-cols-2">
-                    {sectionEnabled("experience") && experience.length > 0 && <section><p className="text-[11px] uppercase tracking-[0.18em] text-[#34D399]">./career-log</p><h2 className="mt-2 text-2xl font-bold text-white">Experience</h2><div className="mt-5 divide-y divide-[#CBD5E1]/15 border-y border-[#CBD5E1]/15">{experience.map((item, index) => <article key={`${item.company}-${index}`} className="py-5"><p className="text-[10px] text-[#64748B]">{item.period || "—"}</p><h3 className="mt-2 text-sm font-bold text-white">{item.role}</h3><p className="mt-1 font-sans text-sm text-[#94A3B8]">{[item.company, item.location].filter(Boolean).join(" · ")}</p>{item.bullets?.length ? <ul className="mt-3 list-disc space-y-1 pl-4 font-sans text-sm leading-6 text-[#94A3B8]">{item.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul> : null}</article>)}</div></section>}
-                    <div className="space-y-10">{sectionEnabled("education") && education.length > 0 && <section><p className="text-[11px] uppercase tracking-[0.18em] text-[#34D399]">./education</p><div className="mt-5 space-y-5">{education.map((item, index) => <article key={`${item.institution}-${index}`}><h3 className="text-sm font-bold text-white">{item.institution}</h3><p className="mt-1 font-sans text-sm text-[#94A3B8]">{[item.degree, item.major, item.period].filter(Boolean).join(" · ")}</p></article>)}</div></section>}{sectionEnabled("certifications") && certifications.length > 0 && <section><p className="text-[11px] uppercase tracking-[0.18em] text-[#34D399]">./credentials</p><ul className="mt-5 space-y-2 font-sans text-sm text-[#94A3B8]">{certifications.map((item) => <li key={item}>— {item}</li>)}</ul></section>}</div>
-                </div>
-                <Footer portfolio={portfolio} className="flex flex-wrap items-center justify-between gap-3 border-t border-[#CBD5E1]/15 py-6 text-[10px] uppercase tracking-wider text-[#64748B]" brandClass="text-[#A78BFA]" />
-            </div>
-        </main>
-    );
+    void sectionEnabled;
+    return <MaxfolioPortfolio portfolio={portfolio} apiBase={apiBase} contacts={contacts} />;
 }
 
 function ProfessionalLayout({ portfolio, apiBase, contacts, sectionEnabled }: LayoutProps) {

@@ -1,12 +1,12 @@
 "use client";
 
-import { Check, FileText, TerminalSquare, UserRound } from "lucide-react";
+import { Check, FileText, PanelsTopLeft, UserRound } from "lucide-react";
 import type { PortfolioContent, PortfolioTheme } from "./types";
 import { getThemePreviewData } from "./theme-preview-data";
 
 const themeMeta: Record<PortfolioTheme, { label: string; detail: string }> = {
     editorial: { label: "Editorial", detail: "Cerita dan personal brand" },
-    developer: { label: "Developer", detail: "Proyek dan bukti GitHub" },
+    developer: { label: "Developer", detail: "Visual gelap dan project-first" },
     professional: { label: "Professional", detail: "Ringkas dan mudah dipindai" },
 };
 
@@ -33,13 +33,15 @@ function EditorialPreview({ name, headline, projectName }: ReturnType<typeof get
     );
 }
 
-function DeveloperPreview({ name, projectName, experienceRole }: ReturnType<typeof getThemePreviewData>) {
+function DeveloperPreview({ name, headline, projectName }: ReturnType<typeof getThemePreviewData>) {
     return (
-        <div className="h-28 overflow-hidden bg-[#0B1020] p-3 font-mono text-[#CBD5E1]" aria-hidden="true">
-            <div className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-[#F87171]" /><span className="size-1.5 rounded-full bg-[#FBBF24]" /><span className="size-1.5 rounded-full bg-[#34D399]" /><span className="ml-1 text-[6px] text-[#A78BFA]">portfolio.sh</span></div>
-            <p className="mt-3 truncate text-[9px] font-semibold"><span className="text-[#34D399]">$</span> {name.toLowerCase().replace(/\s+/g, "-")}</p>
-            <div className="mt-2 space-y-1 text-[6px] text-[#94A3B8]"><p className="truncate"><span className="text-[#A78BFA]">project</span> {projectName}</p><p className="truncate"><span className="text-[#34D399]">role</span> {experienceRole}</p></div>
-            <div className="mt-2 h-1 w-2/3 bg-[#34D399]/70" />
+        <div className="h-28 overflow-hidden bg-[#0A0A0B] p-2.5 text-[#F5F5F0]" aria-hidden="true">
+            <div className="flex items-center justify-between text-[5px] text-[#6C6C7A]"><span className="flex items-center gap-1"><span className="size-2 rounded-full border border-[#2E2E38] bg-[#141415]" /><span className="max-w-16 truncate">{name}</span></span><span>●</span></div>
+            <p className="mt-3 line-clamp-2 font-heading text-[13px] font-medium leading-[0.92] tracking-[-0.04em]">{headline}</p>
+            <div className="mt-2 grid grid-cols-2 gap-1">
+                <div className="relative h-10 overflow-hidden rounded-[4px] bg-gradient-to-br from-[#9B999B] via-[#35383F] to-[#0A0A0B]"><span className="absolute -bottom-2 left-1/2 size-8 -translate-x-1/2 rounded-full border-[3px] border-[#FF4D2E] bg-[#141415] shadow-[0_0_8px_#FF4D2E]" /></div>
+                <div className="flex h-10 flex-col justify-end overflow-hidden rounded-[4px] bg-gradient-to-br from-[#DCDAD9] via-[#555A61] to-[#141415] p-1"><span className="truncate rounded-sm bg-[#141415] px-1 py-0.5 text-[5px]">{projectName}</span></div>
+            </div>
         </div>
     );
 }
@@ -59,7 +61,7 @@ function ThemeArt({ theme, data }: { theme: PortfolioTheme; data: ReturnType<typ
     return <ProfessionalPreview {...data} />;
 }
 
-const themeIcons = { editorial: FileText, developer: TerminalSquare, professional: UserRound } as const;
+const themeIcons = { editorial: FileText, developer: PanelsTopLeft, professional: UserRound } as const;
 
 export function ThemePreviewCards({ content, onSelect }: ThemePreviewCardsProps) {
     const data = getThemePreviewData(content);
