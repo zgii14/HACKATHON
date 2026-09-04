@@ -5,6 +5,7 @@ import {
     createEmptyEducation,
     createEmptyExperience,
     getEligibleRepositories,
+    getPhotoUploadCopy,
     getProjectSlots,
     toPortfolioProject,
 } from "../src/components/portfolio/portfolio-editor-helpers.ts";
@@ -44,4 +45,15 @@ test("ignores duplicates and caps appended projects at six", () => {
 test("factories return blank editable fields", () => {
     assert.deepEqual(createEmptyExperience(), { role: "", company: "", period: "" });
     assert.deepEqual(createEmptyEducation(), { institution: "", degree: "", major: "", period: "" });
+});
+
+test("photo upload copy distinguishes an uploaded draft from an empty picker", () => {
+    assert.deepEqual(getPhotoUploadCopy(false), {
+        label: "Foto opsional",
+        help: "JPG, PNG, atau WEBP · maksimal 2 MB.",
+    });
+    assert.deepEqual(getPhotoUploadCopy(true), {
+        label: "Ganti foto",
+        help: "Foto tersimpan di draft. Pilih file baru untuk mengganti.",
+    });
 });

@@ -58,3 +58,15 @@ export function createEmptyExperience(): PortfolioExperience {
 export function createEmptyEducation(): PortfolioEducation {
     return { institution: "", degree: "", major: "", period: "" };
 }
+
+export function getPhotoUploadCopy(hasPhoto: boolean) {
+    return hasPhoto
+        ? {
+            label: "Ganti foto",
+            help: "Foto tersimpan di draft. Pilih file baru untuk mengganti.",
+        }
+        : {
+            label: "Foto opsional",
+            help: "JPG, PNG, atau WEBP · maksimal 2 MB.",
+        };
+}

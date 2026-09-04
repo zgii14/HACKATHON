@@ -13,7 +13,7 @@ import type {
     PortfolioRecord,
 } from "./types";
 import { ThemePreviewCards } from "./theme-preview-cards";
-import { appendRepositoriesToProjects, createEmptyEducation, createEmptyExperience, getEligibleRepositories, getProjectSlots, MAX_PORTFOLIO_PROJECTS } from "./portfolio-editor-helpers";
+import { appendRepositoriesToProjects, createEmptyEducation, createEmptyExperience, getEligibleRepositories, getPhotoUploadCopy, getProjectSlots, MAX_PORTFOLIO_PROJECTS } from "./portfolio-editor-helpers";
 
 type Repo = {
     name: string;
@@ -64,6 +64,7 @@ export function PortfolioEditor() {
     const projectSlots = form ? getProjectSlots(form.projects) : 0;
     const eligibleRepositories = form ? getEligibleRepositories(repos, form.projects) : [];
     const pendingRepositories = eligibleRepositories.filter((repo) => pendingProjectNames.includes(repo.name));
+    const photoUploadCopy = getPhotoUploadCopy(Boolean(portfolio?.has_photo));
 
     useEffect(() => {
         if (portfolio?.draft_content) setForm(portfolio.draft_content);
@@ -243,8 +244,20 @@ export function PortfolioEditor() {
                             <label className="text-xs font-semibold">Nama<input className={`${inputClass} mt-1`} value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></label>
                             <label className="text-xs font-semibold">Headline<input className={`${inputClass} mt-1`} value={form.headline} onChange={(event) => setForm({ ...form, headline: event.target.value })} /></label>
                             <label className="text-xs font-semibold">Tentang saya<textarea rows={5} className={`${inputClass} mt-1 resize-y`} value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} /></label>
-                            <label className="text-xs font-semibold">Foto opsional<input className="mt-1 block text-xs" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => uploadPhoto(event.target.files?.[0] ?? null)} /></label>
-                            {portfolio?.has_photo && <button type="button" onClick={removePhoto} className="justify-self-start text-xs text-destructive">Hapus foto dari draft</button>}
+                            <div>
+                                <label className="text-xs font-semibold">
+                                    {photoUploadCopy.label}
+                                    <input
+                                        className="mt-1 block text-xs"
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        aria-describedby="portfolio-photo-help"
+                                        onChange={(event) => uploadPhoto(event.target.files?.[0] ?? null)}
+                                    />
+                                </label>
+                                <p id="portfolio-photo-help" role="status" className="mt-1 text-xs text-muted-foreground">{photoUploadCopy.help}</p>
+                                {portfolio?.has_photo && <button type="button" onClick={removePhoto} className="mt-2 text-xs text-destructive">Hapus foto dari draft</button>}
+                            </div>
                         </div>
                     </section>
 
