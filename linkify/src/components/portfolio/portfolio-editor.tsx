@@ -3,9 +3,10 @@
 import { EmptyState, PageHeader, SecTitle } from "@/components/dashboard/ui";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useApi } from "@/hooks/use-api";
+import { confirmDestructive } from "@/lib/confirm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import type {
     PortfolioContent,
@@ -13,7 +14,7 @@ import type {
     PortfolioRecord,
 } from "./types";
 import { ThemePreviewCards } from "./theme-preview-cards";
-import { appendRepositoriesToProjects, createEmptyEducation, createEmptyExperience, getEligibleRepositories, getPhotoUploadCopy, getProjectSlots, MAX_PORTFOLIO_PROJECTS } from "./portfolio-editor-helpers";
+import { appendRepositoriesToProjects, canRestoreProject, createEmptyEducation, createEmptyExperience, createOneShotUndo, getEligibleRepositories, getPhotoUploadCopy, getProjectSlots, MAX_PORTFOLIO_PROJECTS, restoreAt, transitionDraftRemoval } from "./portfolio-editor-helpers";
 
 type Repo = {
     name: string;
@@ -43,11 +44,32 @@ export function PortfolioEditor() {
     const { withAuth, authReady } = useApi();
     const queryClient = useQueryClient();
     const [form, setForm] = useState<PortfolioContent | null>(null);
+    const formRef = useRef<PortfolioContent | null>(null);
     const [language, setLanguage] = useState<PortfolioLanguage>("id");
     const [repoNames, setRepoNames] = useState<string[]>([]);
     const [busy, setBusy] = useState<string | null>(null);
     const [projectPickerOpen, setProjectPickerOpen] = useState(false);
     const [pendingProjectNames, setPendingProjectNames] = useState<string[]>([]);
+
+    const showUndoToast = (message: string, undo: () => void) => {
+        const toastId = "portfolio-editor-undo";
+        toast.dismiss(toastId);
+        toast.success(({ closeToast }) => (
+            <div className="flex items-center justify-between gap-3">
+                <span>{message}</span>
+                <button
+                    type="button"
+                    className="font-semibold underline"
+                    onClick={() => {
+                        undo();
+                        closeToast();
+                    }}
+                >
+                    Urungkan
+                </button>
+            </div>
+        ), { toastId, autoClose: 5000, closeOnClick: false, closeButton: false, draggable: false });
+    };
 
     const { data: profile, isLoading: profileLoading } = useQuery({
         queryKey: ["profile"],
@@ -69,6 +91,10 @@ export function PortfolioEditor() {
     useEffect(() => {
         if (portfolio?.draft_content) setForm(portfolio.draft_content);
     }, [portfolio]);
+
+    useEffect(() => {
+        formRef.current = form;
+    }, [form]);
 
     useEffect(() => {
         if (!repoNames.length && repos.length) setRepoNames(repos.slice(0, 6).map((repo) => repo.name));
@@ -117,11 +143,19 @@ export function PortfolioEditor() {
         "Portfolio berhasil dipublish.",
     );
 
-    const unpublish = () => run(
-        "unpublish",
-        () => withAuth<PortfolioRecord>("/me/portfolio/unpublish", { method: "POST" }),
-        "Portfolio sudah tidak dapat diakses publik.",
-    );
+    const unpublish = async () => {
+        const confirmed = await confirmDestructive({
+            title: "Sembunyikan portfolio publik?",
+            text: "Portfolio tidak dapat dibuka publik sampai dipublish kembali.",
+            confirmText: "Ya, unpublish",
+        });
+        if (!confirmed) return null;
+        return run(
+            "unpublish",
+            () => withAuth<PortfolioRecord>("/me/portfolio/unpublish", { method: "POST" }),
+            "Portfolio sudah tidak dapat diakses publik.",
+        );
+    };
 
     const uploadPhoto = async (file: File | null) => {
         if (!file) return;
@@ -135,11 +169,70 @@ export function PortfolioEditor() {
         );
     };
 
-    const removePhoto = () => run(
-        "photo",
-        () => withAuth<PortfolioRecord>("/me/portfolio/photo", { method: "DELETE" }),
-        "Foto dihapus dari draft.",
-    );
+    const removePhoto = async () => {
+        const confirmed = await confirmDestructive({
+            title: "Hapus foto dari draft?",
+            text: "Foto perlu diunggah ulang jika ingin digunakan kembali.",
+            confirmText: "Ya, hapus foto",
+        });
+        if (!confirmed) return null;
+        return run(
+            "photo",
+            () => withAuth<PortfolioRecord>("/me/portfolio/photo", { method: "DELETE" }),
+            "Foto dihapus dari draft.",
+        );
+    };
+
+    const updateLocalForm = (next: PortfolioContent) => {
+        formRef.current = next;
+        setForm(next);
+    };
+
+    const removeProject = (index: number) => {
+        const current = formRef.current;
+        if (!current) return;
+        const removal = transitionDraftRemoval(current, "projects", index);
+        if (!removal) return;
+        const originalMatchingCount = current.projects.filter((project) => project.repo_name === removal.removed.repo_name).length;
+        const claimUndo = createOneShotUndo();
+        updateLocalForm(removal.draft);
+        showUndoToast("Proyek dihapus.", () => {
+            if (!claimUndo()) return;
+            const latest = formRef.current;
+            if (!latest || !canRestoreProject(latest.projects, removal.removed, originalMatchingCount)) return;
+            updateLocalForm({ ...latest, projects: restoreAt(latest.projects, removal.removed, removal.index) });
+        });
+    };
+
+    const removeExperience = (index: number) => {
+        const current = formRef.current;
+        if (!current) return;
+        const removal = transitionDraftRemoval(current, "experience", index);
+        if (!removal) return;
+        const claimUndo = createOneShotUndo();
+        updateLocalForm(removal.draft);
+        showUndoToast("Pengalaman dihapus.", () => {
+            if (!claimUndo()) return;
+            const latest = formRef.current;
+            if (!latest) return;
+            updateLocalForm({ ...latest, experience: restoreAt(latest.experience, removal.removed, removal.index) });
+        });
+    };
+
+    const removeEducation = (index: number) => {
+        const current = formRef.current;
+        if (!current) return;
+        const removal = transitionDraftRemoval(current, "education", index);
+        if (!removal) return;
+        const claimUndo = createOneShotUndo();
+        updateLocalForm(removal.draft);
+        showUndoToast("Pendidikan dihapus.", () => {
+            if (!claimUndo()) return;
+            const latest = formRef.current;
+            if (!latest) return;
+            updateLocalForm({ ...latest, education: restoreAt(latest.education, removal.removed, removal.index) });
+        });
+    };
 
     const copyLink = async () => {
         if (!portfolio) return;
@@ -271,7 +364,7 @@ export function PortfolioEditor() {
                                 <div key={project.repo_name} className="py-4">
                                     <div className="flex items-center justify-between gap-3">
                                         <a href={project.url} target="_blank" rel="noreferrer" className="font-semibold hover:text-primary">{project.repo_name} ↗</a>
-                                        <button className="text-xs text-destructive" onClick={() => setForm({ ...form, projects: form.projects.filter((_, itemIndex) => itemIndex !== index) })}>Hapus</button>
+                                        <button type="button" className="text-xs text-destructive" onClick={() => removeProject(index)}>Hapus</button>
                                     </div>
                                     <p className="mt-1 font-mono text-[11px] text-muted-foreground">{project.tech_stack.join(" · ")} · ★ {project.stars} · {project.own_commits} commits</p>
                                     <textarea className={`${inputClass} mt-3 resize-y`} rows={3} value={project.description} onChange={(event) => setForm({ ...form, projects: form.projects.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item) })} />
@@ -334,7 +427,7 @@ export function PortfolioEditor() {
                                     <input className={inputClass} placeholder="Peran" value={item.role ?? ""} onChange={(event) => setForm({ ...form, experience: form.experience.map((entry, itemIndex) => itemIndex === index ? { ...entry, role: event.target.value } : entry) })} />
                                     <input className={inputClass} placeholder="Perusahaan" value={item.company ?? ""} onChange={(event) => setForm({ ...form, experience: form.experience.map((entry, itemIndex) => itemIndex === index ? { ...entry, company: event.target.value } : entry) })} />
                                     <input className={inputClass} placeholder="Periode" value={item.period ?? ""} onChange={(event) => setForm({ ...form, experience: form.experience.map((entry, itemIndex) => itemIndex === index ? { ...entry, period: event.target.value } : entry) })} />
-                                    <button className="justify-self-start text-xs text-destructive" onClick={() => setForm({ ...form, experience: form.experience.filter((_, itemIndex) => itemIndex !== index) })}>Hapus pengalaman</button>
+                                    <button type="button" className="justify-self-start text-xs text-destructive" onClick={() => removeExperience(index)}>Hapus pengalaman</button>
                                 </div>
                             ))}
                         </div>
@@ -351,7 +444,7 @@ export function PortfolioEditor() {
                                     <input className={inputClass} placeholder="Institusi" value={item.institution ?? ""} onChange={(event) => setForm({ ...form, education: form.education.map((entry, itemIndex) => itemIndex === index ? { ...entry, institution: event.target.value } : entry) })} />
                                     <input className={inputClass} placeholder="Gelar" value={item.degree ?? ""} onChange={(event) => setForm({ ...form, education: form.education.map((entry, itemIndex) => itemIndex === index ? { ...entry, degree: event.target.value } : entry) })} />
                                     <input className={inputClass} placeholder="Jurusan" value={item.major ?? ""} onChange={(event) => setForm({ ...form, education: form.education.map((entry, itemIndex) => itemIndex === index ? { ...entry, major: event.target.value } : entry) })} />
-                                    <button className="justify-self-start text-xs text-destructive" onClick={() => setForm({ ...form, education: form.education.filter((_, itemIndex) => itemIndex !== index) })}>Hapus pendidikan</button>
+                                    <button type="button" className="justify-self-start text-xs text-destructive" onClick={() => removeEducation(index)}>Hapus pendidikan</button>
                                 </div>
                             ))}
                         </div>

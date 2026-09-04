@@ -1,4 +1,4 @@
-import type { PortfolioEducation, PortfolioExperience, PortfolioProject } from "./types";
+import type { PortfolioContent, PortfolioEducation, PortfolioExperience, PortfolioProject } from "./types";
 
 export type GitHubPortfolioRepository = {
     name: string;
@@ -10,6 +10,55 @@ export type GitHubPortfolioRepository = {
 };
 
 export const MAX_PORTFOLIO_PROJECTS = 6;
+
+export function removeAt<T>(items: T[], index: number): { items: T[]; removed: T; index: number } | null {
+    if (!Number.isInteger(index) || index < 0 || index >= items.length) return null;
+    return {
+        items: [...items.slice(0, index), ...items.slice(index + 1)],
+        removed: items[index],
+        index,
+    };
+}
+
+type RemovablePortfolioSection = "projects" | "experience" | "education";
+
+export function transitionDraftRemoval<K extends RemovablePortfolioSection>(
+    draft: PortfolioContent,
+    section: K,
+    index: number,
+): { draft: PortfolioContent; removed: PortfolioContent[K][number]; index: number } | null {
+    const items = draft[section] as Array<PortfolioContent[K][number]>;
+    const removal = removeAt(items, index);
+    if (!removal) return null;
+    return {
+        draft: { ...draft, [section]: removal.items } as PortfolioContent,
+        removed: removal.removed,
+        index: removal.index,
+    };
+}
+
+export function restoreAt<T>(items: T[], item: T, index: number): T[] {
+    const safeIndex = Math.min(Math.max(index, 0), items.length);
+    return [...items.slice(0, safeIndex), item, ...items.slice(safeIndex)];
+}
+
+export function createOneShotUndo(): () => boolean {
+    let used = false;
+    return () => {
+        if (used) return false;
+        used = true;
+        return true;
+    };
+}
+
+export function canRestoreProject(
+    projects: PortfolioProject[],
+    project: PortfolioProject,
+    originalMatchingCount: number,
+): boolean {
+    return projects.length < MAX_PORTFOLIO_PROJECTS
+        && projects.filter((current) => current.repo_name === project.repo_name).length < originalMatchingCount;
+}
 
 export function getProjectSlots(projects: PortfolioProject[]): number {
     return Math.max(0, MAX_PORTFOLIO_PROJECTS - projects.length);
