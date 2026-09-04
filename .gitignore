@@ -74,6 +74,8 @@ rekomendasi.png
 # ── Agent System Files ────────────────────────────
 .agent/
 .superpowers/
+docs/superpowers/plans/2026-09-04-portfolio-editor-entry-recovery.md
+docs/superpowers/specs/2026-09-04-portfolio-project-picker-design.md
 
 # ── Excluded Project Files & Folders ──────────────
 dashboard-overview-options/
