@@ -1,167 +1,121 @@
-import Link from 'next/link';
-import { AnimationContainer } from "@/components"
-import { TextHoverEffect } from "@/components/ui/text-hover-effect"
+"use client";
+
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ArrowDownRightIcon, ArrowRightIcon } from "lucide-react";
+import Link from "next/link";
+import { useRef } from "react";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const footerGroups = [
+    {
+        title: "Eksplorasi",
+        links: [
+            { label: "Fitur", href: "/#features" },
+            { label: "Cara kerja", href: "/how-it-works" },
+            { label: "Masuk", href: "/auth/sign-in" },
+        ],
+    },
+    {
+        title: "Karier",
+        links: [
+            { label: "Lowongan", href: "/dashboard/jobs" },
+            { label: "Skill gap", href: "/dashboard/skill-gap" },
+            { label: "Roadmap", href: "/dashboard/roadmap" },
+        ],
+    },
+    {
+        title: "Informasi",
+        links: [
+            { label: "Tentang GitHire", href: "/about" },
+            { label: "Privasi", href: "/privacy" },
+            { label: "Ketentuan", href: "/terms" },
+        ],
+    },
+];
 
 const Footer = () => {
+    const root = useRef<HTMLElement>(null);
+
+    useGSAP(() => {
+        gsap.fromTo(
+            ".footer-reveal",
+            { autoAlpha: 0, y: 42, scale: 0.97 },
+            {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.9,
+                stagger: 0.11,
+                ease: "power3.out",
+                scrollTrigger: { trigger: ".landing-footer", start: "top 78%", once: true },
+            },
+        );
+        gsap.to(".footer-signal", { yPercent: -28, opacity: 0.42, ease: "none", scrollTrigger: { trigger: ".landing-footer", start: "top bottom", end: "bottom bottom", scrub: 0.7 } });
+    }, { scope: root });
+
     return (
-        <footer className="flex flex-col relative items-center justify-center border-t border-border pt-16 pb-8 md:pb-0 px-6 lg:px-8 w-full max-w-6xl mx-auto lg:pt-32 bg-[radial-gradient(35%_128px_at_50%_0%,theme(backgroundColor.white/8%),transparent)]">
+        <footer ref={root} className="landing-footer relative isolate overflow-hidden border-t border-white/10 bg-[#080811] px-5 pb-7 pt-24 text-[#F7F5FF] sm:px-8 md:pt-32">
+            <div className="footer-signal pointer-events-none absolute -right-20 top-8 -z-10 h-80 w-80 rounded-full bg-violet-600/20 blur-[7rem]" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-violet-300/65 to-transparent" />
 
-            <div className="absolute top-0 left-1/2 right-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-1.5 bg-foreground rounded-full"></div>
-
-            <div className="grid gap-8 xl:grid-cols-3 xl:gap-8 w-full">
-
-                {/* Brand */}
-                <AnimationContainer delay={0.1}>
-                    <div className="flex flex-col items-start justify-start md:max-w-[220px]">
-                        <Link href="/" className="flex items-center">
-                            <svg width="110" height="30" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg" aria-label="GitHire">
-                                <circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
-                                <circle cx="16" cy="44" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
-                                <circle cx="34" cy="30" r="6" fill="#6d28d9" />
-                                <line x1="16" y1="22" x2="16" y2="38" stroke="currentColor" strokeWidth="2" />
-                                <line x1="20" y1="18" x2="30" y2="26" stroke="currentColor" strokeWidth="2" />
-                                <text x="50" y="30" fontFamily="system-ui,sans-serif" fontSize="22" fontWeight="700" fill="currentColor" dominantBaseline="central">
-                                    Git<tspan fill="#8b5cf6">Hire</tspan>
-                                </text>
-                            </svg>
-                        </Link>
-                        <p className="text-muted-foreground mt-4 text-sm text-start leading-relaxed">
-                            Platform karir berbasis AI untuk fresh graduate dan developer Indonesia.
-                        </p>
-                        <span className="mt-4 text-neutral-200 text-sm flex items-center">
-                            Dibuat oleh <span className="font-semibold ml-1 bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">Tim GitHire</span>
-                        </span>
+            <div className="mx-auto max-w-7xl">
+                <div className="footer-reveal grid gap-10 border-b border-white/10 pb-16 lg:grid-cols-[1.18fr_0.82fr] lg:items-end lg:gap-20">
+                    <div>
+                        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-violet-200/70">From code to career</p>
+                        <h2 className="mt-5 max-w-3xl font-sans text-[clamp(3.2rem,6vw,6.8rem)] font-medium leading-[0.84] tracking-[-0.065em]">Buat karya yang layak <span className="bg-gradient-to-r from-violet-200 via-fuchsia-300 to-violet-400 bg-clip-text text-transparent">dibuka.</span></h2>
                     </div>
-                </AnimationContainer>
-
-                <div className="grid-cols-2 gap-8 grid mt-16 xl:col-span-2 xl:mt-0">
-                    <div className="md:grid md:grid-cols-2 md:gap-8">
-                        {/* Platform */}
-                        <AnimationContainer delay={0.2}>
-                            <div>
-                                <h3 className="text-base font-medium text-white">Platform</h3>
-                                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
-                                    <li>
-                                        <Link href="/#features" className="hover:text-foreground transition-all duration-300">
-                                            Fitur
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/how-it-works" className="hover:text-foreground transition-all duration-300">
-                                            Cara Kerja
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/auth/sign-in" className="hover:text-foreground transition-all duration-300">
-                                            Masuk
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/auth/sign-up" className="hover:text-foreground transition-all duration-300">
-                                            Daftar Gratis
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </AnimationContainer>
-
-                        {/* Dashboard */}
-                        <AnimationContainer delay={0.3}>
-                            <div className="mt-10 md:mt-0 flex flex-col">
-                                <h3 className="text-base font-medium text-white">Dashboard</h3>
-                                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
-                                    <li>
-                                        <Link href="/dashboard/jobs" className="hover:text-foreground transition-all duration-300">
-                                            Lowongan
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/dashboard/skill-gap" className="hover:text-foreground transition-all duration-300">
-                                            Skill Gap
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/dashboard/roadmap" className="hover:text-foreground transition-all duration-300">
-                                            Roadmap
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/dashboard/onboarding" className="hover:text-foreground transition-all duration-300">
-                                            Sync Profil
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </AnimationContainer>
-                    </div>
-
-                    <div className="md:grid md:grid-cols-2 md:gap-8">
-                        {/* Company */}
-                        <AnimationContainer delay={0.4}>
-                            <div>
-                                <h3 className="text-base font-medium text-white">Perusahaan</h3>
-                                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
-                                    <li>
-                                        <Link href="/about" className="hover:text-foreground transition-all duration-300">
-                                            Tentang Kami
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/privacy" className="hover:text-foreground transition-all duration-300">
-                                            Kebijakan Privasi
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/terms" className="hover:text-foreground transition-all duration-300">
-                                            Syarat & Ketentuan
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </AnimationContainer>
-
-                        {/* Tech Stack */}
-                        <AnimationContainer delay={0.5}>
-                            <div className="mt-10 md:mt-0 flex flex-col">
-                                <h3 className="text-base font-medium text-white">Teknologi</h3>
-                                <ul className="mt-4 text-sm text-muted-foreground space-y-2">
-                                    <li className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
-                                        Next.js
-                                    </li>
-                                    <li className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                        FastAPI
-                                    </li>
-                                    <li className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                        Gemini AI
-                                    </li>
-                                    <li className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                                        GitHub API
-                                    </li>
-                                </ul>
-                            </div>
-                        </AnimationContainer>
+                    <div className="max-w-md lg:pb-1">
+                        <p className="text-base leading-7 text-white/60">Portfolio publik dan pencarian lowongan memakai dasar yang sama: pengalaman, project, dan skill yang bisa kamu buktikan.</p>
+                        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                            <Link href="/auth/sign-up" className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#F7F5FF] px-5 text-sm font-semibold text-[#100E1B] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:scale-[1.02] hover:shadow-[0_14px_32px_rgba(167,139,250,0.28)]">Mulai sekarang <ArrowDownRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5" /></Link>
+                            <Link href="/dashboard/jobs" className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 px-5 text-sm font-semibold text-white transition-[transform,background-color,border-color] duration-300 ease-out hover:-translate-y-1 hover:border-violet-200/75 hover:bg-violet-300/15">Lihat lowongan <ArrowRightIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" /></Link>
+                        </div>
                     </div>
                 </div>
 
-            </div>
+                <div className="grid gap-12 py-14 md:grid-cols-[1.1fr_1.9fr] md:gap-16">
+                    <div className="footer-reveal flex max-w-xs flex-col gap-5">
+                        <Link href="/" className="group inline-flex w-fit items-center gap-3" aria-label="GitHire, kembali ke beranda">
+                            <span className="relative flex h-9 w-9 items-center justify-center rounded-full border border-violet-200/35 bg-violet-300/10 transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
+                                <span className="h-2.5 w-2.5 rounded-full bg-violet-200 shadow-[0_0_18px_rgba(196,181,253,0.9)]" />
+                            </span>
+                            <span className="font-sans text-xl font-semibold tracking-[-0.06em]">Git<span className="text-violet-300">Hire</span></span>
+                        </Link>
+                        <p className="text-sm leading-6 text-white/45">Ruang karier untuk developer Indonesia yang ingin menunjukkan bukti kerja, bukan hanya daftar skill.</p>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/35">Portfolio · Match · Recruiter</p>
+                    </div>
 
-            <div className="mt-8 border-t border-border/40 pt-4 md:pt-8 md:flex md:items-center md:justify-between w-full">
-                <AnimationContainer delay={0.6}>
-                    <p className="text-sm text-muted-foreground mt-8 md:mt-0">
-                        &copy; {new Date().getFullYear()} GitHire. All rights reserved.
-                    </p>
-                </AnimationContainer>
-            </div>
+                    <div className="footer-reveal grid grid-cols-2 gap-x-7 gap-y-10 sm:grid-cols-3 sm:gap-x-10">
+                        {footerGroups.map((group) => (
+                            <nav key={group.title} aria-label={group.title}>
+                                <h3 className="font-mono text-[10px] uppercase tracking-[0.17em] text-violet-100/60">{group.title}</h3>
+                                <ul className="mt-5 space-y-3">
+                                    {group.links.map((link) => (
+                                        <li key={link.href}>
+                                            <Link href={link.href} className="group inline-flex items-center gap-1.5 text-sm text-white/50 transition-colors duration-300 hover:text-white">
+                                                <span>{link.label}</span><ArrowRightIcon className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </nav>
+                        ))}
+                    </div>
+                </div>
 
-            <div className="h-[20rem] lg:h-[20rem] hidden md:flex items-center justify-center">
-                <TextHoverEffect text="GitHire" />
+                <div className="footer-reveal flex flex-col gap-5 border-t border-white/10 py-6 text-[11px] text-white/35 sm:flex-row sm:items-center sm:justify-between">
+                    <p>© {new Date().getFullYear()} GitHire. Dibuat untuk developer Indonesia.</p>
+                    <div className="flex items-center gap-4 font-mono uppercase tracking-[0.13em]">
+                        <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,0.9)]" /> Sistem aktif</span>
+                        <span>Jakarta, ID</span>
+                    </div>
+                </div>
             </div>
         </footer>
-    )
-}
+    );
+};
 
-export default Footer
+export default Footer;

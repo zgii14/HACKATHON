@@ -72,8 +72,8 @@ const config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        "heading": ["var(--font-aeonik)"],
-        "default": ["var(--font-inter)"],
+        "heading": ["Satoshi", "Plus Jakarta Sans", "sans-serif"],
+        "default": ["Satoshi", "Plus Jakarta Sans", "sans-serif"],
         "mono": ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       keyframes: {

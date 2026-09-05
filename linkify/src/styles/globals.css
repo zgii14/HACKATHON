@@ -1,3 +1,4 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -7,15 +8,6 @@
 
 html {
   scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  .will-change-transform {
-    transform: none !important;
-  }
 }
 
 @layer base {
@@ -96,7 +88,11 @@ html {
 }
 
 html, body {
-  font-family: "Plus Jakarta Sans", "Inter", sans-serif !important;
+  font-family: "Satoshi", "Plus Jakarta Sans", "Inter", sans-serif !important;
+}
+
+.landing-satoshi .font-heading {
+  font-family: "Satoshi", "Plus Jakarta Sans", sans-serif;
 }
 
 /* Smooth theme transition */
