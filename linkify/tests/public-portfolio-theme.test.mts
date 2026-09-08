@@ -21,3 +21,11 @@ test("prioritizes proof of work before narrative for the Developer presentation"
         sectionOrder: ["projects", "skills", "experience", "education", "certifications"],
     });
 });
+
+test("uses cinematic proof-first ordering for Maestro", () => {
+    assert.deepEqual(getPublicThemePlan("maestro"), {
+        key: "maestro",
+        label: "Maestro portfolio",
+        sectionOrder: ["projects", "experience", "skills", "education", "certifications"],
+    });
+});

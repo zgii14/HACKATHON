@@ -24,6 +24,11 @@ const themePlans: Record<PortfolioTheme, PublicThemePlan> = {
         label: "Professional profile",
         sectionOrder: ["experience", "education", "projects", "skills", "certifications"],
     },
+    maestro: {
+        key: "maestro",
+        label: "Maestro portfolio",
+        sectionOrder: ["projects", "experience", "skills", "education", "certifications"],
+    },
 };
 
 export function getPublicThemePlan(theme: PortfolioTheme | undefined): PublicThemePlan {

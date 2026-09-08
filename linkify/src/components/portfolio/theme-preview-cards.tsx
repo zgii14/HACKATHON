@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, FileText, PanelsTopLeft, UserRound } from "lucide-react";
+import { Check, FileText, PanelsTopLeft, Sparkles, UserRound } from "lucide-react";
 import type { PortfolioContent, PortfolioTheme } from "./types";
 import { getThemePreviewData } from "./theme-preview-data";
 
@@ -8,6 +8,7 @@ const themeMeta: Record<PortfolioTheme, { label: string; detail: string }> = {
     editorial: { label: "Editorial", detail: "Cerita dan personal brand" },
     developer: { label: "Developer", detail: "Visual gelap dan project-first" },
     professional: { label: "Professional", detail: "Ringkas dan mudah dipindai" },
+    maestro: { label: "Maestro", detail: "Sinematik, editorial, dan immersive" },
 };
 
 type ThemePreviewCardsProps = {
@@ -55,13 +56,27 @@ function ProfessionalPreview({ name, headline, experienceRole }: ReturnType<type
     );
 }
 
+function MaestroPreview({ name, headline, projectName }: ReturnType<typeof getThemePreviewData>) {
+    return (
+        <div className="relative h-28 overflow-hidden bg-[#DFE5D7] p-3 text-[#151B13]" aria-hidden="true">
+            <div className="flex items-center justify-between text-[5px]"><span>✦ {name}</span><span>Work · About</span></div>
+            <p className="mx-auto mt-3 max-w-[90%] truncate text-center font-serif text-[14px] italic leading-[0.9] tracking-[-0.04em]">{headline}</p>
+            <div className="absolute inset-x-2 bottom-2 h-11 overflow-hidden rounded-t-[10px] bg-[#20281E] px-2.5 py-2 text-[#F2F4D9]">
+                <div className="flex items-end justify-between gap-2"><span className="max-w-[70%] truncate font-serif text-[8px] italic">{projectName}</span><span className="rounded-full border border-[#F2F4D9]/30 px-1.5 py-0.5 font-mono text-[4px]">001</span></div>
+                <div className="mt-1.5 flex gap-1"><span className="h-4 flex-1 rounded-[3px] bg-[#B1C6C0]" /><span className="h-4 w-6 -rotate-6 rounded-[3px] bg-[#829791]" /><span className="h-4 w-7 rotate-3 rounded-[3px] bg-[#D4DDC8]" /></div>
+            </div>
+        </div>
+    );
+}
+
 function ThemeArt({ theme, data }: { theme: PortfolioTheme; data: ReturnType<typeof getThemePreviewData> }) {
     if (theme === "editorial") return <EditorialPreview {...data} />;
     if (theme === "developer") return <DeveloperPreview {...data} />;
+    if (theme === "maestro") return <MaestroPreview {...data} />;
     return <ProfessionalPreview {...data} />;
 }
 
-const themeIcons = { editorial: FileText, developer: PanelsTopLeft, professional: UserRound } as const;
+const themeIcons = { editorial: FileText, developer: PanelsTopLeft, professional: UserRound, maestro: Sparkles } as const;
 
 export function ThemePreviewCards({ content, onSelect }: ThemePreviewCardsProps) {
     const data = getThemePreviewData(content);
