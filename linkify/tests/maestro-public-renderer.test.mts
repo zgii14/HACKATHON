@@ -30,6 +30,11 @@ test("provides reduced-motion and responsive fallbacks", () => {
     assert.match(renderer, /reduceMotion/);
 });
 
+test("keeps the tall sticky timeline out of mobile document flow", () => {
+    assert.match(renderer, /<div id="work"[\s\S]*lg:hidden[\s\S]*hidden min-h-screen[\s\S]*lg:block/);
+    assert.doesNotMatch(renderer, /<section ref=\{sectionRef\} id="work"/);
+});
+
 test("routes only the Maestro theme to the isolated renderer", () => {
     assert.match(router, /import \{ MaestroPortfolio \} from "\.\/maestro-portfolio"/);
     assert.match(router, /theme === "maestro"/);

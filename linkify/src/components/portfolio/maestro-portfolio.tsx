@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { ArrowDown, ArrowUpRight, Check, Github, Mail, MapPin, Sparkles } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Check, Github, Mail, Sparkles } from "lucide-react";
 import { useRef } from "react";
 import {
     MAESTRO_PROJECT_TITLE_WRAP,
@@ -248,15 +248,17 @@ function ProjectChapters({ projects, copy, reduceMotion }: { projects: Portfolio
         );
     }
     return (
-        <section ref={sectionRef} id="work" className="relative bg-[#DFE5D7] text-[#151B13]" style={{ height: `${Math.max(2, projects.length) * 95}vh` }}>
-            <div className="sticky top-0 hidden min-h-screen overflow-hidden px-8 py-20 lg:block">
+        <div id="work" className="bg-[#DFE5D7] text-[#151B13]">
+            <div className="px-5 py-20 lg:hidden"><div className="mx-auto max-w-3xl"><p className="text-xs uppercase tracking-[0.18em] text-[#687C77]">{copy.selectedWork}</p><h2 className="mt-4 font-serif text-5xl italic leading-[0.9]">{copy.projectStory}</h2><div className="mt-10 space-y-14">{projects.map((project, index) => <motion.article key={project.repo_name} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-10%" }} transition={{ duration: 0.7, ease: EASE }}><ProjectVisual project={project} index={index} className="aspect-[4/3] rounded-[22px]" /><p className="mt-5 text-xs text-[#687C77]">{String(index + 1).padStart(3, "0")}</p><h3 className="mt-2 font-serif text-4xl italic" style={MAESTRO_PROJECT_TITLE_WRAP}>{project.repo_name}</h3><p className="mt-4 leading-7 text-[#485347]">{project.description}</p><a className="mt-5 inline-flex min-h-11 items-center gap-2 font-medium underline underline-offset-4" href={project.url} target="_blank" rel="noreferrer">{copy.visitProject}<ArrowUpRight className="size-4" /></a></motion.article>)}</div></div></div>
+            <section ref={sectionRef} className="relative hidden min-h-screen lg:block" style={{ height: `${Math.max(2, projects.length) * 95}vh` }}>
+                <div className="sticky top-0 min-h-screen overflow-hidden px-8 py-20">
                 <div className="mx-auto flex min-h-[calc(100vh-10rem)] max-w-[1180px] flex-col">
                     <div><p className="text-xs uppercase tracking-[0.18em] text-[#687C77]">{copy.selectedWork}</p><h2 className="mt-3 font-serif text-4xl italic tracking-[-0.04em]">{copy.projectStory}</h2></div>
                     <div className="relative mt-6 flex-1">{projects.map((project, index) => <ChapterPanel key={project.repo_name} project={project} index={index} count={projects.length} progress={scrollYProgress} copy={copy} />)}</div>
                 </div>
-            </div>
-            <div className="px-5 py-20 lg:hidden"><div className="mx-auto max-w-3xl"><p className="text-xs uppercase tracking-[0.18em] text-[#687C77]">{copy.selectedWork}</p><h2 className="mt-4 font-serif text-5xl italic leading-[0.9]">{copy.projectStory}</h2><div className="mt-10 space-y-14">{projects.map((project, index) => <motion.article key={project.repo_name} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-10%" }} transition={{ duration: 0.7, ease: EASE }}><ProjectVisual project={project} index={index} className="aspect-[4/3] rounded-[22px]" /><p className="mt-5 text-xs text-[#687C77]">{String(index + 1).padStart(3, "0")}</p><h3 className="mt-2 font-serif text-4xl italic" style={MAESTRO_PROJECT_TITLE_WRAP}>{project.repo_name}</h3><p className="mt-4 leading-7 text-[#485347]">{project.description}</p><a className="mt-5 inline-flex min-h-11 items-center gap-2 font-medium underline underline-offset-4" href={project.url} target="_blank" rel="noreferrer">{copy.visitProject}<ArrowUpRight className="size-4" /></a></motion.article>)}</div></div></div>
-        </section>
+                </div>
+            </section>
+        </div>
     );
 }
 
