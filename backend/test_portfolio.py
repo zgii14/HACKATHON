@@ -96,6 +96,10 @@ class PortfolioDomainTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             PortfolioPatch(theme="neon")
 
+    def test_patch_accepts_maestro_theme(self):
+        patch = PortfolioPatch(theme="maestro")
+        self.assertEqual(patch.theme, "maestro")
+
     def test_patch_rejects_more_than_six_projects(self):
         projects = [
             {
@@ -206,6 +210,15 @@ class PortfolioDomainTests(unittest.TestCase):
         self.assertEqual(result["content"]["name"], "")
         self.assertEqual(result["content"]["projects"], [])
         self.assertEqual(result["content"]["theme"], "professional")
+
+    def test_public_view_preserves_maestro_theme(self):
+        result = public_view(
+            "opaque-id",
+            {"name": "Candidate", "headline": "Developer", "theme": "maestro"},
+            [],
+            False,
+        )
+        self.assertEqual(result["content"]["theme"], "maestro")
 
 
 class GitHubReadmeTests(unittest.IsolatedAsyncioTestCase):

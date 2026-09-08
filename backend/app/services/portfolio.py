@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 
-PORTFOLIO_THEMES = {"editorial", "developer", "professional"}
+PORTFOLIO_THEMES = {"editorial", "developer", "professional", "maestro"}
 PORTFOLIO_LANGUAGES = {"id", "en"}
 MAX_PROJECTS = 6
 

@@ -178,7 +178,7 @@ class PortfolioPatch(BaseModel):
     headline: str | None = Field(default=None, max_length=255)
     bio: str | None = Field(default=None, max_length=3000)
     language: Literal["id", "en"] | None = None
-    theme: Literal["editorial", "developer", "professional"] | None = None
+    theme: Literal["editorial", "developer", "professional", "maestro"] | None = None
     projects: list[PortfolioProject] | None = Field(default=None, max_length=6)
     skills: list[str] | None = Field(default=None, max_length=50)
     experience: list[CVDataExperience] | None = Field(default=None, max_length=20)
