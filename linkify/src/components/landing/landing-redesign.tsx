@@ -207,6 +207,50 @@ const LandingRedesign = ({ portfolioHref, jobsHref }: Props) => {
                 <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#141224]/85 p-5 shadow-[0_32px_100px_rgba(0,0,0,0.42)] backdrop-blur-xl sm:p-7"><div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono text-[10px] uppercase tracking-[0.16em] text-white/45"><span>Recruiter workspace</span><span className="text-violet-200">Candidate view</span></div><div className="mt-5 grid gap-3 md:grid-cols-[0.95fr_auto_1.05fr]"><div className="rounded-2xl border border-white/10 bg-[#0B0A15]/60 p-5"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/45">01 · Lowongan</p><h3 className="mt-8 font-heading text-3xl leading-[0.9] tracking-[-0.055em]">Tulis requirement yang dibutuhkan.</h3><div className="mt-7 flex flex-wrap gap-2"><span className="rounded-full border border-violet-200/25 bg-violet-300/10 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-violet-100">Skill</span><span className="rounded-full border border-white/10 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.1em] text-white/50">Peran</span></div></div><div className="hidden items-center justify-center md:flex"><div className="relative h-px w-12 bg-violet-200/25"><span className="landing-recruiter-signal absolute -top-1.5 left-0 h-3 w-3 rounded-full bg-violet-200 shadow-[0_0_16px_rgba(196,181,253,0.9)]" /></div></div><div className="rounded-2xl border border-violet-200/20 bg-violet-300/10 p-5"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-violet-100/60">02 · Profil kandidat</p><h3 className="mt-8 font-heading text-3xl leading-[0.9] tracking-[-0.055em]">Baca proyek sebelum membuka lamaran.</h3><div className="mt-7 grid grid-cols-3 gap-2 border-t border-violet-100/15 pt-4 text-center font-mono text-[9px] uppercase tracking-[0.1em] text-violet-100/60"><span>Project</span><span>Skill</span><span>Experience</span></div></div></div><div className="mt-3 flex items-center justify-between rounded-2xl border border-white/10 bg-[#0B0A15]/50 p-4"><div><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40">03 · Lanjutkan</p><p className="mt-2 text-sm text-white/65">Undang kandidat atau mulai percakapan saat sudah ada konteks.</p></div><SendIcon className="h-5 w-5 text-violet-200" /></div></div></div></section>
 
             <section className="px-5 py-32 sm:px-8 md:py-48"><div className="mx-auto max-w-7xl rounded-[2rem] border border-violet-200/20 bg-[radial-gradient(circle_at_50%_0%,rgba(167,139,250,0.28),transparent_55%),#171525] px-6 py-20 text-center sm:px-12 md:py-32"><p className="font-mono text-[11px] uppercase tracking-[0.2em] text-violet-100/70">Mulai dari yang sudah kamu buat</p><h2 className="mx-auto mt-6 max-w-5xl font-heading text-[clamp(3rem,7vw,7.8rem)] leading-[0.84] tracking-[-0.07em]">Siapkan portfolio. Cari peluang yang cocok.</h2><p className="mx-auto mt-8 max-w-xl text-base leading-7 text-white/60">Hubungkan CV dan GitHub, pilih karya yang ingin kamu tampilkan, lalu gunakan profil itu untuk menemukan lowongan.</p><div className="mt-10 flex flex-wrap justify-center gap-3"><Link href={portfolioHref} className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-[#141321] transition-transform duration-300 hover:-translate-y-1">Buat portfolio <ArrowDownRightIcon className="h-4 w-4" /></Link><Link href={jobsHref} className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10">Cari lowongan <ArrowRightIcon className="h-4 w-4" /></Link></div></div></section>
+
+            <section id="pricing" aria-labelledby="pricing-title" className="border-t border-white/10 bg-[#0B0A13] px-5 py-24 sm:px-8 md:py-36">
+                <div className="mx-auto max-w-7xl">
+                    <div className="mb-12 max-w-3xl md:mb-16">
+                        <h2 id="pricing-title" className="font-heading text-[clamp(2.8rem,5.5vw,5.8rem)] leading-[0.88] tracking-[-0.065em] [text-wrap:balance]">Pilih cara portfolio kamu tampil.</h2>
+                    </div>
+
+                    <div className="grid overflow-hidden border border-white/10 bg-[#111019] md:grid-cols-3">
+                        <article className="flex min-h-[31rem] flex-col bg-[#17161F] p-7 sm:p-8 lg:p-9">
+                            <div className="min-h-[10.5rem]">
+                                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Starter</p>
+                                <h3 className="mt-5 font-heading text-[clamp(2rem,2.4vw,2.8rem)] leading-[0.94] tracking-[-0.055em]">Mulai dari portfolio dasar</h3>
+                            </div>
+                            <p className="font-heading text-[clamp(1.9rem,2.6vw,2.75rem)] leading-[0.95] tracking-[-0.06em] text-violet-300">Akses awal tanpa biaya</p>
+                            <ul className="mt-auto space-y-4 border-t border-white/10 pt-6 text-sm leading-5 text-white/60">
+                                {['CV + GitHub import', 'Basic job match', 'Basic template', 'Portfolio preview'].map((feature) => <li key={feature} className="border-l border-white/15 pl-3">{feature}</li>)}
+                            </ul>
+                        </article>
+
+                        <article className="relative flex min-h-[31rem] flex-col border-t border-white/10 bg-[#201D2B] p-7 sm:p-8 md:border-l md:border-t-0 lg:p-9">
+                            <div aria-hidden="true" className="absolute inset-y-0 left-0 w-1 bg-violet-400" />
+                            <div className="min-h-[10.5rem]">
+                                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-200">Premium</p>
+                                <h3 className="mt-5 max-w-sm font-heading text-[clamp(2rem,2.6vw,3rem)] leading-[0.94] tracking-[-0.055em]">Portfolio siap dilihat recruiter</h3>
+                            </div>
+                            <div className="flex flex-wrap items-end gap-x-2 gap-y-1"><p className="font-heading text-[clamp(2.6rem,4vw,4.2rem)] leading-none tracking-[-0.07em] tabular-nums text-violet-300">Rp 79.000</p><span className="pb-1 text-[11px] text-white/50">per bulan</span></div>
+                            <ul className="mt-auto space-y-4 border-t border-violet-200/20 pt-6 text-sm leading-5 text-white/70">
+                                {['Semua fitur Starter', 'Template portfolio premium', 'Publish portfolio online', 'Subdomain GitHire nama.githire.id'].map((feature) => <li key={feature} className="border-l border-violet-300/70 pl-3">{feature}</li>)}
+                            </ul>
+                        </article>
+
+                        <article className="relative flex min-h-[31rem] flex-col border-t border-white/10 bg-[#15141D] p-7 sm:p-8 md:border-l md:border-t-0 lg:p-9">
+                            <div className="min-h-[10.5rem]">
+                                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-200">Pro</p>
+                                <h3 className="mt-5 max-w-sm font-heading text-[clamp(2rem,2.6vw,3rem)] leading-[0.94] tracking-[-0.055em]">Portfolio bebas sesuai kebutuhanmu</h3>
+                            </div>
+                            <div className="flex flex-wrap items-end gap-x-2 gap-y-1"><p className="font-heading text-[clamp(2.6rem,4vw,4.2rem)] leading-none tracking-[-0.07em] tabular-nums text-violet-300">Rp 159.000</p><span className="pb-1 text-[11px] text-white/50">per bulan</span></div>
+                            <ul className="mt-auto space-y-4 border-t border-white/10 pt-6 text-sm leading-5 text-white/65">
+                                {['Semua fitur Premium', 'Custom domain namakamu.com', 'Bebas menambah section portfolio', 'Atur susunan dan isi section lebih fleksibel'].map((feature) => <li key={feature} className="border-l border-white/15 pl-3">{feature}</li>)}
+                            </ul>
+                        </article>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 };
