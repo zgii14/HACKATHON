@@ -749,7 +749,7 @@ def get_roadmap(
         message = (
             "Terlalu banyak proses AI di GitHire. Coba lagi sekitar satu menit."
             if e.scope == "global"
-            else "Batas generate roadmap harian sudah tercapai. Coba lagi besok."
+            else "Batas generate roadmap harian sudah tercapai. Coba lagi setelah 24 jam."
         )
         raise HTTPException(429, message) from e
     except GeminiQuotaExceededError as e:

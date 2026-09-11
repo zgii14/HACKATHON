@@ -566,7 +566,7 @@ def ai_candidate_screening(
         message = (
             "Terlalu banyak proses AI di GitHire. Coba lagi sekitar satu menit."
             if e.scope == "global"
-            else "Batas AI screening harian sudah tercapai. Coba lagi besok."
+            else "Batas AI screening harian sudah tercapai. Coba lagi setelah 24 jam."
         )
         raise HTTPException(429, message) from e
     except GeminiQuotaExceededError as e:
