@@ -588,9 +588,23 @@ def get_roadmap_step_quiz(
         )
         .first()
     )
-    if row and row.quiz_payload and row.quiz_issued_at:
+    now = datetime.now(timezone.utc)
+    if (
+        row
+        and (row.quiz_passed or row.completed)
+        and (
+            is_quiz_expired(row.quiz_issued_at, now)
+            or (row.quiz_attempts or 0) >= MAX_ATTEMPTS
+        )
+    ):
+        raise HTTPException(400, "Langkah ini sudah selesai. Kuis tidak dapat diterbitkan ulang.")
+    if row and row.quiz_payload:
         quiz = normalize_quiz(row.quiz_payload)
-        if len(quiz) == QUIZ_SIZE:
+        if (
+            len(quiz) == QUIZ_SIZE
+            and not is_quiz_expired(row.quiz_issued_at, now)
+            and (row.quiz_attempts or 0) < MAX_ATTEMPTS
+        ):
             return QuizIssueOut(
                 quiz=public_quiz(quiz),
                 quiz_token=quiz_token(quiz, user.id, cache_key, step_index, row.quiz_issued_at),

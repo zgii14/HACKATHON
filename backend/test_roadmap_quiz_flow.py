@@ -8,6 +8,7 @@ Inti yang dibuktikan:
 - bonus XP saat seluruh roadmap selesai
 """
 
+import copy
 import os
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -15,6 +16,7 @@ from unittest import mock
 
 os.environ.setdefault("GEMINI_API_KEY", "test-key")
 
+from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -22,6 +24,7 @@ from app.database import Base
 from app.models import CandidateProfile, RoadmapProgress, User, XpEarning
 from app.routers.me import get_roadmap_step_quiz, get_xp, patch_roadmap_step, submit_roadmap_quiz
 from app.schemas import QuizSubmitIn, RoadmapStepPatch
+from app.services.quiz import MAX_ATTEMPTS, QUIZ_TTL_MINUTES
 from app.services.xp import XP_REWARD_ROADMAP, XP_REWARD_STEP
 
 
@@ -98,6 +101,99 @@ class QuizFlowTests(unittest.TestCase):
         self.assertEqual(first.quiz_token, second.quiz_token)
         self.assertEqual(self.mock_quiz.call_count, 1)
 
+    def test_reopening_an_expired_quiz_regenerates_without_losing_roadmap_progress(self):
+        first_quiz = sample_quiz()
+        second_quiz = sample_quiz()
+        second_quiz[0]["question"] = "Soal ulang kedaluwarsa"
+        self.mock_quiz.side_effect = [first_quiz, second_quiz]
+        first = self.issue()
+        row = self._row()
+        row.quiz_issued_at = datetime.now(timezone.utc) - timedelta(minutes=QUIZ_TTL_MINUTES + 1)
+        row.quiz_attempts = 4
+        self.session.commit()
+        roadmap_cached = copy.deepcopy(self.session.query(CandidateProfile).one().roadmap_cached)
+        progress_id = row.id
+
+        second = self.issue()
+
+        updated_row = self._row()
+        self.assertEqual(self.mock_quiz.call_count, 2)
+        self.assertEqual(updated_row.quiz_attempts, 0)
+        self.assertNotEqual(second.quiz_token, first.quiz_token)
+        self.assertEqual(
+            second.quiz,
+            [{"question": quiz["question"], "options": quiz["options"]} for quiz in second_quiz],
+        )
+        self.assertEqual(updated_row.quiz_payload, second_quiz)
+        self.assertEqual(self.session.query(CandidateProfile).one().roadmap_cached, roadmap_cached)
+        self.assertEqual(updated_row.id, progress_id)
+
+    def test_reopening_a_quiz_at_max_attempts_regenerates_it(self):
+        first_quiz = sample_quiz()
+        second_quiz = sample_quiz()
+        second_quiz[0]["question"] = "Soal ulang batas percobaan"
+        self.mock_quiz.side_effect = [first_quiz, second_quiz]
+        first = self.issue()
+        row = self._row()
+        row.quiz_attempts = MAX_ATTEMPTS
+        self.session.commit()
+        roadmap_cached = copy.deepcopy(self.session.query(CandidateProfile).one().roadmap_cached)
+        progress_id = row.id
+
+        second = self.issue()
+
+        updated_row = self._row()
+        self.assertEqual(self.mock_quiz.call_count, 2)
+        self.assertEqual(updated_row.quiz_attempts, 0)
+        self.assertNotEqual(second.quiz_token, first.quiz_token)
+        self.assertEqual(
+            second.quiz,
+            [{"question": quiz["question"], "options": quiz["options"]} for quiz in second_quiz],
+        )
+        self.assertEqual(updated_row.quiz_payload, second_quiz)
+        self.assertEqual(self.session.query(CandidateProfile).one().roadmap_cached, roadmap_cached)
+        self.assertEqual(updated_row.id, progress_id)
+
+    def test_reopening_a_finalized_expired_or_exhausted_quiz_does_not_regenerate_it(self):
+        self.issue()
+        row = self._row()
+        row.quiz_passed = True
+        row.completed = True
+        self.session.commit()
+
+        for issued_at, attempts in (
+            (datetime.now(timezone.utc) - timedelta(minutes=QUIZ_TTL_MINUTES + 1), 0),
+            (datetime.now(timezone.utc), MAX_ATTEMPTS),
+        ):
+            with self.subTest(issued_at=issued_at, attempts=attempts):
+                row.quiz_issued_at = issued_at
+                row.quiz_attempts = attempts
+                self.session.commit()
+                expected_state = (
+                    copy.deepcopy(row.quiz_payload),
+                    row.quiz_issued_at,
+                    row.quiz_attempts,
+                    row.quiz_passed,
+                    row.completed,
+                )
+
+                with self.assertRaises(HTTPException) as ctx:
+                    self.issue()
+
+                self.assertEqual(ctx.exception.status_code, 400)
+                self.assertEqual(self.mock_quiz.call_count, 1)
+                self.session.refresh(row)
+                self.assertEqual(
+                    (
+                        row.quiz_payload,
+                        row.quiz_issued_at,
+                        row.quiz_attempts,
+                        row.quiz_passed,
+                        row.completed,
+                    ),
+                    expected_state,
+                )
+
     def test_submit_all_wrong_does_not_complete(self):
         out = self.issue()
         res = self.submit(out.quiz_token, [1, 1, 1, 1, 1])
@@ -143,7 +239,7 @@ class QuizFlowTests(unittest.TestCase):
     def test_expired_quiz_is_rejected(self):
         out = self.issue()
         row = self._row()
-        row.quiz_issued_at = datetime.now(timezone.utc) - timedelta(minutes=31)
+        row.quiz_issued_at = datetime.now(timezone.utc) - timedelta(minutes=QUIZ_TTL_MINUTES + 1)
         self.session.commit()
         with self.assertRaises(Exception):
             self.submit(out.quiz_token, [0, 0, 0, 0, 0])
