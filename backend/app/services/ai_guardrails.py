@@ -43,46 +43,52 @@ def reserve_ai_generation(
     if units < 1:
         raise ValueError("units harus minimal 1")
 
+    # Konfigurasi tanpa kedua guardrail tidak perlu menyentuh sesi pemanggil
+    # maupun database.
+    if user_daily_limit <= 0 and global_rpm_limit <= 0:
+        return
+
     current = _utc(now)
-    if db.bind and db.bind.dialect.name == "postgresql":
-        # Serialkan read-then-insert agar dua instance tidak sama-sama lolos
-        # setelah membaca saldo RPM yang identik.
-        db.execute(text("SELECT pg_advisory_xact_lock(841927)"))
+    # Reservasi harus atomik tanpa mem-flush, commit, atau rollback perubahan
+    # lain yang masih pending pada sesi request pemanggil.
+    with Session(bind=db.get_bind()) as reservation_db:
+        with reservation_db.begin():
+            if reservation_db.get_bind().dialect.name == "postgresql":
+                # Serialkan read-then-insert agar dua instance tidak sama-sama
+                # lolos setelah membaca saldo RPM yang identik.
+                reservation_db.execute(text("SELECT pg_advisory_xact_lock(841927)"))
 
-    day_start = current - timedelta(days=1)
-    if user_daily_limit > 0:
-        used_actions = (
-            db.query(func.count(AiUsageEvent.id))
-            .filter(
-                AiUsageEvent.user_id == user_id,
-                AiUsageEvent.feature == feature,
-                AiUsageEvent.created_at >= day_start,
+            day_start = current - timedelta(days=1)
+            if user_daily_limit > 0:
+                used_actions = (
+                    reservation_db.query(func.count(AiUsageEvent.id))
+                    .filter(
+                        AiUsageEvent.user_id == user_id,
+                        AiUsageEvent.feature == feature,
+                        AiUsageEvent.created_at >= day_start,
+                    )
+                    .scalar()
+                    or 0
+                )
+                if used_actions >= user_daily_limit:
+                    raise AiGenerationQuotaError("user", 24 * 60 * 60)
+
+            if global_rpm_limit > 0:
+                minute_start = current - timedelta(minutes=1)
+                used_units = (
+                    reservation_db.query(func.coalesce(func.sum(AiUsageEvent.units), 0))
+                    .filter(AiUsageEvent.created_at >= minute_start)
+                    .scalar()
+                    or 0
+                )
+                if used_units + units > global_rpm_limit:
+                    raise AiGenerationQuotaError("global", 60)
+
+            reservation_db.add(
+                AiUsageEvent(
+                    user_id=user_id,
+                    feature=feature,
+                    units=units,
+                    created_at=current,
+                )
             )
-            .scalar()
-            or 0
-        )
-        if used_actions >= user_daily_limit:
-            db.rollback()
-            raise AiGenerationQuotaError("user", 60 * 60)
-
-    if global_rpm_limit > 0:
-        minute_start = current - timedelta(minutes=1)
-        used_units = (
-            db.query(func.coalesce(func.sum(AiUsageEvent.units), 0))
-            .filter(AiUsageEvent.created_at >= minute_start)
-            .scalar()
-            or 0
-        )
-        if used_units + units > global_rpm_limit:
-            db.rollback()
-            raise AiGenerationQuotaError("global", 60)
-
-    db.add(
-        AiUsageEvent(
-            user_id=user_id,
-            feature=feature,
-            units=units,
-            created_at=current,
-        )
-    )
-    db.commit()
