@@ -43,6 +43,16 @@ class NoDatabaseAccessSession:
         return self._unexpected_access("rollback")
 
 
+class ProviderCodeError(RuntimeError):
+    def __init__(self, message: str, code):
+        super().__init__(message)
+        self._code = code
+
+    @property
+    def code(self):
+        return self._code
+
+
 class AiGuardrailTests(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine("sqlite://")
@@ -282,9 +292,50 @@ class AiGuardrailTests(unittest.TestCase):
         self.assertEqual(ctx.exception.scope, "global")
         self.assertEqual(ctx.exception.retry_after_seconds, 60)
 
-    def test_rate_limit_and_daily_quota_errors_are_distinguished(self):
-        self.assertEqual(classify_gemini_error(RuntimeError("429 rate_limit_exceeded")), "rate_limit")
-        self.assertEqual(classify_gemini_error(RuntimeError("429 quota_exceeded")), "quota")
+    def test_gemini_quota_phrases_take_precedence_over_status_codes(self):
+        for message in (
+            "You exceeded your current quota",
+            "quota_exceeded",
+            "daily quota reached",
+        ):
+            with self.subTest(message=message):
+                self.assertEqual(classify_gemini_error(RuntimeError(message)), "quota")
+
+        self.assertEqual(
+            classify_gemini_error(ProviderCodeError("You exceeded your current quota", 429)),
+            "quota",
+        )
+
+    def test_gemini_official_rate_limit_markers_are_retryable(self):
+        for marker in (
+            "rate_limit_exceeded",
+            "too_many_requests",
+            "resource_exhausted",
+            "too many requests",
+            "overload",
+        ):
+            with self.subTest(marker=marker):
+                self.assertEqual(classify_gemini_error(RuntimeError(marker)), "rate_limit")
+
+    def test_gemini_raw_status_digits_in_messages_are_not_rate_limits(self):
+        self.assertEqual(
+            classify_gemini_error(RuntimeError("The user entered error reference 503.")),
+            "other",
+        )
+
+    def test_gemini_numeric_provider_codes_classify_as_rate_limits(self):
+        self.assertEqual(
+            classify_gemini_error(ProviderCodeError("provider unavailable", 429)),
+            "rate_limit",
+        )
+        self.assertEqual(
+            classify_gemini_error(ProviderCodeError("provider unavailable", 503)),
+            "rate_limit",
+        )
+        self.assertEqual(
+            classify_gemini_error(ProviderCodeError("provider unavailable", lambda: 429)),
+            "rate_limit",
+        )
 
 
 if __name__ == "__main__":

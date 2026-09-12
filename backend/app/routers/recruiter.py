@@ -571,8 +571,8 @@ def ai_candidate_screening(
         raise HTTPException(429, message) from e
     except GeminiQuotaExceededError as e:
         raise HTTPException(503, "Kuota AI sedang penuh. Coba lagi setelah kuota direset.") from e
-    except GeminiRateLimitError:
-        raise HTTPException(503, "Layanan AI sedang ramai. Silakan coba lagi sebentar.")
+    except GeminiRateLimitError as e:
+        raise HTTPException(503, "Layanan AI sedang ramai. Silakan coba lagi sebentar.") from e
     except Exception:
         raise HTTPException(502, "Layanan AI sedang tidak tersedia. Silakan coba lagi.")
 

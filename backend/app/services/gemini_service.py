@@ -25,14 +25,34 @@ class GeminiQuotaExceededError(RuntimeError):
     """Kuota harian Gemini habis; retry segera tidak akan membantu."""
 
 
+def _provider_status_code(error: Exception) -> int | None:
+    """Baca kode status numerik provider tanpa menafsirkan angka di pesan error."""
+    try:
+        code = getattr(error, "code", None)
+    except Exception:
+        return None
+
+    if callable(code):
+        try:
+            code = code()
+        except Exception:
+            return None
+
+    return code if isinstance(code, int) and not isinstance(code, bool) else None
+
+
 def classify_gemini_error(error: Exception) -> str:
     """Bedakan 429 sementara dari quota harian berdasarkan error resmi Gemini."""
     message = str(error).lower()
-    if "quota_exceeded" in message or "daily quota" in message:
+    if any(phrase in message for phrase in (
+        "you exceeded your current quota", "quota_exceeded", "daily quota",
+    )):
         return "quota"
     if any(marker in message for marker in (
-        "rate_limit_exceeded", "too_many_requests", "resource_exhausted", "429", "503", "overload",
+        "rate_limit_exceeded", "too_many_requests", "resource_exhausted", "too many requests", "overload",
     )):
+        return "rate_limit"
+    if _provider_status_code(error) in (429, 503):
         return "rate_limit"
     return "other"
 
