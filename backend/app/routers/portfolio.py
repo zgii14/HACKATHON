@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import logging
 import secrets
 from datetime import datetime, timezone
 from urllib.parse import urlparse
@@ -14,8 +15,12 @@ from app.config import settings
 from app.database import get_db
 from app.models import CandidateProfile, Portfolio, User
 from app.schemas import PortfolioGenerateRequest, PortfolioOut, PortfolioPatch
-from app.services.gemini_service import generate_portfolio_copy
-from app.services.ai_guardrails import reserve_ai_generation
+from app.services.gemini_service import (
+    GeminiQuotaExceededError,
+    GeminiRateLimitError,
+    generate_portfolio_copy,
+)
+from app.services.ai_guardrails import AiGenerationQuotaError, reserve_ai_generation
 from app.services.github_client import fetch_repo_readme
 from app.services.portfolio import (
     build_fallback_draft,
@@ -27,6 +32,7 @@ from app.services.portfolio import (
 
 
 router = APIRouter(tags=["portfolio"])
+logger = logging.getLogger(__name__)
 ALLOWED_PHOTO_TYPES = {"image/jpeg", "image/png", "image/webp"}
 MAX_PHOTO_BYTES = 2 * 1024 * 1024
 GENERATE_COOLDOWN_SECONDS = 60
@@ -225,7 +231,11 @@ async def generate_my_portfolio(
         for project in draft["projects"]:
             project["description"] = descriptions.get(project["repo_name"], project["description"])
         draft["ai_enhanced"] = True
-    except Exception:
+    except (AiGenerationQuotaError, GeminiQuotaExceededError, GeminiRateLimitError) as exc:
+        logger.info("portfolio_ai_fallback category=%s", type(exc).__name__)
+        draft["ai_enhanced"] = False
+    except Exception as exc:
+        logger.warning("portfolio_ai_fallback category=unexpected error_type=%s", type(exc).__name__)
         draft["ai_enhanced"] = False
 
     draft["_generated_at"] = datetime.now(timezone.utc).isoformat()

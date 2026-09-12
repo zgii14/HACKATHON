@@ -12,6 +12,7 @@ from app.auth import get_current_user
 from app.database import Base, get_db
 from app.models import CandidateProfile, Portfolio, User
 from app.schemas import PortfolioPatch
+from app.services.ai_guardrails import AiGenerationQuotaError
 from app.services.gemini_service import generate_portfolio_copy, portfolio_summary_prompt
 from app.services.github_client import fetch_repo_readme
 from app.routers.portfolio import _matches_image_signature, _valid_http_url
@@ -279,11 +280,24 @@ class PortfolioApiTests(unittest.TestCase):
     @patch("app.routers.portfolio.fetch_repo_readme", return_value="")
     @patch("app.routers.portfolio.generate_portfolio_copy", side_effect=RuntimeError("quota"))
     def test_generate_uses_fallback_when_ai_fails(self, _generate, _readme):
-        response = self.client.post("/me/portfolio/generate", json={"language": "en"})
+        with self.assertLogs("app.routers.portfolio", level="WARNING") as logs:
+            response = self.client.post("/me/portfolio/generate", json={"language": "en"})
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertFalse(body["draft_content"]["ai_enhanced"])
         self.assertNotIn("_generated_at", body["draft_content"])
+        self.assertIn("portfolio_ai_fallback category=unexpected error_type=RuntimeError", logs.output[0])
+
+    @patch(
+        "app.routers.portfolio.reserve_ai_generation",
+        side_effect=AiGenerationQuotaError("global", 60),
+    )
+    def test_generate_logs_expected_ai_guardrail_fallback(self, _reserve):
+        with self.assertLogs("app.routers.portfolio", level="INFO") as logs:
+            response = self.client.post("/me/portfolio/generate", json={"language": "en"})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()["draft_content"]["ai_enhanced"])
+        self.assertIn("portfolio_ai_fallback category=AiGenerationQuotaError", logs.output[0])
 
     def test_unpublished_portfolio_is_not_public(self):
         self.db.add(Portfolio(user_id=self.user.id, public_id="private123", status="draft", draft_content={"name": "Candidate"}))
