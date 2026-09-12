@@ -51,13 +51,13 @@ class QuizFlowTests(unittest.TestCase):
         )
         self.session.add(self.profile)
         self.session.commit()
-        self.mock_quiz = mock.patch(
+        self.mock_quiz_patcher = mock.patch(
             "app.services.gemini_service.generate_step_quiz", return_value=sample_quiz()
         )
-        self.mock_quiz.start()
+        self.mock_quiz = self.mock_quiz_patcher.start()
 
     def tearDown(self):
-        self.mock_quiz.stop()
+        self.mock_quiz_patcher.stop()
         self.session.close()
         self.engine.dispose()
 
@@ -89,6 +89,14 @@ class QuizFlowTests(unittest.TestCase):
         for q in out.quiz:
             self.assertNotIn("correct_index", q)
         self.assertTrue(out.quiz_token)
+
+    def test_reopening_a_issued_quiz_uses_the_server_cache(self):
+        first = self.issue()
+        second = self.issue()
+
+        self.assertEqual(first.quiz, second.quiz)
+        self.assertEqual(first.quiz_token, second.quiz_token)
+        self.assertEqual(self.mock_quiz.call_count, 1)
 
     def test_submit_all_wrong_does_not_complete(self):
         out = self.issue()

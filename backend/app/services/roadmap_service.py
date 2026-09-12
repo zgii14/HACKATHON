@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.models import CandidateProfile, Job, RoadmapProgress, User
+from app.config import settings
+from app.services.ai_guardrails import reserve_ai_generation
 from app.services.gemini_service import generate_roadmap
 from app.services.market_scope import active_jobs
 from app.services.matching import skill_gap
@@ -106,6 +108,13 @@ def ensure_roadmap_generated(
         return fp, entry["steps"], True
 
     # Generate roadmap baru dari Gemini
+    reserve_ai_generation(
+        db,
+        user_id=user.id,
+        feature="roadmap_generate",
+        user_daily_limit=settings.ai_roadmap_generate_daily_limit,
+        global_rpm_limit=settings.ai_global_requests_per_minute,
+    )
     raw_steps = generate_roadmap(roadmap_input_gap, merged)
 
     # Simpan ke cache dengan key yang sesuai — buat dict BARU agar SQLAlchemy mendeteksi perubahan

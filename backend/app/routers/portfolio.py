@@ -10,10 +10,12 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.auth import get_current_user
+from app.config import settings
 from app.database import get_db
 from app.models import CandidateProfile, Portfolio, User
 from app.schemas import PortfolioGenerateRequest, PortfolioOut, PortfolioPatch
 from app.services.gemini_service import generate_portfolio_copy
+from app.services.ai_guardrails import reserve_ai_generation
 from app.services.github_client import fetch_repo_readme
 from app.services.portfolio import (
     build_fallback_draft,
@@ -195,6 +197,13 @@ async def generate_my_portfolio(
         raise HTTPException(400, "Data CV dan GitHub belum cukup untuk membuat portfolio.")
 
     try:
+        reserve_ai_generation(
+            db,
+            user_id=user.id,
+            feature="portfolio_generate",
+            user_daily_limit=settings.ai_portfolio_generate_daily_limit,
+            global_rpm_limit=settings.ai_global_requests_per_minute,
+        )
         readmes = await asyncio.gather(
             *(fetch_repo_readme(profile.github_username or "", repo["name"]) for repo in ranked)
         )

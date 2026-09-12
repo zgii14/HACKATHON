@@ -7,6 +7,7 @@ from sqlalchemy import update as sa_update
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user, is_recruiter_email, is_admin_email
+from app.config import settings
 from app.database import get_db
 from app.models import CandidateProfile, Job, RecruiterProfile, RoadmapProgress, User
 from app.services.cv_pdf import render_cv_pdf
@@ -34,6 +35,8 @@ from app.schemas import (
     XpOut,
 )
 from app.services import roadmap_service
+from app.services.ai_guardrails import AiGenerationQuotaError, reserve_ai_generation
+from app.services.gemini_service import GeminiQuotaExceededError, GeminiRateLimitError
 from app.services.market_scope import resolve_market_scope
 from app.services.matching import jaccard_score
 from app.services.quiz import (
@@ -576,14 +579,46 @@ def get_roadmap_step_quiz(
         if not prev_row or not prev_row.completed:
             raise HTTPException(403, "Selesaikan langkah sebelumnya terlebih dahulu.")
 
+    row = (
+        db.query(RoadmapProgress)
+        .filter(
+            RoadmapProgress.user_id == user.id,
+            RoadmapProgress.roadmap_key == cache_key,
+            RoadmapProgress.step_index == step_index,
+        )
+        .first()
+    )
+    if row and row.quiz_payload and row.quiz_issued_at:
+        quiz = normalize_quiz(row.quiz_payload)
+        if len(quiz) == QUIZ_SIZE:
+            return QuizIssueOut(
+                quiz=public_quiz(quiz),
+                quiz_token=quiz_token(quiz, user.id, cache_key, step_index, row.quiz_issued_at),
+                total=len(quiz),
+            )
+
     from app.services.gemini_service import generate_step_quiz
 
-    quiz = normalize_quiz(generate_step_quiz(step_title, step_description))
+    try:
+        reserve_ai_generation(
+            db,
+            user_id=user.id,
+            feature="roadmap_quiz",
+            user_daily_limit=0,
+            global_rpm_limit=settings.ai_global_requests_per_minute,
+        )
+        quiz = normalize_quiz(generate_step_quiz(step_title, step_description))
+    except AiGenerationQuotaError as e:
+        raise HTTPException(429, "Terlalu banyak proses AI di GitHire. Coba lagi sekitar satu menit.") from e
+    except GeminiQuotaExceededError as e:
+        raise HTTPException(503, "Kuota AI sedang penuh. Coba lagi setelah kuota direset.") from e
+    except GeminiRateLimitError as e:
+        raise HTTPException(503, "Layanan AI sedang ramai. Silakan coba lagi sebentar.") from e
     if len(quiz) != QUIZ_SIZE:
         raise HTTPException(502, "Gagal men-generate kuis yang valid. Silakan coba lagi.")
 
     issued_at = datetime.now(timezone.utc)
-    row = _get_or_create_progress(db, user.id, cache_key, step_index)
+    row = row or _get_or_create_progress(db, user.id, cache_key, step_index)
     row.quiz_payload = quiz
     row.quiz_issued_at = issued_at
     row.quiz_attempts = 0
@@ -696,6 +731,17 @@ def get_roadmap(
         fp, steps_raw, _cached = roadmap_service.ensure_roadmap_generated(
             db, user, job_id=job_id, effective_jobs=effective_jobs
         )
+    except AiGenerationQuotaError as e:
+        message = (
+            "Terlalu banyak proses AI di GitHire. Coba lagi sekitar satu menit."
+            if e.scope == "global"
+            else "Batas generate roadmap harian sudah tercapai. Coba lagi besok."
+        )
+        raise HTTPException(429, message) from e
+    except GeminiQuotaExceededError as e:
+        raise HTTPException(503, "Kuota AI sedang penuh. Coba lagi setelah kuota direset.") from e
+    except GeminiRateLimitError as e:
+        raise HTTPException(503, "Layanan AI sedang ramai. Silakan coba lagi sebentar.") from e
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
     except Exception as e:

@@ -1,4 +1,5 @@
 import json
+import random
 import re
 import time
 
@@ -14,6 +15,26 @@ GEMINI_MODEL = "gemini-3.1-flash-lite"
 # Konfigurasi retry
 MAX_RETRIES = 3
 RETRY_DELAYS = [2, 5]  # detik jeda antar retry (index 0 = setelah attempt 1, dst)
+
+
+class GeminiRateLimitError(RuntimeError):
+    """Gemini menolak sementara karena batas request/token atau overload."""
+
+
+class GeminiQuotaExceededError(RuntimeError):
+    """Kuota harian Gemini habis; retry segera tidak akan membantu."""
+
+
+def classify_gemini_error(error: Exception) -> str:
+    """Bedakan 429 sementara dari quota harian berdasarkan error resmi Gemini."""
+    message = str(error).lower()
+    if "quota_exceeded" in message or "daily quota" in message:
+        return "quota"
+    if any(marker in message for marker in (
+        "rate_limit_exceeded", "too_many_requests", "resource_exhausted", "429", "503", "overload",
+    )):
+        return "rate_limit"
+    return "other"
 
 
 # =========================
@@ -48,11 +69,15 @@ def _call_gemini_with_retry(contents: str) -> str:
         except Exception as e:
             last_exc = e
             err_str = str(e).lower()
+            error_kind = classify_gemini_error(e)
+
+            if error_kind == "quota":
+                raise GeminiQuotaExceededError("Kuota AI sedang penuh") from e
 
             # Error permanen — langsung gagal, tidak perlu retry
             PERMANENT_ERRORS = [
                 "api_key", "api key", "invalid key",
-                "quota", "billing", "permission",
+                "billing", "permission",
                 "not found", "not supported",
             ]
             if any(keyword in err_str for keyword in PERMANENT_ERRORS):
@@ -60,11 +85,14 @@ def _call_gemini_with_retry(contents: str) -> str:
 
             # Masih ada retry tersisa
             if attempt < MAX_RETRIES - 1:
-                delay = RETRY_DELAYS[attempt] if attempt < len(RETRY_DELAYS) else RETRY_DELAYS[-1]
+                base_delay = RETRY_DELAYS[attempt] if attempt < len(RETRY_DELAYS) else RETRY_DELAYS[-1]
+                delay = base_delay + random.uniform(0, 0.5)
                 print(f"[Gemini] Attempt {attempt + 1} gagal ({type(e).__name__}). Retry dalam {delay}s...")
                 time.sleep(delay)
             # else: sudah attempt terakhir, keluar loop → raise di bawah
 
+    if classify_gemini_error(last_exc or RuntimeError()) == "rate_limit":
+        raise GeminiRateLimitError("Layanan AI sedang ramai") from last_exc
     raise RuntimeError(
         f"Gemini tidak merespons setelah {MAX_RETRIES} percobaan. "
         f"Error terakhir: {last_exc}"

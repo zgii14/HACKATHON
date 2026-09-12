@@ -224,6 +224,22 @@ async def lifespan(app: FastAPI):
         conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS cv_preference VARCHAR(10) NOT NULL DEFAULT 'form'"))
         conn.commit()
 
+    # DDL Migration: cache parsing CV + ledger quota AI lintas process/container.
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS cv_ai_fingerprint VARCHAR(64) NULL"))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS ai_usage_events (
+                id UUID PRIMARY KEY,
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                feature VARCHAR(64) NOT NULL,
+                units INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_ai_usage_events_user_feature_time ON ai_usage_events (user_id, feature, created_at)"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_ai_usage_events_time ON ai_usage_events (created_at)"))
+        conn.commit()
+
     # DDL Migration: skill terverifikasi dari bukti commit GitHub
     with engine.connect() as conn:
         conn.execute(text("""

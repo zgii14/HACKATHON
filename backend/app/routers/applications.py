@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
+from app.config import settings
 from app.database import get_db
 import json
 
@@ -17,6 +18,8 @@ from app.schemas import (
     GenerateLetterRequest,
 )
 from app.services.letter_service import generate_cover_letter
+from app.services.ai_guardrails import AiGenerationQuotaError, reserve_ai_generation
+from app.services.gemini_service import GeminiQuotaExceededError, GeminiRateLimitError
 from app.services.matching import jaccard_score, normalize_skill
 
 router = APIRouter(prefix="/applications", tags=["applications"])
@@ -303,6 +306,13 @@ def generate_letter(
     missing = [orig for norm, orig in required_norm_map.items() if norm not in merged_norm]
 
     try:
+        reserve_ai_generation(
+            db,
+            user_id=user.id,
+            feature="cover_letter",
+            user_daily_limit=settings.ai_cover_letter_daily_limit,
+            global_rpm_limit=settings.ai_global_requests_per_minute,
+        )
         letter_text = generate_cover_letter(
             full_name=body.full_name or profile.bio_full_name or "Pelamar",
             github_username=profile.github_username,
@@ -319,6 +329,17 @@ def generate_letter(
             phone=profile.bio_phone,
             email=user.email,
         )
+    except AiGenerationQuotaError as e:
+        message = (
+            "Terlalu banyak proses AI di GitHire. Coba lagi sekitar satu menit."
+            if e.scope == "global"
+            else "Batas generate surat lamaran harian sudah tercapai. Coba lagi besok."
+        )
+        raise HTTPException(429, message) from e
+    except GeminiQuotaExceededError as e:
+        raise HTTPException(503, "Kuota AI sedang penuh. Coba lagi setelah kuota direset.") from e
+    except GeminiRateLimitError as e:
+        raise HTTPException(503, "Layanan AI sedang ramai. Silakan coba lagi sebentar.") from e
     except Exception as e:
         raise HTTPException(502, f"Gagal generate surat lamaran: {e!s}") from e
 

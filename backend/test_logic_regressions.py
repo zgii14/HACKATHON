@@ -5,14 +5,22 @@ os.environ.setdefault("GEMINI_API_KEY", "test-key")
 os.environ.setdefault("RECRUITER_EMAILS", "trusted@example.com")
 
 from app.auth import is_recruiter_email
+from app.config import settings
 from app.routers.applications import can_confirm_interview
-from app.routers.profiles import has_usable_cv_data
+from app.routers.profiles import cv_content_fingerprint, has_usable_cv_data
 from app.routers.recruiter import _escape_like, _extract_json_data, normalize_screening_result
 from app.seed import DUMMY_JOBS, seed_jobs_if_empty
 from app.services.matching import jaccard_score
 
 
 class LogicRegressionTests(unittest.TestCase):
+    def setUp(self):
+        self.original_recruiter_emails = settings.recruiter_emails
+        settings.recruiter_emails = "trusted@example.com"
+
+    def tearDown(self):
+        settings.recruiter_emails = self.original_recruiter_emails
+
     def test_demo_job_does_not_block_static_seed(self):
         class Query:
             def count(self):
@@ -76,6 +84,16 @@ class LogicRegressionTests(unittest.TestCase):
         self.assertFalse(has_usable_cv_data({}))
         self.assertFalse(has_usable_cv_data({"education": []}))
         self.assertTrue(has_usable_cv_data({"summary": "Backend developer"}))
+
+    def test_same_cv_bytes_have_a_stable_ai_cache_fingerprint(self):
+        self.assertEqual(
+            cv_content_fingerprint(b"same-pdf-content"),
+            cv_content_fingerprint(b"same-pdf-content"),
+        )
+        self.assertNotEqual(
+            cv_content_fingerprint(b"same-pdf-content"),
+            cv_content_fingerprint(b"new-pdf-content"),
+        )
 
     def test_candidate_search_escapes_like_wildcards(self):
         self.assertEqual(_escape_like(r"100%_ready\dev"), r"100\%\_ready\\dev")

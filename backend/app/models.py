@@ -50,6 +50,7 @@ class CandidateProfile(Base):
     )
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     github_signals: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    cv_ai_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     cv_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
     merged_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
     # Skill yang lolos verifikasi bukti commit GitHub (lihat services/skill_verification.py)
@@ -76,6 +77,25 @@ class CandidateProfile(Base):
     total_xp: Mapped[int] = mapped_column(Integer, default=0)
 
     user: Mapped["User"] = relationship("User", back_populates="profile")
+
+
+class AiUsageEvent(Base):
+    """Reservasi request AI untuk quota per pengguna dan seluruh project."""
+
+    __tablename__ = "ai_usage_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    feature: Mapped[str] = mapped_column(String(64), index=True)
+    # Satu aksi dapat memerlukan beberapa request model, misalnya parsing CV.
+    units: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow, index=True
+    )
 
 
 class Portfolio(Base):

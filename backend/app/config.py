@@ -6,6 +6,15 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql://githire:githire@localhost:5432/githire"
     gemini_api_key: str = ""
+    # Guardrail AI: nilai ini adalah batas aplikasi GitHire dan dapat disetel
+    # sesuai quota aktif project Gemini di AI Studio.
+    # 0 = nonaktif. Sengaja dibuka saat demo; aktifkan per environment produksi.
+    ai_global_requests_per_minute: int = 0
+    ai_cv_parse_daily_limit: int = 0
+    ai_roadmap_generate_daily_limit: int = 0
+    ai_portfolio_generate_daily_limit: int = 0
+    ai_cover_letter_daily_limit: int = 0
+    ai_screening_daily_limit: int = 0
     github_token: str | None = None
     clerk_jwks_url: str = ""
     clerk_issuer: str = ""

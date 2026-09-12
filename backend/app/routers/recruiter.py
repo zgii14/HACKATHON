@@ -9,11 +9,13 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.auth import get_current_user
+from app.config import settings
 from app.database import get_db
 from app.models import CandidateProfile, Job, JobApplication, RecruiterProfile, User
 from app.schemas import ApplicationStatus
 from app.services.cv_pdf import render_cv_pdf
-from app.services.gemini_service import _call_gemini_with_retry
+from app.services.ai_guardrails import AiGenerationQuotaError, reserve_ai_generation
+from app.services.gemini_service import GeminiQuotaExceededError, GeminiRateLimitError, _call_gemini_with_retry
 from app.services.job_category import classify_job_categories, sanitize_categories
 from app.services.matching import jaccard_score, explain_match
 from app.services.screening import (
@@ -474,24 +476,6 @@ def ai_candidate_screening(
     """Menjalankan AI screening otomatis dengan Gemini untuk pelamar."""
     if user.role != "recruiter":
         raise HTTPException(403, "Hanya recruiter yang diperbolehkan mengakses AI screening.")
-    # Glints-like: Free 5/minggu, Premium unlimited — hitung via screened_at, bukan updated_at
-    is_premium = bool(getattr(user, "is_premium", False))
-    if not is_premium:
-        from datetime import timedelta, timezone
-        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
-        cnt = (
-            db.query(JobApplication)
-            .join(Job, JobApplication.job_id == Job.id)
-            .filter(
-                Job.recruiter_id == str(user.id),
-                JobApplication.screened_at.isnot(None),
-                JobApplication.screened_at >= week_ago,
-            )
-            .count()
-        )
-        if cnt >= 5:
-            raise HTTPException(429, f"Kuota screening mingguan habis ({cnt}/5). Upgrade ke Premium untuk unlimited.")
-
     app = db.query(JobApplication).filter(JobApplication.id == application_id).first()
     if not app:
         raise HTTPException(404, "Data lamaran tidak ditemukan.")
@@ -524,6 +508,24 @@ def ai_candidate_screening(
             cached["cached"] = True
             return cached
 
+    # Cache tidak mengonsumsi kuota screening. Premium tetap memiliki pagar teknis harian.
+    is_premium = bool(getattr(user, "is_premium", False))
+    if not is_premium:
+        from datetime import timedelta, timezone
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        cnt = (
+            db.query(JobApplication)
+            .join(Job, JobApplication.job_id == Job.id)
+            .filter(
+                Job.recruiter_id == str(user.id),
+                JobApplication.screened_at.isnot(None),
+                JobApplication.screened_at >= week_ago,
+            )
+            .count()
+        )
+        if cnt >= 5:
+            raise HTTPException(429, f"Kuota screening mingguan habis ({cnt}/5). Upgrade ke Premium untuk unlimited.")
+
     # Anchor deterministik dari skor algoritmik + skill matched/missing
     required = job.required_skills or []
     algo_score = round(jaccard_score(profile.merged_skills or [], required) * 100)
@@ -552,7 +554,25 @@ def ai_candidate_screening(
     )
 
     try:
+        reserve_ai_generation(
+            db,
+            user_id=user.id,
+            feature="ai_screening",
+            user_daily_limit=settings.ai_screening_daily_limit,
+            global_rpm_limit=settings.ai_global_requests_per_minute,
+        )
         text = _call_gemini_with_retry(prompt)
+    except AiGenerationQuotaError as e:
+        message = (
+            "Terlalu banyak proses AI di GitHire. Coba lagi sekitar satu menit."
+            if e.scope == "global"
+            else "Batas AI screening harian sudah tercapai. Coba lagi besok."
+        )
+        raise HTTPException(429, message) from e
+    except GeminiQuotaExceededError as e:
+        raise HTTPException(503, "Kuota AI sedang penuh. Coba lagi setelah kuota direset.") from e
+    except GeminiRateLimitError:
+        raise HTTPException(503, "Layanan AI sedang ramai. Silakan coba lagi sebentar.")
     except Exception:
         raise HTTPException(502, "Layanan AI sedang tidak tersedia. Silakan coba lagi.")
 

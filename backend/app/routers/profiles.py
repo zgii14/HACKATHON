@@ -1,13 +1,21 @@
+import hashlib
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
+from app.config import settings
 from app.database import get_db
 from app.models import CandidateProfile, RoadmapProgress, User
+from app.services.ai_guardrails import AiGenerationQuotaError, reserve_ai_generation
 from app.services import github_client
-from app.services.gemini_service import extract_skills_from_cv_text, extract_cv_data_from_text
+from app.services.gemini_service import (
+    GeminiQuotaExceededError,
+    GeminiRateLimitError,
+    extract_skills_from_cv_text,
+    extract_cv_data_from_text,
+)
 from app.services.pdf_extract import extract_text_from_pdf
 from app.services.skill_verification import verify_skills
 
@@ -58,6 +66,10 @@ def has_usable_cv_data(data: dict | None) -> bool:
     return isinstance(data, dict) and any(bool(value) for value in data.values())
 
 
+def cv_content_fingerprint(content: bytes) -> str:
+    return hashlib.sha256(content).hexdigest()
+
+
 @router.post("/sync")
 async def sync_profile(
     github_url: str = Form(...),
@@ -70,6 +82,7 @@ async def sync_profile(
     content = await cv.read()
     if len(content) > 5 * 1024 * 1024:
         raise HTTPException(400, "Ukuran PDF terlalu besar, maksimal 5MB")
+    cv_fingerprint = cv_content_fingerprint(content)
 
     # Rate limiting berbasis DB: cek kolom updated_at di profil yang sudah ada
     existing_for_ratelimit = db.query(CandidateProfile).filter(
@@ -115,13 +128,42 @@ async def sync_profile(
             "menggunakan Word, Google Docs, atau tools seperti Adobe Acrobat."
         )
 
-    try:
-        cv_skills = extract_skills_from_cv_text(text)
-        cv_data = extract_cv_data_from_text(text)
-    except Exception as e:
-        raise HTTPException(502, f"Gagal mengekstrak data dari CV menggunakan Gemini AI: {e!s}") from e
-    if not has_usable_cv_data(cv_data):
-        raise HTTPException(502, "AI tidak berhasil membaca struktur CV. Silakan coba PDF lain.")
+    cached_cv = bool(
+        existing_for_ratelimit
+        and existing_for_ratelimit.cv_ai_fingerprint == cv_fingerprint
+        and existing_for_ratelimit.cv_skills is not None
+        and has_usable_cv_data(existing_for_ratelimit.cv_data)
+    )
+    if cached_cv:
+        cv_skills = existing_for_ratelimit.cv_skills or []
+        cv_data = existing_for_ratelimit.cv_data or {}
+    else:
+        try:
+            reserve_ai_generation(
+                db,
+                user_id=user.id,
+                feature="cv_parse",
+                user_daily_limit=settings.ai_cv_parse_daily_limit,
+                global_rpm_limit=settings.ai_global_requests_per_minute,
+                units=2,
+            )
+            cv_skills = extract_skills_from_cv_text(text)
+            cv_data = extract_cv_data_from_text(text)
+        except AiGenerationQuotaError as e:
+            message = (
+                "Terlalu banyak proses AI di GitHire. Coba lagi sekitar satu menit."
+                if e.scope == "global"
+                else "Batas parse CV harian sudah tercapai. Coba lagi besok."
+            )
+            raise HTTPException(429, message) from e
+        except GeminiQuotaExceededError as e:
+            raise HTTPException(503, "Kuota AI sedang penuh. Coba lagi setelah kuota direset.") from e
+        except GeminiRateLimitError as e:
+            raise HTTPException(503, "Layanan AI sedang ramai. Silakan coba lagi sebentar.") from e
+        except Exception as e:
+            raise HTTPException(502, f"Gagal mengekstrak data dari CV menggunakan Gemini AI: {e!s}") from e
+        if not has_usable_cv_data(cv_data):
+            raise HTTPException(502, "AI tidak berhasil membaca struktur CV. Silakan coba PDF lain.")
 
     gh_skills = _skills_from_github(gh_signals)
     merged = _merge_skills(gh_skills, cv_skills)
@@ -129,7 +171,7 @@ async def sync_profile(
     # maupun matching — hanya dipakai untuk membedakan verified vs declared.
     verified = verify_skills(gh_signals, as_of=datetime.now(timezone.utc))
 
-    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    profile = existing_for_ratelimit
     if not profile:
         profile = CandidateProfile(user_id=user.id)
         db.add(profile)
@@ -143,6 +185,7 @@ async def sync_profile(
     profile.github_signals = gh_signals
     profile.cv_skills = cv_skills
     profile.cv_data = cv_data
+    profile.cv_ai_fingerprint = cv_fingerprint
     profile.merged_skills = merged
     profile.verified_skills = verified
 
@@ -170,4 +213,5 @@ async def sync_profile(
         "skills_changed": skills_changed,
         "verified_skills_count": len(verified),
         "verified_skills": verified,
+        "cv_ai_cached": cached_cv,
     }
