@@ -242,13 +242,14 @@ class SyncMatrixTests(ConnectApiTests):
         res = self._sync({"github_url": "someone-else"})
         self.assertEqual(res.json()["github_username"], "legacyuser")
 
-    def test_transition_typed_username_marks_legacy(self):
+    def test_typed_username_is_ignored(self):
+        # Identitas GitHub hanya dari Clerk; github_url dari klien lama diabaikan.
         res = self._sync({"github_url": "octo"})
         self.assertEqual(res.status_code, 200, res.text)
+        self.assertIsNone(res.json()["github_username"])
         prof = self._one(CandidateProfile)
-        self.assertEqual(prof.github_username, "octo")
-        self.assertTrue(prof.github_legacy_grandfathered)
-        self.assertIsNone(prof.github_user_id)
+        self.assertIsNone(prof.github_username)
+        self.assertFalse(prof.github_legacy_grandfathered)
 
 
 class GatingAndFlagsTests(ConnectApiTests):

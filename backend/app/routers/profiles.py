@@ -40,7 +40,11 @@ async def sync_profile(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Sync profil dari CV (opsional) + GitHub (dari identitas terverifikasi/legacy)."""
+    """Sync profil dari CV (opsional) + GitHub (dari identitas terverifikasi/legacy).
+
+    `github_url` masih diterima agar klien lama tidak gagal validasi, tapi diabaikan:
+    identitas GitHub hanya berasal dari Clerk (POST /profiles/github/connect).
+    """
     content: bytes | None = None
     cv_fingerprint: str | None = None
     if cv is not None:
@@ -70,23 +74,9 @@ async def sync_profile(
                 f"Terlalu cepat! Tunggu {remaining} detik lagi sebelum sync ulang."
             )
 
-    # Sumber GitHub: identitas terverifikasi > username legacy > ketikan (masa transisi).
-    # Username ketikan tidak pernah menimpa identitas yang sudah ada.
+    # Sumber GitHub: identitas terverifikasi via Clerk, atau username legacy.
     state = connection_state(existing_for_ratelimit)
-    typed_username = False
-    if state in ("verified", "legacy_unverified"):
-        username = existing_for_ratelimit.github_username
-    elif github_url and github_url.strip():
-        username = github_client.parse_github_username(github_url)
-        if not username:
-            raise HTTPException(
-                400,
-                "Format GitHub tidak valid. Masukkan username (contoh: octocat) "
-                "atau URL profil (contoh: https://github.com/octocat)"
-            )
-        typed_username = True
-    else:
-        username = None
+    username = existing_for_ratelimit.github_username if state in ("verified", "legacy_unverified") else None
 
     has_saved_cv = bool(existing_for_ratelimit and existing_for_ratelimit.cv_skills is not None)
     if not username and content is None and not has_saved_cv:
@@ -169,10 +159,6 @@ async def sync_profile(
         profile.cv_file = content
         profile.cv_filename = cv.filename
         profile.cv_uploaded_at = datetime.utcnow()
-    if typed_username:
-        # Masa transisi: frontend lama masih mengirim username ketikan.
-        profile.github_legacy_grandfathered = True
-
     # Gabung skill + reset roadmap hanya jika skill benar-benar berubah
     skills_changed = apply_github_data(db, profile, username, gh_signals)
     profile.updated_at = datetime.utcnow()
