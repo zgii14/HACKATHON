@@ -3,11 +3,12 @@
 // Hallmark · genre: modern-minimal · macrostructure: Workbench (app-surface) · theme: GitHire violet (locked)
 
 import { PageHeader, Reveal } from "@/components/dashboard/ui";
+import { GithubConnection, type GithubConnectionState } from "@/components/onboarding/github-connection";
 import { useApi } from "@/hooks/use-api";
 import { INTERESTS } from "@/utils/constants/interests";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 
@@ -20,6 +21,8 @@ type Profile = {
     cv_filename: string | null;
     cv_uploaded_at: string | null;
     github_signals: any | null;
+    github_connection?: GithubConnectionState;
+    github_verified_at?: string | null;
 } | null;
 
 type SyncResult = {
@@ -29,8 +32,8 @@ type SyncResult = {
     skills_changed: boolean;
 };
 
-const SYNC_STEPS = [
-    "Menghubungi GitHub…",
+const GITHUB_SYNC_STEP = "Menghubungi GitHub…";
+const CV_SYNC_STEPS = [
     "Membaca CV kamu…",
     "Mengekstrak skill dengan AI…",
     "Menghitung skill gap…",
@@ -40,7 +43,15 @@ const SYNC_STEPS = [
 const INTEREST_OPTIONS = INTERESTS;
 
 export default function OnboardingPage() {
-    const [githubUrl, setGithubUrl] = useState("");
+    // GithubConnection membaca query string (?github=connected) via useSearchParams.
+    return (
+        <Suspense>
+            <OnboardingContent />
+        </Suspense>
+    );
+}
+
+function OnboardingContent() {
     const [file, setFile] = useState<File | null>(null);
     const [stepIndex, setStepIndex] = useState(0);
     const [showInterestSurvey, setShowInterestSurvey] = useState(false);
@@ -58,13 +69,12 @@ export default function OnboardingPage() {
     });
 
     const hasExistingProfile = !!existingProfile?.merged_skills?.length;
-
-    // Prefill GitHub URL ketika profil sudah ada — biar sync ulang tinggal upload PDF
-    useEffect(() => {
-        if (hasExistingProfile && existingProfile?.github_username && !githubUrl) {
-            setGithubUrl(`https://github.com/${existingProfile.github_username}`);
-        }
-    }, [hasExistingProfile, existingProfile?.github_username]);
+    const githubConnection: GithubConnectionState = existingProfile?.github_connection ?? "none";
+    const hasGithub = githubConnection !== "none";
+    const hasSavedCv = !!existingProfile?.cv_data;
+    // Sync butuh CV baru, atau GitHub yang sudah terhubung (re-sync data repo).
+    const canSync = !!file || (hasGithub && hasSavedCv);
+    const syncSteps = hasGithub ? [GITHUB_SYNC_STEP, ...CV_SYNC_STEPS] : CV_SYNC_STEPS;
 
     const toggleInterest = (key: string) => {
         setSelectedInterests((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -88,13 +98,12 @@ export default function OnboardingPage() {
 
     const sync = useMutation({
         mutationFn: async (): Promise<SyncResult> => {
-            if (!file || !githubUrl.trim()) throw new Error("GitHub URL dan file PDF wajib diisi");
+            if (!canSync) throw new Error("Pilih file CV (PDF) dulu.");
             const fd = new FormData();
-            fd.append("github_url", githubUrl.trim());
-            fd.append("cv", file);
+            if (file) fd.append("cv", file);
             let i = 0;
             const interval = setInterval(() => {
-                i = (i + 1) % SYNC_STEPS.length;
+                i = (i + 1) % syncSteps.length;
                 setStepIndex(i);
             }, 1800);
             try {
@@ -125,8 +134,8 @@ export default function OnboardingPage() {
     });
 
     const handleSyncClick = async () => {
-        if (!githubUrl.trim() || !file) {
-            toast.error("GitHub URL dan file PDF wajib diisi");
+        if (!canSync) {
+            toast.error("Pilih file CV (PDF) dulu.");
             return;
         }
         if (!authReady || !profileFetched) {
@@ -137,7 +146,7 @@ export default function OnboardingPage() {
             const isDark = typeof document !== "undefined" && document.documentElement.classList.contains("dark");
             const result = await Swal.fire({
                 title: "Sync ulang profil?",
-                html: `Kamu akan melakukan sinkronisasi ulang profil <b>@${existingProfile?.github_username}</b> dengan <b>${existingProfile?.merged_skills?.length ?? 0} skill</b>.<br><span style="color:#6b7280">Jika skill berubah, progress roadmap akan diatur ulang.</span>`,
+                html: `Kamu akan melakukan sinkronisasi ulang profil${existingProfile?.github_username ? ` <b>@${existingProfile.github_username}</b>` : ""} dengan <b>${existingProfile?.merged_skills?.length ?? 0} skill</b>.<br><span style="color:#6b7280">Jika skill berubah, progress roadmap akan diatur ulang.</span>`,
                 icon: "warning",
                 theme: isDark ? "dark" : "light",
                 showCancelButton: true,
@@ -249,27 +258,20 @@ export default function OnboardingPage() {
                 title={hasExistingProfile ? "Data GitHub & CV" : "Onboarding"}
                 sub={
                     hasExistingProfile
-                        ? `Profil @${existingProfile?.github_username} · ${existingProfile?.merged_skills?.length ?? 0} skill terhubung. Upload PDF baru untuk sync ulang.`
-                        : "Kami hanya membaca data GitHub publik. Upload CV PDF untuk ekstraksi skill."
+                        ? `${existingProfile?.merged_skills?.length ?? 0} skill terhubung. Upload PDF baru untuk sync ulang.`
+                        : "Hubungkan GitHub dan upload CV. Keduanya opsional, tapi makin lengkap makin akurat."
                 }
             />
 
             <Reveal delay={0.06} className="pt-6">
                 {hasExistingProfile && existingProfile && (
                     <div className="mb-5 rounded-xl border border-border bg-card p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                                <div className="flex size-8 items-center justify-center rounded-full bg-violet-600 text-xs font-bold text-white">
-                                    {(existingProfile.github_username ?? "?").slice(0, 2).toUpperCase()}
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold">@{existingProfile.github_username ?? "-"}</p>
-                                    <p className="text-meta text-muted-foreground">
-                                        {existingProfile.merged_skills?.length ?? 0} skill · {existingProfile.github_signals?.commits ?? 0} commits · {existingProfile.github_signals?.stars ?? 0} stars
-                                    </p>
-                                </div>
-                            </div>
-                            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-meta font-bold text-emerald-600">Terhubung</span>
+                        <div>
+                            <p className="text-sm font-semibold">Profil tersinkron</p>
+                            <p className="text-meta text-muted-foreground">
+                                {existingProfile.merged_skills?.length ?? 0} skill
+                                {existingProfile.github_signals ? ` · ${existingProfile.github_signals.commits ?? 0} commits · ${existingProfile.github_signals.stars ?? 0} stars` : ""}
+                            </p>
                         </div>
                         {existingProfile.merged_skills && existingProfile.merged_skills.length > 0 && (
                             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -302,7 +304,7 @@ export default function OnboardingPage() {
                     <div className="mb-5 flex items-center gap-3 border border-border px-4 py-3">
                         <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         <div>
-                            <p className="text-body font-medium">{SYNC_STEPS[stepIndex]}</p>
+                            <p className="text-body font-medium">{syncSteps[stepIndex % syncSteps.length]}</p>
                             <p className="text-meta text-muted-foreground">biasanya 10–20 detik</p>
                         </div>
                     </div>
@@ -310,22 +312,14 @@ export default function OnboardingPage() {
 
                 {/* Form */}
                 <div className="space-y-5">
-                    <div>
-                        <label htmlFor="gh" className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
-                            GitHub URL atau username
-                        </label>
-                        <input
-                            id="gh"
-                            placeholder="https://github.com/octocat"
-                            value={githubUrl}
-                            onChange={(e) => setGithubUrl(e.target.value)}
-                            disabled={sync.isPending}
-                            className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25 disabled:opacity-50"
-                        />
-                    </div>
+                    <GithubConnection
+                        connection={githubConnection}
+                        username={existingProfile?.github_username ?? null}
+                        verifiedAt={existingProfile?.github_verified_at ?? null}
+                    />
 
                     <div>
-                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">CV (hanya PDF)</label>
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">CV (PDF)</label>
                         <label
                             htmlFor="cv"
                             className={`flex w-full cursor-pointer items-center justify-center rounded-md border-2 border-dashed px-4 py-5 transition-colors ${
@@ -374,7 +368,7 @@ export default function OnboardingPage() {
 
                     <button
                         type="button"
-                        disabled={sync.isPending || !githubUrl.trim() || !file}
+                        disabled={sync.isPending || !canSync}
                         onClick={handleSyncClick}
                         className="rounded-md bg-primary px-5 py-2.5 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
