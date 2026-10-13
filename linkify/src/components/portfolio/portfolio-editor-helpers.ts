@@ -19,6 +19,21 @@ export function rankRepositories<T extends Pick<GitHubPortfolioRepository, "star
     );
 }
 
+// Endpoint generate membuat draft baru dari nol. Untuk "tulis ulang", ambil hanya
+// copy AI (headline, bio, deskripsi proyek) dan pertahankan isian lain milik user.
+export function mergeAiCopy(current: PortfolioContent, generated: PortfolioContent): PortfolioContent {
+    const descriptions = new Map(generated.projects.map((project) => [project.repo_name, project.description]));
+    return {
+        ...current,
+        headline: generated.headline || current.headline,
+        bio: generated.bio || current.bio,
+        projects: current.projects.map((project) => ({
+            ...project,
+            description: descriptions.get(project.repo_name) || project.description,
+        })),
+    };
+}
+
 export function removeAt<T>(items: T[], index: number): { items: T[]; removed: T; index: number } | null {
     if (!Number.isInteger(index) || index < 0 || index >= items.length) return null;
     return {

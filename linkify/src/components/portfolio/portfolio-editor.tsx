@@ -14,7 +14,7 @@ import type {
     PortfolioRecord,
 } from "./types";
 import { ThemePreviewCards } from "./theme-preview-cards";
-import { appendRepositoriesToProjects, canRestoreProject, createEmptyEducation, createEmptyExperience, createOneShotUndo, getEligibleRepositories, getPhotoUploadCopy, getProjectSlots, MAX_PORTFOLIO_PROJECTS, rankRepositories, restoreAt, transitionDraftRemoval } from "./portfolio-editor-helpers";
+import { appendRepositoriesToProjects, canRestoreProject, createEmptyEducation, createEmptyExperience, createOneShotUndo, getEligibleRepositories, getPhotoUploadCopy, getProjectSlots, MAX_PORTFOLIO_PROJECTS, mergeAiCopy, rankRepositories, restoreAt, transitionDraftRemoval } from "./portfolio-editor-helpers";
 
 type Repo = {
     name: string;
@@ -147,6 +147,40 @@ export function PortfolioEditor() {
         () => withAuth<PortfolioRecord>("/me/portfolio/publish", { method: "POST" }),
         "Portfolio berhasil dipublish.",
     );
+
+    const rewriteWithAi = async () => {
+        const current = formRef.current;
+        if (!current) return;
+        const confirmed = await confirmDestructive({
+            title: "Tulis ulang dengan AI?",
+            text: "Headline, bio, dan deskripsi proyek diganti hasil AI terbaru. Tema, kontak, pengalaman, dan isian lain tetap.",
+            confirmText: "Ya, tulis ulang",
+        });
+        if (!confirmed) return;
+        setBusy("rewrite");
+        try {
+            const generated = await withAuth<PortfolioRecord>("/me/portfolio/generate", {
+                method: "POST",
+                body: JSON.stringify({ language: current.language, repo_names: current.projects.map((project) => project.repo_name) }),
+            });
+            // Generate menimpa draft di server; simpan kembali draft user + copy AI (atau draft utuh jika AI gagal).
+            const fresh = generated.draft_content;
+            const aiEnhanced = Boolean(fresh?.ai_enhanced);
+            const next = fresh && aiEnhanced ? mergeAiCopy(current, fresh) : current;
+            const saved = await withAuth<PortfolioRecord>("/me/portfolio", {
+                method: "PATCH",
+                body: JSON.stringify({ ...next, ai_enhanced: undefined, save_mode: "draft" }),
+            });
+            setForm(saved.draft_content);
+            queryClient.setQueryData(["portfolio"], saved);
+            if (aiEnhanced) toast.success("Copy AI diperbarui. Review sebelum publish.");
+            else toast.warn("AI sedang tidak tersedia. Draft tidak diubah.");
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Terjadi kesalahan. Silakan coba lagi.");
+        } finally {
+            setBusy(null);
+        }
+    };
 
     const unpublish = async () => {
         const confirmed = await confirmDestructive({
@@ -487,6 +521,7 @@ export function PortfolioEditor() {
                         </div>
                     </section>
                     <div className="grid gap-2">
+                        <button className={buttonClass} disabled={busy !== null || form.projects.length === 0} onClick={rewriteWithAi}>{busy === "rewrite" ? "Menulis ulang…" : "✦ Tulis ulang dengan AI"}</button>
                         <button className={buttonClass} disabled={busy !== null} onClick={() => save("draft")}>{busy === "draft" ? "Menyimpan…" : "Save draft"}</button>
                         {portfolio?.status === "published" ? (
                             <>
