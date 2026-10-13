@@ -73,13 +73,13 @@ export default function RecommendedJobsPage() {
                 right={
                     <div className="flex flex-col items-start gap-1 md:items-end">
                         <div className="flex items-baseline gap-2">
-                            <span className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">rata-rata top-5</span>
+                            <span className="text-meta uppercase tracking-wide text-muted-foreground">rata-rata top-5</span>
                             <CountUp value={Math.round(avgScore * 100)} className="font-mono text-[24px] font-semibold tabular-nums tracking-tight" />
                             <span className="font-mono text-xs text-muted-foreground">%</span>
                         </div>
                         <Link
                             href="/dashboard/jobs"
-                            className="font-mono text-meta text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="text-meta text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             browse semua lowongan →
                         </Link>
@@ -92,7 +92,7 @@ export default function RecommendedJobsPage() {
                     <h2 className="text-[15px] font-bold tracking-tight">
                         <strong className="text-primary">{jobs.length}</strong> rekomendasi cocok untukmu
                     </h2>
-                    <span className="font-mono text-meta text-muted-foreground">diurutkan by match</span>
+                    <span className="text-meta text-muted-foreground">diurutkan by match</span>
                 </div>
                 <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                     {jobs.map((job, i) => (

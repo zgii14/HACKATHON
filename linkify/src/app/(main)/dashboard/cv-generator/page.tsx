@@ -207,7 +207,7 @@ export default function CVGeneratorPage() {
                         >
                             <div className="flex items-center justify-between">
                                 <span className="text-[13px] font-bold">Versi form (ATS)</span>
-                                <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-micro font-semibold uppercase tracking-wide text-primary">disarankan</span>
+                                <span className="rounded bg-primary/15 px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide text-primary">disarankan</span>
                             </div>
                             <p className="mt-1 text-meta leading-relaxed text-muted-foreground">
                                 CV terstruktur ramah ATS dari data di bawah. <span className="text-amber-600 dark:text-amber-500">Pastikan sudah kamu cek</span> — hasil ekstraksi AI bisa keliru.

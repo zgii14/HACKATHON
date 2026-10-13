@@ -78,26 +78,26 @@ export default function AccountPage() {
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={user.imageUrl} alt={user.fullName ?? "User"} className="size-14 rounded-full object-cover ring-1 ring-border" />
                     ) : (
-                        <div className="grid size-14 place-items-center rounded-full bg-muted font-mono text-lg font-semibold">
+                        <div className="grid size-14 place-items-center rounded-full bg-muted text-lg font-semibold">
                             {(user?.fullName ?? user?.username ?? "U").charAt(0).toUpperCase()}
                         </div>
                     )}
                     <div className="min-w-0">
                         <p className="flex items-center gap-2 text-[15px] font-semibold">
                             {user?.fullName ?? user?.username ?? "—"}
-                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-micro font-semibold text-success">VERIFIED</span>
+                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px text-micro font-semibold text-success">VERIFIED</span>
                         </p>
-                        <p className="mt-0.5 font-mono text-[12px] text-muted-foreground">{user?.primaryEmailAddress?.emailAddress ?? "—"}</p>
+                        <p className="mt-0.5 text-[12px] text-muted-foreground">{user?.primaryEmailAddress?.emailAddress ?? "—"}</p>
                     </div>
                 </div>
                 <dl className="grid grid-cols-2 border-y border-border">
                     <div className="px-5 py-3">
-                        <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Username</dt>
+                        <dt className="text-meta uppercase tracking-wide text-muted-foreground">Username</dt>
                         <dd className="mt-0.5 truncate text-[14px] font-medium">{user?.username ?? "—"}</dd>
                     </div>
                     <div className="border-l border-border px-5 py-3">
-                        <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Bergabung</dt>
-                        <dd className="mt-0.5 font-mono text-[14px] tabular-nums">{joined}</dd>
+                        <dt className="text-meta uppercase tracking-wide text-muted-foreground">Bergabung</dt>
+                        <dd className="mt-0.5 text-[14px] tabular-nums">{joined}</dd>
                     </div>
                 </dl>
                 <p className="mt-2.5 text-meta text-muted-foreground">
@@ -135,7 +135,7 @@ export default function AccountPage() {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {FIELDS.map(({ key, label, placeholder, wide }) => (
                                 <div key={key} className={wide ? "sm:col-span-2" : ""}>
-                                    <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{label}</label>
+                                    <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">{label}</label>
                                     <input
                                         value={form[key] ?? ""}
                                         onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value || null }))}
@@ -165,7 +165,7 @@ export default function AccountPage() {
                     <dl className="pt-1">
                         {FIELDS.filter(({ key }) => !!bio?.[key]).map(({ key, label }) => (
                             <div key={key} className="flex items-baseline gap-4 border-b border-border/60 py-3">
-                                <dt className="w-32 shrink-0 font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{label}</dt>
+                                <dt className="w-32 shrink-0 text-meta uppercase tracking-wide text-muted-foreground">{label}</dt>
                                 <dd className="text-[14px] font-medium">{bio?.[key]}</dd>
                             </div>
                         ))}

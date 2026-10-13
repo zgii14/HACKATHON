@@ -45,7 +45,7 @@ export function ContactSection({
                     title="1. Informasi Kontak"
                     meta={
                         !bioComplete ? (
-                            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-micro font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-500">
+                            <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-500">
                                 wajib
                             </span>
                         ) : undefined
@@ -53,7 +53,7 @@ export function ContactSection({
                 />
                 <div className="grid grid-cols-1 gap-4 py-4 md:grid-cols-2">
                     <div>
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             Nama Lengkap
                         </label>
                         <input
@@ -65,7 +65,7 @@ export function ContactSection({
                         />
                     </div>
                     <div>
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             Nomor Telepon
                         </label>
                         <input
@@ -77,7 +77,7 @@ export function ContactSection({
                         />
                     </div>
                     <div>
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             Email
                         </label>
                         <input
@@ -89,7 +89,7 @@ export function ContactSection({
                         />
                     </div>
                     <div>
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             URL LinkedIn
                         </label>
                         <input
@@ -100,7 +100,7 @@ export function ContactSection({
                         />
                     </div>
                     <div className="md:col-span-2">
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             GitHub
                         </label>
                         {githubUsername ? (
@@ -111,7 +111,7 @@ export function ContactSection({
                                 className="flex w-full items-center gap-2 rounded-md border border-border bg-muted/20 px-3 py-2.5 text-body font-medium text-primary transition-colors hover:border-primary/40 hover:bg-primary/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25"
                             >
                                 <span className="truncate">github.com/{githubUsername}</span>
-                                <span className="ml-auto shrink-0 font-mono text-micro uppercase tracking-wide text-muted-foreground">
+                                <span className="ml-auto shrink-0 text-micro uppercase tracking-wide text-muted-foreground">
                                     read-only · kelola di onboarding
                                 </span>
                             </a>
@@ -122,7 +122,7 @@ export function ContactSection({
                         )}
                     </div>
                     <div className="md:col-span-2">
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             Alamat Domisili
                         </label>
                         <input
@@ -138,7 +138,7 @@ export function ContactSection({
                 {/* unify bio_birth_place / bio_birth_date → link to account */}
                 <div className="grid grid-cols-1 gap-4 border-t border-border/60 pt-4 md:grid-cols-2">
                     <div>
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             Tempat Lahir
                         </label>
                         <div className="flex items-center gap-2 rounded-md border border-border bg-muted/10 px-3 py-2.5">
@@ -154,7 +154,7 @@ export function ContactSection({
                         </div>
                     </div>
                     <div>
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             Tanggal Lahir
                         </label>
                         <div className="flex items-center gap-2 rounded-md border border-border bg-muted/10 px-3 py-2.5">

@@ -232,7 +232,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
         const heading = (label: string) => (
             <div className="mt-4 mb-1 px-3">
-                {showLabel && label && <p className="font-mono text-micro uppercase tracking-widest text-muted-foreground">{label}</p>}
+                {showLabel && label && <p className="text-micro uppercase tracking-wider text-muted-foreground">{label}</p>}
                 {(!showLabel || !label) && <div className="h-px bg-border" />}
             </div>
         );

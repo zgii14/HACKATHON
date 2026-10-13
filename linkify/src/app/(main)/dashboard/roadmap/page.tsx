@@ -43,7 +43,7 @@ function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitl
     if (application) {
         return (
             <div className="flex flex-wrap items-center gap-4">
-                <span className="font-mono text-[13px] font-semibold text-success">
+                <span className="text-[13px] font-semibold text-success">
                     ✓ sudah dilamar · <span className="capitalize">{application.status}</span>
                 </span>
                 <Link href="/dashboard/applications" className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -253,7 +253,7 @@ function RoadmapContent() {
             {/* Header */}
             <div className="flex flex-col gap-4 pb-6 pt-5 md:flex-row md:items-end md:justify-between">
                 <div className="min-w-0">
-                    <p className="font-mono text-meta text-muted-foreground">
+                    <p className="text-meta text-muted-foreground">
                         dasbor / roadmap / <span className="font-medium text-foreground">{data?.job_title ? "job" : "umum"}</span>
                     </p>
                     <h1 className="mt-2 text-[22px] font-bold tracking-tight">Roadmap belajar</h1>
@@ -266,7 +266,7 @@ function RoadmapContent() {
                 <button
                     onClick={() => reset.mutate()}
                     disabled={reset.isPending || isLoading}
-                    className="shrink-0 self-start font-mono text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:self-auto"
+                    className="shrink-0 self-start text-[12px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:self-auto"
                 >
                     {reset.isPending ? "mereset…" : "↺ generate ulang"}
                 </button>
@@ -275,7 +275,7 @@ function RoadmapContent() {
             {/* Progress */}
             {totalCount > 0 && (
                 <div className="border-y border-border py-4">
-                    <div className="mb-2 flex items-baseline justify-between font-mono text-meta text-muted-foreground">
+                    <div className="mb-2 flex items-baseline justify-between text-meta text-muted-foreground">
                         <span>
                             <span className="text-foreground">{completedCount}</span>/{totalCount} langkah selesai
                         </span>
@@ -299,9 +299,9 @@ function RoadmapContent() {
                 <div className="py-6">
                     <div className="flex items-center gap-3">
                         <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        <span className="font-mono text-body font-medium text-muted-foreground">{LOADING_MESSAGES[loadingMsgIdx]}</span>
+                        <span className="text-body font-medium text-muted-foreground">{LOADING_MESSAGES[loadingMsgIdx]}</span>
                     </div>
-                    <p className="mt-1 pl-7 font-mono text-meta text-muted-foreground">biasanya 10–20 detik</p>
+                    <p className="mt-1 pl-7 text-meta text-muted-foreground">biasanya 10–20 detik</p>
                 </div>
             )}
             {error && (
@@ -349,7 +349,7 @@ function RoadmapContent() {
                                                 {step.title}
                                             </h3>
                                             {isCurrent && !isCompleted && (
-                                                <span className="shrink-0 rounded-[3px] border border-primary/40 px-1.5 py-px font-mono text-micro font-semibold text-primary">SEKARANG</span>
+                                                <span className="shrink-0 rounded-[3px] border border-primary/40 px-1.5 py-px text-micro font-semibold text-primary">SEKARANG</span>
                                             )}
                                         </div>
 
@@ -357,7 +357,7 @@ function RoadmapContent() {
 
                                         {step.resources && step.resources.length > 0 && (
                                             <p className="mt-2 text-xs leading-relaxed">
-                                                <span className="font-mono uppercase tracking-[0.06em] text-muted-foreground">resource · </span>
+                                                <span className="uppercase tracking-wide text-muted-foreground">resource · </span>
                                                 {step.resources.map((r, i) => (
                                                     <span key={i}>
                                                         {i > 0 && <span className="mx-1.5 text-border">·</span>}
@@ -369,7 +369,7 @@ function RoadmapContent() {
 
                                         {step.target && (
                                             <p className="mt-2 border-l-2 border-primary/50 pl-3 text-[13px] text-muted-foreground">
-                                                <span className="font-mono uppercase tracking-[0.06em]">target</span> — {step.target}
+                                                <span className="uppercase tracking-wide">target</span> — {step.target}
                                             </p>
                                         )}
 
@@ -400,7 +400,7 @@ function RoadmapContent() {
                                                         {loadingQuiz ? (
                                                             <div className="flex items-center gap-2 py-2">
                                                                 <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                                                                <p className="font-mono text-[12px] text-muted-foreground">Gemini menyusun 5 pertanyaan…</p>
+                                                                <p className="text-[12px] text-muted-foreground">Gemini menyusun 5 pertanyaan…</p>
                                                             </div>
                                                         ) : quizQuestions && quizResult?.finished ? (
                                                             <motion.div
@@ -410,7 +410,7 @@ function RoadmapContent() {
                                                                 className="space-y-3"
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className={`font-mono text-meta font-semibold ${quizResult.passed ? "text-success" : "text-destructive"}`}>
+                                                                    <span className={`text-meta font-semibold ${quizResult.passed ? "text-success" : "text-destructive"}`}>
                                                                         {quizResult.passed ? "✓ VERIFIKASI BERHASIL" : "✗ BELUM LULUS"}
                                                                     </span>
                                                                     <span className="font-mono text-meta text-muted-foreground">skor {quizResult.score}/{quizResult.total}</span>
@@ -451,7 +451,7 @@ function RoadmapContent() {
                                                                     transition={{ duration: 0.25, ease: EASE_OUT }}
                                                                     className="space-y-3"
                                                                 >
-                                                                    <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                                                    <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
                                                                         <span className="font-semibold text-primary">AI verification quiz</span>
                                                                         <span>soal {currentQuestionIdx + 1}/{quizQuestions.length}</span>
                                                                     </div>
@@ -472,7 +472,7 @@ function RoadmapContent() {
                                                                             </button>
                                                                         ))}
                                                                     </div>
-                                                                    <button onClick={() => setActiveQuizIdx(null)} className="pt-1 font-mono text-[11px] text-muted-foreground hover:text-foreground">
+                                                                    <button onClick={() => setActiveQuizIdx(null)} className="pt-1 text-[11px] text-muted-foreground hover:text-foreground">
                                                                         batal & keluar kuis
                                                                     </button>
                                                                 </motion.div>
@@ -509,7 +509,7 @@ function RoadmapContent() {
 
 export default function RoadmapPage() {
     return (
-        <Suspense fallback={<p className="font-mono text-sm text-muted-foreground">Loading roadmap…</p>}>
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Loading roadmap…</p>}>
             <RoadmapContent />
         </Suspense>
     );

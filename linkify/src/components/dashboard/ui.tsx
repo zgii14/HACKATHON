@@ -112,16 +112,16 @@ export function SecTitle({ title, meta }: { title: string; meta?: React.ReactNod
     return (
         <div className="flex items-baseline justify-between border-b border-border pb-2.5">
             <h2 className="text-body font-bold tracking-tight">{title}</h2>
-            {meta && <span className="font-mono text-meta text-muted-foreground">{meta}</span>}
+            {meta && <span className="text-meta text-muted-foreground">{meta}</span>}
         </div>
     );
 }
 
-/* ── Breadcrumb mono: segmen terakhir tegas ── */
+/* ── Breadcrumb: segmen terakhir tegas ── */
 export function Crumb({ path }: { path: string }) {
     const segs = path.split("/").map((s) => s.trim());
     return (
-        <p className="font-mono text-meta text-muted-foreground">
+        <p className="text-meta text-muted-foreground">
             {segs.map((s, i) => (
                 <span key={i}>
                     {i > 0 && " / "}
@@ -274,7 +274,7 @@ export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: numbe
                             transition={{ duration: reduced ? 0 : 0.28, ease: EASE_OUT, delay: reduced ? 0 : 0.05 }}
                         >
                             {(job.salary || job.work_type || job.min_experience) && (
-                                <p className="mb-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-meta text-muted-foreground">
+                                <p className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-meta text-muted-foreground">
                                     {job.salary && <span className="text-success">{job.salary}</span>}
                                     {job.work_type && <span>{job.work_type}</span>}
                                     {job.min_experience && <span>pengalaman {job.min_experience}</span>}
@@ -289,7 +289,7 @@ export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: numbe
 
                             {job.required_skills.length > 0 && (
                                 <p className="mt-3 text-xs leading-relaxed">
-                                    <span className="font-mono uppercase tracking-[0.06em] text-muted-foreground">skill · </span>
+                                    <span className="uppercase tracking-wide text-muted-foreground">skill · </span>
                                     {job.required_skills.map((skill, i) => (
                                         <span key={skill}>
                                             {i > 0 && <span className="mx-1.5 text-border">·</span>}
@@ -314,7 +314,7 @@ export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: numbe
                                     Buat roadmap
                                 </Link>
                                 {pct != null && (
-                                    <span className="font-mono text-meta text-muted-foreground">match {pct}% dengan profilmu</span>
+                                    <span className="text-meta text-muted-foreground">match {pct}% dengan profilmu</span>
                                 )}
                             </div>
                         </motion.div>
@@ -364,7 +364,7 @@ export function JobCard({
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         {rank != null && (
-                            <span className="font-mono text-[11px] uppercase tracking-[0.07em] text-muted-foreground">
+                            <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
                                 #{rank}
                                 {featured ? " · pilihan teratas" : ""}
                             </span>
@@ -380,7 +380,7 @@ export function JobCard({
                     </div>
                     {badge != null && (
                         <span
-                            className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-micro font-semibold uppercase tracking-[0.05em] ${
+                            className={`shrink-0 rounded-full border px-2 py-0.5 text-micro font-semibold uppercase tracking-wide ${
                                 badge === "Top match"
                                     ? "border-primary/50 bg-primary/10 text-primary"
                                     : "border-border bg-muted/40 text-muted-foreground"
@@ -396,7 +396,7 @@ export function JobCard({
                 {pct != null && (
                     <div className="mt-3">
                         <div className="flex items-baseline justify-between">
-                            <span className="font-mono text-micro uppercase tracking-[0.06em] text-muted-foreground">Match</span>
+                            <span className="text-micro uppercase tracking-wide text-muted-foreground">Match</span>
                             <span className="font-mono text-[16px] font-semibold tabular-nums tracking-tight">{pct}%</span>
                         </div>
                         <BarFill pct={pct} tone={pct >= 60 ? "primary" : "warning"} className="mt-1 w-full" />
@@ -417,12 +417,12 @@ export function JobCard({
                 )}
 
                 {job.created_at && (
-                    <div className="mt-3 flex items-center gap-1 font-mono text-micro text-muted-foreground">
+                    <div className="mt-3 flex items-center gap-1 text-micro text-muted-foreground">
                         <span className="size-1 rounded-full bg-emerald-500" /> Dipost {formatDistanceToNow(new Date(job.created_at), { addSuffix: true, locale: localeId })}
                     </div>
                 )}
                 <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
-                    <span className="truncate font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                    <span className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
                         {job.work_type || (job.is_remote ? "Remote" : "On-site")}
                         {job.min_experience ? ` · ${job.min_experience}` : ""}
                     </span>

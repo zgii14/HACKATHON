@@ -71,7 +71,7 @@ export function ChatInput({
                     <SendHorizonal className="size-4" />
                 </button>
             </form>
-            <p className="px-3 pb-2 font-mono text-micro text-muted-foreground">{value.length}/2000 · Enter kirim, Shift+Enter baris baru</p>
+            <p className="px-3 pb-2 text-micro text-muted-foreground">{value.length}/2000 · Enter kirim, Shift+Enter baris baru</p>
         </div>
     );
 }

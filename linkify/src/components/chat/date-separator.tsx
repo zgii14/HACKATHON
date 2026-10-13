@@ -10,7 +10,7 @@ export function DateSeparator({ date }: { date: string }) {
     else if (isYesterday(d)) label = "Kemarin";
     return (
         <div className="flex justify-center py-3">
-            <span className="rounded-full border border-border bg-muted px-3 py-1 font-mono text-micro uppercase tracking-widest text-muted-foreground shadow-sm">
+            <span className="rounded-full border border-border bg-muted px-3 py-1 text-micro uppercase tracking-wider text-muted-foreground shadow-sm">
                 {label}
             </span>
         </div>

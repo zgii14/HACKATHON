@@ -82,7 +82,7 @@ export function WorkSection({ workExperience, setWorkExperience }: Props) {
 
                                 <div className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                                             Nama Perusahaan / Organisasi
                                         </label>
                                         <input
@@ -93,7 +93,7 @@ export function WorkSection({ workExperience, setWorkExperience }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                                             Lokasi
                                         </label>
                                         <input
@@ -104,7 +104,7 @@ export function WorkSection({ workExperience, setWorkExperience }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                                             Jabatan / Posisi
                                         </label>
                                         <input
@@ -115,7 +115,7 @@ export function WorkSection({ workExperience, setWorkExperience }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                                             Periode (Tanggal)
                                         </label>
                                         <input
@@ -129,7 +129,7 @@ export function WorkSection({ workExperience, setWorkExperience }: Props) {
 
                                 <div className="space-y-2 pt-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="text-meta uppercase tracking-wide text-muted-foreground">
                                             Deskripsi Tugas / Pencapaian
                                         </label>
                                         <button

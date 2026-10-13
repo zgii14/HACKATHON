@@ -139,7 +139,7 @@ export default function SkillGapPage() {
                 sub="Seberapa siap kamu melamar lowongan relevan, plus skill yang paling dicari tapi belum kamu kuasai."
                 right={
                     <div className="flex flex-col items-start gap-2 md:items-end">
-                        <div className="font-mono text-[12px] text-muted-foreground">
+                        <div className="text-[12px] text-muted-foreground">
                             <span className="text-foreground">{data.user_skill_count}</span> skill ·{" "}
                             <span className="text-foreground">{data.verified_skill_count ?? 0}</span> verified ·{" "}
                             <span className="text-warning">{missingTotal}</span> gap
@@ -179,7 +179,7 @@ export default function SkillGapPage() {
                     </div>
                     <Link
                         href="/dashboard/onboarding"
-                        className="font-mono text-meta text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="text-meta text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                         ubah minat →
                     </Link>
@@ -208,7 +208,7 @@ export default function SkillGapPage() {
                             <CountUp value={readiness.ready_jobs} className="font-mono text-[52px] font-semibold leading-none tracking-tight" />
                             <span className="font-mono text-lg text-muted-foreground">/ {readiness.relevant_jobs}</span>
                         </div>
-                        <p className="mt-1 font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <p className="mt-1 text-meta uppercase tracking-wide text-muted-foreground">
                             lowongan siap dilamar · {readyLabel}
                         </p>
                         <BarFill
@@ -218,12 +218,12 @@ export default function SkillGapPage() {
                         />
                     </div>
                     <p className="max-w-prose text-sm leading-relaxed text-muted-foreground">
-                        Dari <span className="font-mono text-foreground">{readiness.relevant_jobs}</span> lowongan aktif yang relevan,
+                        Dari <span className="text-foreground">{readiness.relevant_jobs}</span> lowongan aktif yang relevan,
                         kamu sudah memenuhi minimal{" "}
                         <span className="font-semibold text-foreground">{readiness.threshold_pct}%</span> requirement di{" "}
-                        <span className="font-mono text-foreground">{readiness.ready_jobs}</span> lowongan. Median kecocokan{" "}
+                        <span className="text-foreground">{readiness.ready_jobs}</span> lowongan. Median kecocokan{" "}
                         <span className="font-semibold text-foreground">{readiness.median_coverage_pct}%</span>.{" "}
-                        <span className="font-mono text-warning">{missingTotal}</span> skill pasar belum kamu miliki.
+                        <span className="text-warning">{missingTotal}</span> skill pasar belum kamu miliki.
                         {data.mode_info.effective === "interests" && data.interests.length > 0 && (
                             <span className="mt-2 block text-xs">
                                 Bidang: <span className="font-medium text-foreground">{data.interests.map(interestLabel).join(" · ")}</span>
@@ -260,7 +260,7 @@ export default function SkillGapPage() {
                     <div className="mt-3 flex flex-wrap gap-1.5">
                         {unprovenDemand.map((s) => (
                             <span key={s.canonical_skill} className="rounded-md border border-warning/40 px-2 py-1 text-[12px] text-warning">
-                                {s.skill} <span className="font-mono text-[11px] opacity-70">{s.job_count} job</span>
+                                {s.skill} <span className="text-[11px] opacity-70">{s.job_count} job</span>
                             </span>
                         ))}
                     </div>
@@ -309,7 +309,7 @@ export default function SkillGapPage() {
                                     .map(([cat, skills]) => (
                                         <div key={cat}>
                                             <div className="mb-1.5 flex items-baseline justify-between">
-                                                <span className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{cat}</span>
+                                                <span className="text-meta uppercase tracking-wide text-muted-foreground">{cat}</span>
                                                 <span className="font-mono text-meta text-muted-foreground">{skills.length}</span>
                                             </div>
                                             <p className="text-body leading-relaxed">
@@ -338,7 +338,7 @@ export default function SkillGapPage() {
                         <span className="block text-[14px] font-semibold">Lihat job rekomendasi</span>
                         <span className="mt-0.5 block text-xs text-muted-foreground">Lowongan yang cocok dengan skillmu saat ini</span>
                     </span>
-                    <span className="font-mono text-body font-semibold text-primary transition-transform group-hover:translate-x-1">→</span>
+                    <span className="text-body font-semibold text-primary transition-transform group-hover:translate-x-1">→</span>
                 </Link>
             </Reveal>
         </div>

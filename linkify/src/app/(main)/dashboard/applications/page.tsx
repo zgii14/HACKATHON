@@ -64,7 +64,7 @@ const ALL_STATUSES: ApplicationStatus[] = ["applied", "interview", "interview_co
 function StatusTag({ status }: { status: ApplicationStatus }) {
     const cfg = STATUS_CONFIG[status];
     return (
-        <span className={`rounded-[3px] border px-1.5 py-px font-mono text-micro font-semibold tracking-[0.05em] ${cfg.cls}`}>
+        <span className={`rounded-[3px] border px-1.5 py-px text-micro font-semibold tracking-wide ${cfg.cls}`}>
             {cfg.label}
         </span>
     );
@@ -164,7 +164,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                 <div className="flex shrink-0 items-center justify-between border-b border-border p-5">
                     <div>
                         <h3 className="text-[15px] font-bold">Generate surat lamaran</h3>
-                        <p className="mt-0.5 font-mono text-meta text-muted-foreground">
+                        <p className="mt-0.5 text-meta text-muted-foreground">
                             {app.job_title} · {app.job_company}
                         </p>
                     </div>
@@ -177,7 +177,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
 
                 <div className="flex-1 space-y-4 overflow-y-auto p-5">
                     <div>
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             Nama lengkap
                         </label>
                         <div className="flex gap-2">
@@ -196,7 +196,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                             </button>
                         </div>
                         {hasBio ? (
-                            <p className="mt-1.5 font-mono text-meta text-success">Data diri tersimpan dipakai otomatis (TTL, alamat, telepon)</p>
+                            <p className="mt-1.5 text-meta text-success">Data diri tersimpan dipakai otomatis (TTL, alamat, telepon)</p>
                         ) : (
                             <p className="mt-1.5 text-meta text-muted-foreground">
                                 Lengkapi{" "}
@@ -211,7 +211,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                     {letter ? (
                         <div>
                             <div className="mb-1.5 flex items-center justify-between">
-                                <label className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Surat lamaran (bisa diedit)</label>
+                                <label className="text-meta uppercase tracking-wide text-muted-foreground">Surat lamaran (bisa diedit)</label>
                                 <div className="flex gap-3">
                                     <button onClick={copyToClipboard} className="text-[12px] font-semibold text-primary hover:underline">Copy</button>
                                     <button onClick={downloadDocx} className="text-[12px] font-semibold text-primary hover:underline">Download .docx</button>
@@ -221,7 +221,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                                 value={letter}
                                 onChange={(e) => setLetter(e.target.value)}
                                 rows={18}
-                                className="w-full resize-y rounded-md border border-border bg-muted/30 px-4 py-3 font-mono text-body focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
+                                className="w-full resize-y rounded-md border border-border bg-muted/30 px-4 py-3 text-body focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                             />
                         </div>
                     ) : (
@@ -230,7 +230,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                                 <p className="text-body text-muted-foreground">
                                     Klik <span className="font-semibold text-foreground">Generate</span> untuk membuat surat lamaran terpersonalisasi.
                                 </p>
-                                <p className="mt-1 font-mono text-meta text-muted-foreground">proses 5–10 detik</p>
+                                <p className="mt-1 text-meta text-muted-foreground">proses 5–10 detik</p>
                             </div>
                         )
                     )}
@@ -323,7 +323,7 @@ function ApplicationRow({
                     <span className="flex items-center gap-2">
                         <span className="truncate text-[14px] font-semibold leading-tight">{app.job_title}</span>
                         {app.roadmap_completed && (
-                            <span className="shrink-0 rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-micro font-semibold text-success">ROADMAP ✓</span>
+                            <span className="shrink-0 rounded-[3px] border border-success/40 px-1.5 py-px text-micro font-semibold text-success">ROADMAP ✓</span>
                         )}
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-muted-foreground">
@@ -367,14 +367,14 @@ function ApplicationRow({
                             {isJsonNote && interviewDetails && (
                                 <div className="border-l-2 border-primary bg-primary/[0.04] px-4 py-3">
                                     <div className="mb-2 flex items-center justify-between">
-                                        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-primary">Undangan wawancara</span>
-                                        <span className="font-mono text-[11px] text-muted-foreground">
+                                        <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">Undangan wawancara</span>
+                                        <span className="text-[11px] text-muted-foreground">
                                             {interviewDetails.type === "online" ? "online meeting" : "offline / tatap muka"}
                                         </span>
                                     </div>
                                     <div className="grid gap-3 text-body sm:grid-cols-2">
                                         <div>
-                                            <span className="font-mono text-micro uppercase tracking-[0.06em] text-muted-foreground">Jadwal</span>
+                                            <span className="text-micro uppercase tracking-wide text-muted-foreground">Jadwal</span>
                                             <p className="font-semibold">
                                                 {new Date(interviewDetails.datetime).toLocaleString("id-ID", {
                                                     weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
@@ -383,7 +383,7 @@ function ApplicationRow({
                                             </p>
                                         </div>
                                         <div>
-                                            <span className="font-mono text-micro uppercase tracking-[0.06em] text-muted-foreground">
+                                            <span className="text-micro uppercase tracking-wide text-muted-foreground">
                                                 {interviewDetails.type === "online" ? "Link meeting" : "Lokasi"}
                                             </span>
                                             {interviewDetails.type === "online" ? (
@@ -410,7 +410,7 @@ function ApplicationRow({
                                                 ✓ Konfirmasi hadir
                                             </button>
                                         ) : (
-                                            <span className="font-mono text-meta font-semibold text-success">✓ kehadiran dikonfirmasi</span>
+                                            <span className="text-meta font-semibold text-success">✓ kehadiran dikonfirmasi</span>
                                         )}
                                         {interviewDetails.hr_phone && (
                                             <a
@@ -555,7 +555,7 @@ export default function ApplicationsPage() {
                                 { k: "Ditolak", v: stats.rejected },
                             ].map((s, i) => (
                                 <div key={s.k} className={`px-5 py-4 ${i > 0 ? "border-l border-border" : ""}`}>
-                                    <p className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{s.k}</p>
+                                    <p className="text-meta uppercase tracking-wide text-muted-foreground">{s.k}</p>
                                     <p className="mt-1 font-mono text-[26px] font-semibold tabular-nums tracking-tight">
                                         <CountUp value={s.v} />
                                     </p>

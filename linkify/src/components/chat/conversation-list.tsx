@@ -159,7 +159,7 @@ export function ConversationList({
                                     <p className={cn("truncate text-xs", c.unread_count > 0 ? "font-semibold text-foreground" : "text-muted-foreground")}>
                                         {c.last_message || "—"}
                                     </p>
-                                    {expiresLabel && <p className="font-mono text-micro text-amber-600">{expiresLabel} lagi</p>}
+                                    {expiresLabel && <p className="text-micro text-amber-600">{expiresLabel} lagi</p>}
                                 </div>
                             </button>
                             <button onClick={(e) => handleDelete(e, c.id)} className="hidden shrink-0 rounded p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 group-hover:flex" title="Hapus chat">

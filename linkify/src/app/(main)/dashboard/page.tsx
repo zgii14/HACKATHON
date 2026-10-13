@@ -214,7 +214,7 @@ export default function DashboardHomePage() {
     if (!hasProfile) {
         return (
             <Reveal className="mx-auto max-w-xl py-16">
-                <p className="font-mono text-meta uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="text-meta uppercase tracking-wide text-muted-foreground">
                     dasbor / onboarding
                 </p>
                 <h1 className="mt-3 text-2xl font-bold tracking-tight">
@@ -250,7 +250,7 @@ export default function DashboardHomePage() {
             <Reveal>
                 <div className="flex flex-col gap-6 pb-6 pt-1 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <p className="font-mono text-meta text-muted-foreground">
+                        <p className="text-meta text-muted-foreground">
                             dasbor / <span className="font-medium text-foreground">ringkasan</span> · {today}
                         </p>
                         <h1 className="mt-2 text-[22px] font-bold tracking-tight">
@@ -259,7 +259,7 @@ export default function DashboardHomePage() {
                     </div>
                     <div className="md:text-right">
                         <div className="flex items-baseline gap-2.5 md:justify-end">
-                            <span className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                            <span className="text-meta uppercase tracking-wide text-muted-foreground">
                                 Kesiapan profil
                             </span>
                             <CountUp value={readinessScore} className="font-mono text-[28px] font-semibold tabular-nums tracking-tight" />
@@ -296,13 +296,13 @@ export default function DashboardHomePage() {
                                 i > 0 ? "border-l border-border max-md:[&:nth-child(3)]:border-l-0" : ""
                             } max-md:[&:nth-child(n+3)]:border-t max-md:[&:nth-child(n+3)]:border-border`}
                         >
-                            <p className="font-mono text-meta font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                            <p className="text-meta font-medium uppercase tracking-wide text-muted-foreground">
                                 {s.k}
                             </p>
                             <p className="mt-1 font-mono text-[30px] font-semibold tabular-nums tracking-tight">
                                 <CountUp value={s.v} />
                             </p>
-                            <p className="font-mono text-meta text-muted-foreground transition-colors group-hover:text-foreground">
+                            <p className="text-meta text-muted-foreground transition-colors group-hover:text-foreground">
                                 {s.d}
                             </p>
                             <span
@@ -341,7 +341,7 @@ export default function DashboardHomePage() {
                                     <span className={item.complete ? "text-muted-foreground line-through decoration-muted-foreground/50" : ""}>
                                         {item.label}
                                     </span>
-                                    <span className="ml-auto font-mono text-meta text-muted-foreground">{item.helper}</span>
+                                    <span className="ml-auto text-meta text-muted-foreground">{item.helper}</span>
                                 </li>
                             ))}
                         </ul>
@@ -375,8 +375,8 @@ export default function DashboardHomePage() {
                         ) : (
                             <>
                                 <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-4 pb-2 pt-3">
-                                    <span className="font-mono text-meta font-medium uppercase tracking-[0.07em] text-muted-foreground">Posisi</span>
-                                    <span className="text-right font-mono text-meta font-medium uppercase tracking-[0.07em] text-muted-foreground">Match</span>
+                                    <span className="text-meta font-medium uppercase tracking-wide text-muted-foreground">Posisi</span>
+                                    <span className="text-right text-meta font-medium uppercase tracking-wide text-muted-foreground">Match</span>
                                     <span className="w-4" aria-hidden="true" />
                                 </div>
                                 <ul>
@@ -385,7 +385,7 @@ export default function DashboardHomePage() {
                                     ))}
                                 </ul>
                                 <div className="flex items-center justify-between border-t border-border/60 pt-3">
-                                    <span className="font-mono text-meta text-muted-foreground">
+                                    <span className="text-meta text-muted-foreground">
                                         Klik baris untuk lihat deskripsi · {recommended?.length ?? 0} cocok total
                                     </span>
                                     <Link
@@ -443,7 +443,7 @@ export default function DashboardHomePage() {
                                                     <p className="truncate text-[14px] font-semibold leading-tight">
                                                         {bookmark.title}
                                                         {isDone && (
-                                                            <span className="ml-2 rounded-[3px] border border-success/40 px-1.5 py-px align-[2px] font-mono text-micro font-semibold tracking-[0.05em] text-success">
+                                                            <span className="ml-2 rounded-[3px] border border-success/40 px-1.5 py-px align-[2px] text-micro font-semibold tracking-wide text-success">
                                                                 SELESAI
                                                             </span>
                                                         )}
@@ -490,7 +490,7 @@ export default function DashboardHomePage() {
                                         <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight">
                                             <CountUp value={s.v} />
                                         </p>
-                                        <p className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{s.k}</p>
+                                        <p className="text-meta uppercase tracking-wide text-muted-foreground">{s.k}</p>
                                     </div>
                                 ))}
                             </div>
@@ -514,7 +514,7 @@ export default function DashboardHomePage() {
                                                 <span className="font-semibold text-foreground">{skill}</span>
                                             </span>
                                         ))}
-                                        {gapCount > 8 && <span className="ml-1.5 font-mono text-meta">+{gapCount - 8} lagi</span>}
+                                        {gapCount > 8 && <span className="ml-1.5 text-meta">+{gapCount - 8} lagi</span>}
                                     </p>
                                     {weakCount > 0 && (
                                         <p className="mt-3 border-t border-border/60 pt-3 text-[14px] text-muted-foreground">

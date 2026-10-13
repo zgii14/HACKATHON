@@ -117,7 +117,7 @@ export default function JobsPage() {
                 crumb="dasbor / lowongan"
                 title="Browse lowongan"
                 sub="Semua posisi tersedia dengan match score terhadap profilmu. Klik kartu untuk detail."
-                right={<div className="font-mono text-[12px] text-muted-foreground"><span className="text-foreground">{jobs.length}</span> posisi</div>}
+                right={<div className="text-[12px] text-muted-foreground"><span className="text-foreground">{jobs.length}</span> posisi</div>}
             />
 
             {/* Toolbar: search pill (1 baris) + filter chips (1 baris) — Joblet-style */}
@@ -181,7 +181,7 @@ export default function JobsPage() {
                         <h2 className="text-[15px] font-bold tracking-tight">
                             <strong className="text-primary">{filtered.length}</strong> lowongan tersedia
                         </h2>
-                        <span className="font-mono text-meta text-muted-foreground">{filtered.length} hasil</span>
+                        <span className="text-meta text-muted-foreground">{filtered.length} hasil</span>
                     </div>
                     <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {visible.map((job, i) => (

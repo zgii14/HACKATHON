@@ -66,7 +66,7 @@ export default function MyRoadmapsPage() {
                 title="Roadmap tersimpan"
                 sub="Job yang sedang kamu kejar. Tiap job punya roadmap dan progress belajar tersendiri."
                 right={
-                    <div className="font-mono text-[12px] text-muted-foreground">
+                    <div className="text-[12px] text-muted-foreground">
                         <span className="text-foreground">{bookmarks.length}</span> dibookmark ·{" "}
                         <span className="text-success">{doneCount}</span> selesai
                     </div>
@@ -97,7 +97,7 @@ export default function MyRoadmapsPage() {
                                             <p className="truncate text-[14px] font-semibold leading-tight">
                                                 {b.title}
                                                 {isDone && (
-                                                    <span className="ml-2 rounded-[3px] border border-success/40 px-1.5 py-px align-[2px] font-mono text-micro font-semibold tracking-[0.05em] text-success">
+                                                    <span className="ml-2 rounded-[3px] border border-success/40 px-1.5 py-px align-[2px] text-micro font-semibold tracking-wide text-success">
                                                         SELESAI
                                                     </span>
                                                 )}

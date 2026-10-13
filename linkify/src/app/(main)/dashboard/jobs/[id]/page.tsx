@@ -86,9 +86,9 @@ function ApplyDialog({
             <div className="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-2xl">
                 <div className="flex items-start justify-between border-b border-border pb-4">
                     <div>
-                        <p className="font-mono text-meta uppercase tracking-[0.07em] text-warning">konfirmasi</p>
+                        <p className="text-meta uppercase tracking-wide text-warning">konfirmasi</p>
                         <h3 className="mt-1 text-[15px] font-bold tracking-tight">Yakin ingin apply?</h3>
-                        <p className="mt-0.5 font-mono text-[12px] text-muted-foreground">{job.title} · {job.company}</p>
+                        <p className="mt-0.5 text-[12px] text-muted-foreground">{job.title} · {job.company}</p>
                     </div>
                     <button onClick={onClose} className="text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                         <X className="size-4" />
@@ -126,7 +126,7 @@ function ApplyDialog({
                 {/* Note input — sembunyikan saat gate data diri (belum bisa lanjut) */}
                 {kind !== "incomplete-bio" && (
                     <div className="mt-4">
-                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block text-meta uppercase tracking-wide text-muted-foreground">
                             Catatan (opsional)
                         </label>
                         <textarea
@@ -379,17 +379,17 @@ export default function JobDetailPage() {
                                     <div className="mt-2 flex flex-wrap items-center gap-2.5">
                                         <h1 className="text-[22px] font-bold tracking-tight">{job.title}</h1>
                                         {hasRoadmap && (
-                                            <span className="rounded-[3px] border border-primary/40 px-1.5 py-px font-mono text-micro font-semibold text-primary">
+                                            <span className="rounded-[3px] border border-primary/40 px-1.5 py-px text-micro font-semibold text-primary">
                                                 ROADMAP AKTIF
                                             </span>
                                         )}
                                         {alreadyApplied && (
-                                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-micro font-semibold text-success">
+                                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px text-micro font-semibold text-success">
                                                 ✓ DILAMAR
                                             </span>
                                         )}
                                     </div>
-                                    <p className="mt-1.5 font-mono text-[13px] text-muted-foreground">
+                                    <p className="mt-1.5 text-[13px] text-muted-foreground">
                                         {job.company}
                                         {job.location ? ` · ${job.location}` : ""}
                                         {job.is_remote ? " · remote" : ""}
@@ -400,7 +400,7 @@ export default function JobDetailPage() {
                                 <div className="flex shrink-0 flex-col items-start gap-2 md:items-end">
                                     {alreadyApplied ? (
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="font-mono text-[12px] text-success">
+                                            <span className="text-[12px] text-success">
                                                 Status · {STATUS_LABELS[application?.status ?? ""] ?? application?.status}
                                             </span>
                                             <Button variant="outline" size="sm" asChild>
@@ -444,12 +444,12 @@ export default function JobDetailPage() {
                             <Reveal delay={0.05} className="pt-6">
                                 <div className="flex items-end justify-between">
                                     <div>
-                                        <p className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Match score</p>
+                                        <p className="text-meta uppercase tracking-wide text-muted-foreground">Match score</p>
                                         <p className="mt-1 font-mono text-[36px] font-semibold leading-none tabular-nums tracking-tight">
                                             <CountUp value={matchPct} /><span className="text-lg text-muted-foreground">%</span>
                                         </p>
                                     </div>
-                                    <span className={`font-mono text-[12px] ${matchPct >= 60 ? "text-success" : "text-warning"}`}>{scoreLabel}</span>
+                                    <span className={`text-[12px] ${matchPct >= 60 ? "text-success" : "text-warning"}`}>{scoreLabel}</span>
                                 </div>
                                 <BarFill pct={matchPct} tone={scoreTone} className="mt-3 w-full" />
                             </Reveal>
@@ -461,15 +461,15 @@ export default function JobDetailPage() {
                                 <div className="grid grid-cols-3 divide-x divide-border border-y border-border">
                                     <div className="px-4 py-4 text-center">
                                         <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight">{totalRequired}</p>
-                                        <p className="mt-0.5 font-mono text-meta uppercase tracking-[0.05em] text-muted-foreground">Skill dibutuhkan</p>
+                                        <p className="mt-0.5 text-meta uppercase tracking-wide text-muted-foreground">Skill dibutuhkan</p>
                                     </div>
                                     <div className="px-4 py-4 text-center">
                                         <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight text-success">{ownedCount}</p>
-                                        <p className="mt-0.5 font-mono text-meta uppercase tracking-[0.05em] text-muted-foreground">Sudah dimiliki</p>
+                                        <p className="mt-0.5 text-meta uppercase tracking-wide text-muted-foreground">Sudah dimiliki</p>
                                     </div>
                                     <div className="px-4 py-4 text-center">
                                         <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight text-warning">{job.missing_skills.length}</p>
-                                        <p className="mt-0.5 font-mono text-meta uppercase tracking-[0.05em] text-muted-foreground">Perlu dipelajari</p>
+                                        <p className="mt-0.5 text-meta uppercase tracking-wide text-muted-foreground">Perlu dipelajari</p>
                                     </div>
                                 </div>
                             </Reveal>
@@ -534,25 +534,25 @@ export default function JobDetailPage() {
                                 <dl className="grid grid-cols-2 gap-x-6 gap-y-4 pt-4 sm:grid-cols-4">
                                     {job.salary && (
                                         <div>
-                                            <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Gaji</dt>
+                                            <dt className="text-meta uppercase tracking-wide text-muted-foreground">Gaji</dt>
                                             <dd className="mt-1 text-[14px] font-semibold text-success">{job.salary}</dd>
                                         </div>
                                     )}
                                     {job.min_experience && (
                                         <div>
-                                            <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Pengalaman</dt>
+                                            <dt className="text-meta uppercase tracking-wide text-muted-foreground">Pengalaman</dt>
                                             <dd className="mt-1 text-[14px] font-semibold">{job.min_experience}</dd>
                                         </div>
                                     )}
                                     {job.min_education && (
                                         <div>
-                                            <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Pendidikan</dt>
+                                            <dt className="text-meta uppercase tracking-wide text-muted-foreground">Pendidikan</dt>
                                             <dd className="mt-1 text-[14px] font-semibold">{job.min_education}</dd>
                                         </div>
                                     )}
                                     {job.work_type && (
                                         <div>
-                                            <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Tipe kerja</dt>
+                                            <dt className="text-meta uppercase tracking-wide text-muted-foreground">Tipe kerja</dt>
                                             <dd className="mt-1 text-[14px] font-semibold">{job.work_type}</dd>
                                         </div>
                                     )}
@@ -582,7 +582,7 @@ export default function JobDetailPage() {
                                     );
                                 })}
                             </div>
-                            <p className="pt-3 font-mono text-meta text-muted-foreground">
+                            <p className="pt-3 text-meta text-muted-foreground">
                                 <span className="text-success">● dimiliki</span>
                                 <span className="mx-2 text-border">·</span>
                                 <span>● belum dimiliki</span>
