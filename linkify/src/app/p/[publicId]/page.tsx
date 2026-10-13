@@ -17,5 +17,15 @@ export default async function PublicPortfolioPage({ params }: { params: { public
     });
     if (!response.ok) notFound();
     const portfolio = await response.json() as PublicPortfolio;
-    return <PublicPortfolioView portfolio={portfolio} apiBase={apiBase} />;
+    return (
+        <>
+            <PublicPortfolioView portfolio={portfolio} apiBase={apiBase} />
+            {portfolio.github_verified && (
+                // Di luar tema supaya konsisten di semua tampilan portfolio.
+                <p className="fixed bottom-4 right-4 z-40 rounded-full border border-zinc-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-zinc-800 shadow-sm">
+                    <span className="text-emerald-600">✓</span> GitHub terverifikasi oleh GitHire
+                </p>
+            )}
+        </>
+    );
 }

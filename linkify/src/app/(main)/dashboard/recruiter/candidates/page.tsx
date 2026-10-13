@@ -1,5 +1,6 @@
 "use client";
 
+import { GithubVerifiedLabel } from "@/components/dashboard/github-verified-label";
 import { VerifiedSkill, VerifiedSkillChips } from "@/components/dashboard/verified-skills";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ type Candidate = {
     phone: string | null;
     address: string | null;
     github: string | null;
+    github_verified?: boolean;
     cv_skills: string[];
     merged_skills: string[];
     verified_skills?: VerifiedSkill[];
@@ -506,6 +508,7 @@ export default function CandidateSearchPage() {
                                                                     <Github className="size-3 shrink-0 text-foreground" />
                                                                     <span className="truncate">@{candidate.github}</span>
                                                                 </a>
+                                                                <GithubVerifiedLabel verified={candidate.github_verified} />
                                                             </>
                                                         )}
                                                     </div>

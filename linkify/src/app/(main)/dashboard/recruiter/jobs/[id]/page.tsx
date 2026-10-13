@@ -1,5 +1,6 @@
 "use client";
 
+import { GithubVerifiedLabel } from "@/components/dashboard/github-verified-label";
 import { VerifiedSkill, VerifiedSkillList } from "@/components/dashboard/verified-skills";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ type JobApplicant = {
         phone: string | null;
         address: string | null;
         github: string | null;
+        github_verified?: boolean;
         cv_skills: string[];
         merged_skills: string[];
         verified_skills?: VerifiedSkill[];
@@ -275,6 +277,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     <Github className="w-3.5 h-3.5" />
                                     {app.applicant.github || "-"}
                                 </span>
+                                {app.applicant.github && <GithubVerifiedLabel verified={app.applicant.github_verified} />}
                                 <span>•</span>
                                 <span className="flex items-center gap-1">
                                     <Clock className="w-3.5 h-3.5" />
@@ -441,7 +444,10 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-0.5">
                                                 <span className="text-micro text-muted-foreground font-semibold uppercase">Username</span>
-                                                <p className="text-xs font-bold text-foreground">@{selectedApp.applicant.github}</p>
+                                                <p className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-foreground">
+                                                    @{selectedApp.applicant.github}
+                                                    <GithubVerifiedLabel verified={selectedApp.applicant.github_verified} />
+                                                </p>
                                             </div>
                                             <div className="space-y-0.5">
                                                 <span className="text-micro text-muted-foreground font-semibold uppercase">Declared Skills (GitHub + CV)</span>

@@ -64,6 +64,8 @@ export type PublicPortfolioContent = Omit<PortfolioContent, "contacts"> & {
 
 export type PublicPortfolio = {
     public_id: string;
+    /** Status terkini identitas GitHub pemilik (bukan snapshot saat publish). */
+    github_verified?: boolean;
     content: PublicPortfolioContent;
     verified_skills: Array<{
         skill: string;
