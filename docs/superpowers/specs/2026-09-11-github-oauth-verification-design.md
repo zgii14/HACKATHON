@@ -1,7 +1,7 @@
 # GitHub OAuth Verification for Candidate Accounts
 
 **Date:** 2026-09-11
-**Status:** Approved design; implementation not started
+**Status:** Superseded on 2026-10-13 by `2026-10-13-github-connect-via-clerk-design.md` (GitHub via Clerk, optional connection). Never implemented.
 
 ## Purpose
 
