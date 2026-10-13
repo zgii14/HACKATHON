@@ -68,6 +68,12 @@ export default function RecruiterApplyPage() {
         submit.mutate();
     };
 
+    useEffect(() => {
+        if (isLoaded && !isSignedIn) {
+            router.replace("/auth/sign-up?redirect_url=/recruiter/apply");
+        }
+    }, [isLoaded, isSignedIn, router]);
+
     if (!isLoaded) {
         return (
             <MaxWidthWrapper className="py-16">
@@ -77,12 +83,6 @@ export default function RecruiterApplyPage() {
             </MaxWidthWrapper>
         );
     }
-
-    useEffect(() => {
-        if (isLoaded && !isSignedIn) {
-            router.replace("/auth/sign-up?redirect_url=/recruiter/apply");
-        }
-    }, [isLoaded, isSignedIn, router]);
 
     if (!isSignedIn) {
         return (
