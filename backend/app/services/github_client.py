@@ -71,6 +71,22 @@ async def fetch_repo_readme(username: str, repo_name: str) -> str:
         return ""
 
 
+async def fetch_login_by_id(github_id: int) -> str:
+    """Username terkini dari ID numerik GitHub (ID stabil, username bisa berubah)."""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(
+                f"https://api.github.com/user/{int(github_id)}",
+                headers=_headers(use_auth=True),
+            )
+    except httpx.HTTPError as exc:
+        raise HTTPException(502, "Gagal menghubungi GitHub. Coba lagi sebentar.") from exc
+    login = response.json().get("login") if response.status_code == 200 else None
+    if not isinstance(login, str) or not login:
+        raise HTTPException(502, "Akun GitHub tidak ditemukan. Coba hubungkan ulang.")
+    return login
+
+
 def _parse_last_page(link_header: str | None) -> int | None:
     """
     Ambil nomor halaman terakhir dari header Link GitHub (rel="last").
