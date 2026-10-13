@@ -1,30 +1,5 @@
 import localFont from "next/font/local";
-
-export const aeonik = localFont({
-    src: [
-        {
-            path: "../../../public/fonts/AeonikPro-Light.woff2",
-            weight: "300",
-        },
-        {
-            path: "../../../public/fonts/AeonikPro-Regular.woff2",
-            weight: "400",
-        },
-        {
-            path: "../../../public/fonts/AeonikPro-Medium.woff2",
-            weight: "500",
-        },
-        {
-            path: "../../../public/fonts/AeonikPro-Bold.woff2",
-            weight: "700",
-        },
-        {
-            path: "../../../public/fonts/AeonikPro-Black.woff2",
-            weight: "900",
-        }
-    ],
-    variable: "--font-aeonik",
-});
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 
 export const inter = localFont({
     src: [
@@ -52,3 +27,18 @@ export const inter = localFont({
     variable: "--font-inter",
 });
 
+
+// Font UI utama dan font angka/kode; di-self-host oleh next/font (tanpa @import remote).
+export const jakarta = Plus_Jakarta_Sans({
+    subsets: ["latin"],
+    weight: ["400", "500", "600", "700", "800"],
+    variable: "--font-jakarta",
+    display: "swap",
+});
+
+export const jetbrains = JetBrains_Mono({
+    subsets: ["latin"],
+    weight: ["400", "500", "600"],
+    variable: "--font-jetbrains",
+    display: "swap",
+});

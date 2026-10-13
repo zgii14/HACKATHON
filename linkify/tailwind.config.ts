@@ -78,9 +78,10 @@ const config = {
         read: ["15px", { lineHeight: "24px" }],
       },
       fontFamily: {
-        "heading": ["Satoshi", "Plus Jakarta Sans", "sans-serif"],
-        "default": ["Satoshi", "Plus Jakarta Sans", "sans-serif"],
-        "mono": ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
+        "heading": ["var(--font-jakarta)", "Plus Jakarta Sans", "sans-serif"],
+        "default": ["var(--font-jakarta)", "Plus Jakarta Sans", "sans-serif"],
+        "satoshi": ["Satoshi", "var(--font-jakarta)", "sans-serif"],
+        "mono": ["var(--font-jetbrains)", "JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       keyframes: {
         "accordion-down": {

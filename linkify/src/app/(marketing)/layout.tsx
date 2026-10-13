@@ -7,13 +7,13 @@ interface Props {
 
 const MarketingLayout = ({ children }: Props) => {
     return (
-        <>
+        <div className="font-satoshi">
             <Navbar />
             <main id="home" className="mt-20 mx-auto w-full z-0 relative">
                 {children}
             </main>
             <Footer />
-        </>
+        </div>
     );
 };
 

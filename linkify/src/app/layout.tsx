@@ -1,7 +1,7 @@
 import { Providers } from "@/components";
 import { AppToastContainer } from "@/components/ui/app-toast";
 import "@/styles/globals.css";
-import { aeonik, cn, generateMetadata, inter } from "@/utils";
+import { cn, generateMetadata, inter, jakarta, jetbrains } from "@/utils";
 
 export const metadata = generateMetadata();
 
@@ -15,7 +15,8 @@ export default function RootLayout({
             <body
                 className={cn(
                     "min-h-screen bg-background text-foreground antialiased !font-default overflow-x-hidden",
-                    aeonik.variable,
+                    jakarta.variable,
+                    jetbrains.variable,
                     inter.variable,
                 )}
             >

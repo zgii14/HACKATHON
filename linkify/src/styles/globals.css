@@ -1,6 +1,5 @@
+/* Satoshi hanya untuk halaman marketing (landing); dihapus saat landing didesain ulang. */
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -88,11 +87,14 @@ html {
 }
 
 html, body {
-  font-family: "Satoshi", "Plus Jakarta Sans", "Inter", sans-serif !important;
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
 }
 
+.font-satoshi .font-heading,
+.font-satoshi .font-default,
+.landing-satoshi,
 .landing-satoshi .font-heading {
-  font-family: "Satoshi", "Plus Jakarta Sans", sans-serif;
+  font-family: "Satoshi", var(--font-jakarta), sans-serif;
 }
 
 /* Smooth theme transition */
