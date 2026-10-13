@@ -5,7 +5,6 @@ import type { DashboardNavLink, NavBadge } from "@/utils/constants/nav-links";
 import { findActiveHref } from "@/utils/functions/nav-active";
 import { AppRole, redirectForRole } from "@/utils/constants/roles";
 import { useApi } from "@/hooks/use-api";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { UserButton } from "@clerk/nextjs";
 import { Menu, PanelLeftClose, PanelLeftOpen, X, Briefcase, PlusCircle, Search, ShieldCheck, MessageCircle, CreditCard, LayoutDashboard, Users, Settings } from "lucide-react";
 import Link from "next/link";
@@ -406,7 +405,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                     {/* Global XP Badge + Theme toggle + UserButton */}
                     <div className="flex items-center gap-2">
                         {authReady && profile && profile.role !== "recruiter" && <GlobalXpBadge />}
-                        <ThemeToggle />
                         <UserButton
                             afterSignOutUrl="/"
                             appearance={{

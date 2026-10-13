@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { ClerkProvider, useAuth } from '@clerk/nextjs'
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
+import { usePathname } from "next/navigation";
 
 // ── AuthCacheSync ──────────────────────────────────────────────────────────────
 // Komponen ini mendeteksi perubahan userId (sign out / ganti akun) dan
@@ -63,11 +64,16 @@ const Providers = ({ children }: Props) => {
         },
     }));
 
+    // Dashboard selalu terang; halaman marketing masih mengikuti tema lama.
+    const pathname = usePathname();
+    const forcedTheme = pathname?.startsWith("/dashboard") ? "light" : undefined;
+
     return (
         <ClerkProvider>
             <ThemeProvider
                 attribute="class"
                 defaultTheme="dark"
+                forcedTheme={forcedTheme}
                 enableSystem
                 disableTransitionOnChange={false}
             >
