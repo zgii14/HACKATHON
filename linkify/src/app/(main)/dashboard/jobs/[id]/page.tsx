@@ -86,7 +86,7 @@ function ApplyDialog({
             <div className="w-full max-w-md rounded-lg border border-border bg-background p-6 shadow-2xl">
                 <div className="flex items-start justify-between border-b border-border pb-4">
                     <div>
-                        <p className="font-mono text-[11px] uppercase tracking-[0.07em] text-warning">konfirmasi</p>
+                        <p className="font-mono text-meta uppercase tracking-[0.07em] text-warning">konfirmasi</p>
                         <h3 className="mt-1 text-[15px] font-bold tracking-tight">Yakin ingin apply?</h3>
                         <p className="mt-0.5 font-mono text-[12px] text-muted-foreground">{job.title} · {job.company}</p>
                     </div>
@@ -96,7 +96,7 @@ function ApplyDialog({
                 </div>
 
                 {/* Peringatan berdasarkan kondisi */}
-                <div className="mt-4 border-l-2 border-warning/50 pl-3 text-[13px] leading-relaxed text-muted-foreground">
+                <div className="mt-4 border-l-2 border-warning/50 pl-3 text-body leading-relaxed text-muted-foreground">
                     {kind === "incomplete-bio" && (
                         <>
                             <p className="font-semibold text-foreground">Lengkapi data diri dulu sebelum melamar.</p>
@@ -126,7 +126,7 @@ function ApplyDialog({
                 {/* Note input — sembunyikan saat gate data diri (belum bisa lanjut) */}
                 {kind !== "incomplete-bio" && (
                     <div className="mt-4">
-                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                             Catatan (opsional)
                         </label>
                         <textarea
@@ -134,7 +134,7 @@ function ApplyDialog({
                             onChange={(e) => setNote(e.target.value)}
                             placeholder="Contoh: Apply via referral, follow up minggu depan..."
                             rows={2}
-                            className="w-full resize-none rounded-md border border-border bg-background px-3 py-2.5 text-[13px] transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
+                            className="w-full resize-none rounded-md border border-border bg-background px-3 py-2.5 text-body transition-colors hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                         />
                     </div>
                 )}
@@ -379,17 +379,17 @@ export default function JobDetailPage() {
                                     <div className="mt-2 flex flex-wrap items-center gap-2.5">
                                         <h1 className="text-[22px] font-bold tracking-tight">{job.title}</h1>
                                         {hasRoadmap && (
-                                            <span className="rounded-[3px] border border-primary/40 px-1.5 py-px font-mono text-[10px] font-semibold text-primary">
+                                            <span className="rounded-[3px] border border-primary/40 px-1.5 py-px font-mono text-micro font-semibold text-primary">
                                                 ROADMAP AKTIF
                                             </span>
                                         )}
                                         {alreadyApplied && (
-                                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-[10px] font-semibold text-success">
+                                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-micro font-semibold text-success">
                                                 ✓ DILAMAR
                                             </span>
                                         )}
                                     </div>
-                                    <p className="mt-1.5 font-mono text-[12.5px] text-muted-foreground">
+                                    <p className="mt-1.5 font-mono text-[13px] text-muted-foreground">
                                         {job.company}
                                         {job.location ? ` · ${job.location}` : ""}
                                         {job.is_remote ? " · remote" : ""}
@@ -444,7 +444,7 @@ export default function JobDetailPage() {
                             <Reveal delay={0.05} className="pt-6">
                                 <div className="flex items-end justify-between">
                                     <div>
-                                        <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Match score</p>
+                                        <p className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Match score</p>
                                         <p className="mt-1 font-mono text-[36px] font-semibold leading-none tabular-nums tracking-tight">
                                             <CountUp value={matchPct} /><span className="text-lg text-muted-foreground">%</span>
                                         </p>
@@ -461,15 +461,15 @@ export default function JobDetailPage() {
                                 <div className="grid grid-cols-3 divide-x divide-border border-y border-border">
                                     <div className="px-4 py-4 text-center">
                                         <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight">{totalRequired}</p>
-                                        <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.05em] text-muted-foreground">Skill dibutuhkan</p>
+                                        <p className="mt-0.5 font-mono text-meta uppercase tracking-[0.05em] text-muted-foreground">Skill dibutuhkan</p>
                                     </div>
                                     <div className="px-4 py-4 text-center">
                                         <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight text-success">{ownedCount}</p>
-                                        <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.05em] text-muted-foreground">Sudah dimiliki</p>
+                                        <p className="mt-0.5 font-mono text-meta uppercase tracking-[0.05em] text-muted-foreground">Sudah dimiliki</p>
                                     </div>
                                     <div className="px-4 py-4 text-center">
                                         <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight text-warning">{job.missing_skills.length}</p>
-                                        <p className="mt-0.5 font-mono text-[11px] uppercase tracking-[0.05em] text-muted-foreground">Perlu dipelajari</p>
+                                        <p className="mt-0.5 font-mono text-meta uppercase tracking-[0.05em] text-muted-foreground">Perlu dipelajari</p>
                                     </div>
                                 </div>
                             </Reveal>
@@ -498,7 +498,7 @@ export default function JobDetailPage() {
                         {job.missing_skills.length > 0 && (
                             <Reveal delay={0.18} className="pt-8">
                                 <SecTitle title="Skill yang perlu dikuasai" meta={`${job.missing_skills.length} skill`} />
-                                <p className="pt-3 text-[13px] leading-relaxed">
+                                <p className="pt-3 text-body leading-relaxed">
                                     {job.missing_skills.map((s, i) => (
                                         <span key={s}>
                                             {i > 0 && <span className="mx-1.5 text-border">·</span>}
@@ -511,7 +511,7 @@ export default function JobDetailPage() {
 
                         {job.missing_skills.length === 0 && job.match_score != null && (
                             <Reveal delay={0.18} className="pt-6">
-                                <p className="border-l-2 border-success/60 pl-3 text-[13px] text-muted-foreground">
+                                <p className="border-l-2 border-success/60 pl-3 text-body text-muted-foreground">
                                     <span className="font-semibold text-success">✓ Lengkap.</span> Kamu sudah memiliki semua skill yang dibutuhkan job ini.
                                 </p>
                             </Reveal>
@@ -520,7 +520,7 @@ export default function JobDetailPage() {
                         {/* ── Kenapa skor ini ── */}
                         <Reveal delay={0.22} className="pt-8">
                             <SecTitle title="Kenapa skor ini?" />
-                            <div className="space-y-1.5 pt-3 text-[13px] leading-relaxed text-muted-foreground">
+                            <div className="space-y-1.5 pt-3 text-body leading-relaxed text-muted-foreground">
                                 {job.match_reasons.length > 0
                                     ? job.match_reasons.map((r) => <p key={r}>{r}</p>)
                                     : <p>Sync profilmu terlebih dahulu untuk melihat alasan skor.</p>}
@@ -534,26 +534,26 @@ export default function JobDetailPage() {
                                 <dl className="grid grid-cols-2 gap-x-6 gap-y-4 pt-4 sm:grid-cols-4">
                                     {job.salary && (
                                         <div>
-                                            <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Gaji</dt>
-                                            <dd className="mt-1 text-[13.5px] font-semibold text-success">{job.salary}</dd>
+                                            <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Gaji</dt>
+                                            <dd className="mt-1 text-[14px] font-semibold text-success">{job.salary}</dd>
                                         </div>
                                     )}
                                     {job.min_experience && (
                                         <div>
-                                            <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Pengalaman</dt>
-                                            <dd className="mt-1 text-[13.5px] font-semibold">{job.min_experience}</dd>
+                                            <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Pengalaman</dt>
+                                            <dd className="mt-1 text-[14px] font-semibold">{job.min_experience}</dd>
                                         </div>
                                     )}
                                     {job.min_education && (
                                         <div>
-                                            <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Pendidikan</dt>
-                                            <dd className="mt-1 text-[13.5px] font-semibold">{job.min_education}</dd>
+                                            <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Pendidikan</dt>
+                                            <dd className="mt-1 text-[14px] font-semibold">{job.min_education}</dd>
                                         </div>
                                     )}
                                     {job.work_type && (
                                         <div>
-                                            <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Tipe kerja</dt>
-                                            <dd className="mt-1 text-[13.5px] font-semibold">{job.work_type}</dd>
+                                            <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Tipe kerja</dt>
+                                            <dd className="mt-1 text-[14px] font-semibold">{job.work_type}</dd>
                                         </div>
                                     )}
                                 </dl>
@@ -563,7 +563,7 @@ export default function JobDetailPage() {
                         {/* ── Deskripsi ── */}
                         <Reveal delay={0.3} className="pt-8">
                             <SecTitle title="Deskripsi" />
-                            <p className="max-w-prose whitespace-pre-wrap pt-3 text-[13px] leading-relaxed text-muted-foreground">{job.description}</p>
+                            <p className="max-w-prose whitespace-pre-wrap pt-3 text-body leading-relaxed text-muted-foreground">{job.description}</p>
                         </Reveal>
 
                         {/* ── Required skills ── */}
@@ -575,14 +575,14 @@ export default function JobDetailPage() {
                                         .map((m) => m.toLowerCase())
                                         .includes(s.toLowerCase());
                                     return (
-                                        <span key={s} className="inline-flex items-center gap-1.5 text-[13px]">
+                                        <span key={s} className="inline-flex items-center gap-1.5 text-body">
                                             <span className={`size-1.5 rounded-full ${isMissing ? "bg-muted-foreground/40" : "bg-success"}`} />
                                             <span className={isMissing ? "text-muted-foreground line-through" : "font-medium text-foreground"}>{s}</span>
                                         </span>
                                     );
                                 })}
                             </div>
-                            <p className="pt-3 font-mono text-[11px] text-muted-foreground">
+                            <p className="pt-3 font-mono text-meta text-muted-foreground">
                                 <span className="text-success">● dimiliki</span>
                                 <span className="mx-2 text-border">·</span>
                                 <span>● belum dimiliki</span>

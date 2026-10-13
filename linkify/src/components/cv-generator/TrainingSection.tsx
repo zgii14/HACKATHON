@@ -61,7 +61,7 @@ export function TrainingSection({ training, setTraining }: Props) {
                         <button
                             type="button"
                             onClick={addTraining}
-                            className="rounded-md border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="rounded-md border border-border px-3 py-1.5 text-[13px] font-semibold hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             + Tambah Pelatihan
                         </button>
@@ -82,7 +82,7 @@ export function TrainingSection({ training, setTraining }: Props) {
 
                                 <div className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Judul Pelatihan
                                         </label>
                                         <input
@@ -93,7 +93,7 @@ export function TrainingSection({ training, setTraining }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Penyelenggara / Provider
                                         </label>
                                         <input
@@ -104,7 +104,7 @@ export function TrainingSection({ training, setTraining }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Lokasi
                                         </label>
                                         <input
@@ -115,7 +115,7 @@ export function TrainingSection({ training, setTraining }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Periode (Tanggal)
                                         </label>
                                         <input
@@ -129,13 +129,13 @@ export function TrainingSection({ training, setTraining }: Props) {
 
                                 <div className="space-y-2 pt-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Deskripsi / Hasil Pelatihan
                                         </label>
                                         <button
                                             type="button"
                                             onClick={() => addBullet(t.id)}
-                                            className="rounded-md border border-border px-2 py-1 text-[11px] font-semibold hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            className="rounded-md border border-border px-2 py-1 text-meta font-semibold hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         >
                                             + Tambah poin
                                         </button>

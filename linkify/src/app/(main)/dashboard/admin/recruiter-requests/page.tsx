@@ -94,14 +94,14 @@ export default function AdminRecruiterRequestsPage() {
                             <div className="flex items-start justify-between gap-4">
                                 <Link href={`/dashboard/admin/recruiter-requests/${r.id}`} className="min-w-0 flex-1">
                                     <p className="text-sm font-semibold hover:text-violet-600">{r.company_name} <span className="font-normal text-muted-foreground">· {r.company_website}</span></p>
-                                    <p className="mt-1 flex flex-wrap gap-2 font-mono text-[11px] text-muted-foreground">
+                                    <p className="mt-1 flex flex-wrap gap-2 font-mono text-meta text-muted-foreground">
                                         <span className="rounded-full border border-border bg-muted/30 px-2 py-0.5">{r.company_size}</span>
                                         <span className="rounded-full border border-border bg-muted/30 px-2 py-0.5">{r.industry}</span>
                                         <span>{r.wa_pic}</span>
                                         <span className={`rounded-full px-2 py-0.5 font-semibold ${r.status === "pending" ? "bg-amber-500/10 text-amber-600 border border-amber-500/20" : r.status === "approved" ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20" : "bg-red-500/10 text-red-600 border border-red-500/20"}`}>{r.status}</span>
                                     </p>
                                     {r.reason && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">“{r.reason}”</p>}
-                                    <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+                                    <p className="mt-2 font-mono text-meta text-muted-foreground">
                                         {r.user_email} · {new Date(r.requested_at).toLocaleString("id-ID")}
                                         {r.reviewed_by && ` · reviewed by ${r.reviewed_by}`}
                                     </p>

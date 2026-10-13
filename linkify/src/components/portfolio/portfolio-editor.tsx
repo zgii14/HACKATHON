@@ -344,7 +344,7 @@ export function PortfolioEditor() {
                                 <label key={repo.name} className={`flex items-center gap-3 py-3 text-sm ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
                                     <input type="checkbox" checked={repoNames.includes(repo.name)} onChange={() => toggleRepo(repo.name)} disabled={disabled} />
                                     <span className="min-w-0 flex-1 truncate font-medium">{repo.name}</span>
-                                    <span className="font-mono text-[11px] text-muted-foreground">★ {repo.stars ?? 0} · {repo.own_commits ?? 0} commits</span>
+                                    <span className="font-mono text-meta text-muted-foreground">★ {repo.stars ?? 0} · {repo.own_commits ?? 0} commits</span>
                                 </label>
                             );
                         })}
@@ -408,7 +408,7 @@ export function PortfolioEditor() {
                                         <a href={project.url} target="_blank" rel="noreferrer" className="font-semibold hover:text-primary">{project.repo_name} ↗</a>
                                         <button type="button" className="text-xs text-destructive" onClick={() => removeProject(index)}>Hapus</button>
                                     </div>
-                                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">{project.tech_stack.join(" · ")} · ★ {project.stars} · {project.own_commits} commits</p>
+                                    <p className="mt-1 font-mono text-meta text-muted-foreground">{project.tech_stack.join(" · ")} · ★ {project.stars} · {project.own_commits} commits</p>
                                     <textarea className={`${inputClass} mt-3 resize-y`} rows={3} value={project.description} onChange={(event) => setForm({ ...form, projects: form.projects.map((item, itemIndex) => itemIndex === index ? { ...item, description: event.target.value } : item) })} />
                                 </div>
                             ))}
@@ -508,12 +508,12 @@ export function PortfolioEditor() {
 
                 <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
                     <section className="border border-border p-4">
-                        <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Pilih presentasi</p>
+                        <p className="font-mono text-meta uppercase tracking-wide text-muted-foreground">Pilih presentasi</p>
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">Lihat struktur portfolio sebelum kamu memilih tema.</p>
                         <ThemePreviewCards content={form} onSelect={(theme) => setForm({ ...form, theme })} />
                     </section>
                     <section className="border border-border p-4">
-                        <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">Section tampil</p>
+                        <p className="font-mono text-meta uppercase tracking-wide text-muted-foreground">Section tampil</p>
                         <div className="mt-3 space-y-2">
                             {(Object.keys(form.sections) as Array<keyof typeof form.sections>).map((key) => (
                                 <label key={key} className="flex items-center justify-between gap-3 text-xs capitalize"><span>{key}</span><input type="checkbox" checked={form.sections[key]} onChange={(event) => setForm({ ...form, sections: { ...form.sections, [key]: event.target.checked } })} /></label>

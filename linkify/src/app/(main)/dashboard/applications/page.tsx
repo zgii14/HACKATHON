@@ -64,7 +64,7 @@ const ALL_STATUSES: ApplicationStatus[] = ["applied", "interview", "interview_co
 function StatusTag({ status }: { status: ApplicationStatus }) {
     const cfg = STATUS_CONFIG[status];
     return (
-        <span className={`rounded-[3px] border px-1.5 py-px font-mono text-[10px] font-semibold tracking-[0.05em] ${cfg.cls}`}>
+        <span className={`rounded-[3px] border px-1.5 py-px font-mono text-micro font-semibold tracking-[0.05em] ${cfg.cls}`}>
             {cfg.label}
         </span>
     );
@@ -164,7 +164,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                 <div className="flex shrink-0 items-center justify-between border-b border-border p-5">
                     <div>
                         <h3 className="text-[15px] font-bold">Generate surat lamaran</h3>
-                        <p className="mt-0.5 font-mono text-[11.5px] text-muted-foreground">
+                        <p className="mt-0.5 font-mono text-meta text-muted-foreground">
                             {app.job_title} · {app.job_company}
                         </p>
                     </div>
@@ -177,7 +177,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
 
                 <div className="flex-1 space-y-4 overflow-y-auto p-5">
                     <div>
-                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                             Nama lengkap
                         </label>
                         <div className="flex gap-2">
@@ -190,15 +190,15 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                             <button
                                 onClick={generate}
                                 disabled={loading}
-                                className="shrink-0 rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                                className="shrink-0 rounded-md bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             >
                                 {loading ? "Generating…" : "Generate"}
                             </button>
                         </div>
                         {hasBio ? (
-                            <p className="mt-1.5 font-mono text-[11px] text-success">Data diri tersimpan dipakai otomatis (TTL, alamat, telepon)</p>
+                            <p className="mt-1.5 font-mono text-meta text-success">Data diri tersimpan dipakai otomatis (TTL, alamat, telepon)</p>
                         ) : (
-                            <p className="mt-1.5 text-[11.5px] text-muted-foreground">
+                            <p className="mt-1.5 text-meta text-muted-foreground">
                                 Lengkapi{" "}
                                 <Link href="/dashboard/profile" className="font-semibold text-primary hover:underline" onClick={onClose}>
                                     data diri
@@ -211,7 +211,7 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                     {letter ? (
                         <div>
                             <div className="mb-1.5 flex items-center justify-between">
-                                <label className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Surat lamaran (bisa diedit)</label>
+                                <label className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Surat lamaran (bisa diedit)</label>
                                 <div className="flex gap-3">
                                     <button onClick={copyToClipboard} className="text-[12px] font-semibold text-primary hover:underline">Copy</button>
                                     <button onClick={downloadDocx} className="text-[12px] font-semibold text-primary hover:underline">Download .docx</button>
@@ -221,16 +221,16 @@ function CoverLetterModal({ app, fallbackName, onClose }: { app: ApplicationOut;
                                 value={letter}
                                 onChange={(e) => setLetter(e.target.value)}
                                 rows={18}
-                                className="w-full resize-y rounded-md border border-border bg-muted/30 px-4 py-3 font-mono text-[13px] focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
+                                className="w-full resize-y rounded-md border border-border bg-muted/30 px-4 py-3 font-mono text-body focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                             />
                         </div>
                     ) : (
                         !loading && (
                             <div className="border border-dashed border-border py-10 text-center">
-                                <p className="text-[13px] text-muted-foreground">
+                                <p className="text-body text-muted-foreground">
                                     Klik <span className="font-semibold text-foreground">Generate</span> untuk membuat surat lamaran terpersonalisasi.
                                 </p>
-                                <p className="mt-1 font-mono text-[11px] text-muted-foreground">proses 5–10 detik</p>
+                                <p className="mt-1 font-mono text-meta text-muted-foreground">proses 5–10 detik</p>
                             </div>
                         )
                     )}
@@ -321,9 +321,9 @@ function ApplicationRow({
             >
                 <span className="min-w-0">
                     <span className="flex items-center gap-2">
-                        <span className="truncate text-[13.5px] font-semibold leading-tight">{app.job_title}</span>
+                        <span className="truncate text-[14px] font-semibold leading-tight">{app.job_title}</span>
                         {app.roadmap_completed && (
-                            <span className="shrink-0 rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-[9.5px] font-semibold text-success">ROADMAP ✓</span>
+                            <span className="shrink-0 rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-micro font-semibold text-success">ROADMAP ✓</span>
                         )}
                     </span>
                     <span className="mt-0.5 block truncate text-xs text-muted-foreground">
@@ -360,21 +360,21 @@ function ApplicationRow({
                         <div className="space-y-4 pb-4 pr-1">
                             {/* Note biasa */}
                             {app.note && !isJsonNote && (
-                                <p className="border-l-2 border-border pl-3 text-[13px] text-muted-foreground">{app.note}</p>
+                                <p className="border-l-2 border-border pl-3 text-body text-muted-foreground">{app.note}</p>
                             )}
 
                             {/* Tiket undangan wawancara */}
                             {isJsonNote && interviewDetails && (
                                 <div className="border-l-2 border-primary bg-primary/[0.04] px-4 py-3">
                                     <div className="mb-2 flex items-center justify-between">
-                                        <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-primary">Undangan wawancara</span>
-                                        <span className="font-mono text-[10.5px] text-muted-foreground">
+                                        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-primary">Undangan wawancara</span>
+                                        <span className="font-mono text-[11px] text-muted-foreground">
                                             {interviewDetails.type === "online" ? "online meeting" : "offline / tatap muka"}
                                         </span>
                                     </div>
-                                    <div className="grid gap-3 text-[13px] sm:grid-cols-2">
+                                    <div className="grid gap-3 text-body sm:grid-cols-2">
                                         <div>
-                                            <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">Jadwal</span>
+                                            <span className="font-mono text-micro uppercase tracking-[0.06em] text-muted-foreground">Jadwal</span>
                                             <p className="font-semibold">
                                                 {new Date(interviewDetails.datetime).toLocaleString("id-ID", {
                                                     weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
@@ -383,7 +383,7 @@ function ApplicationRow({
                                             </p>
                                         </div>
                                         <div>
-                                            <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">
+                                            <span className="font-mono text-micro uppercase tracking-[0.06em] text-muted-foreground">
                                                 {interviewDetails.type === "online" ? "Link meeting" : "Lokasi"}
                                             </span>
                                             {interviewDetails.type === "online" ? (
@@ -396,7 +396,7 @@ function ApplicationRow({
                                         </div>
                                     </div>
                                     {interviewDetails.hr_message && (
-                                        <p className="mt-2.5 border-t border-border/40 pt-2 text-[12.5px] text-muted-foreground">
+                                        <p className="mt-2.5 border-t border-border/40 pt-2 text-[13px] text-muted-foreground">
                                             Pesan HRD: {interviewDetails.hr_message}
                                         </p>
                                     )}
@@ -410,7 +410,7 @@ function ApplicationRow({
                                                 ✓ Konfirmasi hadir
                                             </button>
                                         ) : (
-                                            <span className="font-mono text-[11.5px] font-semibold text-success">✓ kehadiran dikonfirmasi</span>
+                                            <span className="font-mono text-meta font-semibold text-success">✓ kehadiran dikonfirmasi</span>
                                         )}
                                         {interviewDetails.hr_phone && (
                                             <a
@@ -461,7 +461,7 @@ function ApplicationRow({
                                                     <button
                                                         key={s}
                                                         onClick={() => statusMutation.mutate(s)}
-                                                        className={`flex w-full items-center justify-between px-3 py-2 text-left text-[12.5px] transition-colors hover:bg-muted ${
+                                                        className={`flex w-full items-center justify-between px-3 py-2 text-left text-[13px] transition-colors hover:bg-muted ${
                                                             s === app.status ? "font-semibold text-primary" : "text-foreground"
                                                         }`}
                                                     >
@@ -475,10 +475,10 @@ function ApplicationRow({
                                 </div>}
 
                                 <ActionLink href={`/dashboard/jobs/${app.job_id}`}>Detail job</ActionLink>
-                                <button onClick={() => onGenerateLetter(app)} className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                <button onClick={() => onGenerateLetter(app)} className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                                     Surat lamaran
                                 </button>
-                                <Link href={`/dashboard/roadmap?job_id=${app.job_id}`} className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                                <Link href={`/dashboard/roadmap?job_id=${app.job_id}`} className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                                     Roadmap
                                 </Link>
                                 {app.apply_url && (
@@ -555,7 +555,7 @@ export default function ApplicationsPage() {
                                 { k: "Ditolak", v: stats.rejected },
                             ].map((s, i) => (
                                 <div key={s.k} className={`px-5 py-4 ${i > 0 ? "border-l border-border" : ""}`}>
-                                    <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{s.k}</p>
+                                    <p className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{s.k}</p>
                                     <p className="mt-1 font-mono text-[26px] font-semibold tabular-nums tracking-tight">
                                         <CountUp value={s.v} />
                                     </p>
@@ -576,12 +576,12 @@ export default function ApplicationsPage() {
                                         type="button"
                                         onClick={() => setActiveFilter(f)}
                                         aria-current={activeFilter === f ? "true" : undefined}
-                                        className={`-mb-px border-b-2 px-3 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
+                                        className={`-mb-px border-b-2 px-3 py-2 text-body font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
                                             activeFilter === f ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
                                         }`}
                                     >
                                         {f === "all" ? "Semua" : STATUS_CONFIG[f].label.replace(" ✓", "")}
-                                        <span className="ml-1.5 font-mono text-[10.5px] text-muted-foreground">{count}</span>
+                                        <span className="ml-1.5 font-mono text-[11px] text-muted-foreground">{count}</span>
                                     </button>
                                 );
                             })}
@@ -605,7 +605,7 @@ export default function ApplicationsPage() {
                         </EmptyState>
                     </div>
                 ) : filtered.length === 0 ? (
-                    <p className="py-10 text-center text-[13px] text-muted-foreground">
+                    <p className="py-10 text-center text-body text-muted-foreground">
                         Tidak ada lamaran berstatus &ldquo;{activeFilter === "all" ? "semua" : STATUS_CONFIG[activeFilter].label}&rdquo;.
                     </p>
                 ) : (

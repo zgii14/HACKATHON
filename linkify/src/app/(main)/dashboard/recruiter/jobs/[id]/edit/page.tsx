@@ -98,7 +98,7 @@ export default function EditJobPage() {
                                 type="button"
                                 onClick={() => toggleCategory(c.key)}
                                 aria-pressed={categories.includes(c.key)}
-                                className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+                                className={`rounded-full border px-3 py-1 text-meta font-semibold transition ${
                                     categories.includes(c.key)
                                         ? "border-primary bg-primary/10 text-primary"
                                         : "border-border text-muted-foreground hover:text-foreground"
@@ -108,7 +108,7 @@ export default function EditJobPage() {
                             </button>
                         ))}
                     </div>
-                    <p className="mt-1 text-[10px] text-muted-foreground">Kosongkan untuk deteksi otomatis dari judul dan skill.</p>
+                    <p className="mt-1 text-micro text-muted-foreground">Kosongkan untuk deteksi otomatis dari judul dan skill.</p>
                 </div>
                 <div><label className="text-xs font-semibold text-muted-foreground">Deskripsi*</label><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={6} className="mt-1 w-full rounded-xl border border-border bg-muted/20 px-3.5 py-2.5 text-xs" /></div>
                 <div className="flex justify-end gap-2">

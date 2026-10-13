@@ -41,7 +41,7 @@ function FilterChip({
             type="button"
             onClick={onClick}
             aria-pressed={active}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[12.5px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 active
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
@@ -50,7 +50,7 @@ function FilterChip({
             {children}
             {count != null && (
                 <span
-                    className={`rounded-full px-1.5 py-px font-mono text-[10.5px] tabular-nums ${
+                    className={`rounded-full px-1.5 py-px font-mono text-[11px] tabular-nums ${
                         active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
                     }`}
                 >
@@ -142,7 +142,7 @@ export default function JobsPage() {
                             onChange={(e) => setQ(e.target.value)}
                             placeholder="Cari judul, perusahaan, atau skill…"
                             aria-label="Cari lowongan"
-                            className="h-12 w-full rounded-full border border-border bg-background pl-10 pr-4 text-[13.5px] transition-colors placeholder:text-muted-foreground hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
+                            className="h-12 w-full rounded-full border border-border bg-background pl-10 pr-4 text-[14px] transition-colors placeholder:text-muted-foreground hover:border-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/25"
                         />
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -173,7 +173,7 @@ export default function JobsPage() {
             ) : filtered.length === 0 ? (
                 <div className="mt-6 border-y border-border py-14 text-center">
                     <p className="text-[15px] font-bold">Tidak ada hasil</p>
-                    <p className="mt-1.5 text-[13.5px] text-muted-foreground">Coba ubah kata kunci atau reset filter.</p>
+                    <p className="mt-1.5 text-[14px] text-muted-foreground">Coba ubah kata kunci atau reset filter.</p>
                 </div>
             ) : (
                 <Reveal delay={0.1} className="mt-6">
@@ -181,7 +181,7 @@ export default function JobsPage() {
                         <h2 className="text-[15px] font-bold tracking-tight">
                             <strong className="text-primary">{filtered.length}</strong> lowongan tersedia
                         </h2>
-                        <span className="font-mono text-[11px] text-muted-foreground">{filtered.length} hasil</span>
+                        <span className="font-mono text-meta text-muted-foreground">{filtered.length} hasil</span>
                     </div>
                     <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {visible.map((job, i) => (
@@ -193,7 +193,7 @@ export default function JobsPage() {
                             <button
                                 type="button"
                                 onClick={() => setDisplayCount((c) => c + PAGE_SIZE)}
-                                className="w-full rounded-full border border-border py-2.5 text-[12.5px] font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="w-full rounded-full border border-border py-2.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 Muat {Math.min(PAGE_SIZE, remaining)} lagi ↓
                             </button>

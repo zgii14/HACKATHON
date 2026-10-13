@@ -88,7 +88,7 @@ export function ConversationList({
                     {quota && quota.limit !== null && (
                         <span
                             className={cn(
-                                "rounded-full px-2 py-0.5 font-mono text-[10px] font-bold",
+                                "rounded-full px-2 py-0.5 font-mono text-micro font-bold",
                                 quota.remaining === 0
                                     ? "bg-rose-500/10 text-rose-600 border border-rose-500/20"
                                     : quota.used / (quota.limit || 1) > 0.8
@@ -116,7 +116,7 @@ export function ConversationList({
                         <p className="text-xs font-medium text-muted-foreground">
                             {search ? "Tidak ada hasil." : "Belum ada percakapan."}
                         </p>
-                        {!search && <p className="mt-1 text-[11px] text-muted-foreground">Mulai dari halaman Cari Kandidat → Chat.</p>}
+                        {!search && <p className="mt-1 text-meta text-muted-foreground">Mulai dari halaman Cari Kandidat → Chat.</p>}
                     </div>
                 )}
                 {filtered.map((c) => {
@@ -136,11 +136,11 @@ export function ConversationList({
                         >
                             <button onClick={() => onSelect(c.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
                                 <div className="relative shrink-0">
-                                    <div className="flex size-9 items-center justify-center rounded-full bg-violet-600 text-[11px] font-bold text-white">
+                                    <div className="flex size-9 items-center justify-center rounded-full bg-violet-600 text-meta font-bold text-white">
                                         {initials}
                                     </div>
                                     {c.unread_count > 0 && (
-                                        <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow-sm">
+                                        <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-emerald-500 text-micro font-bold text-white shadow-sm">
                                             {c.unread_count > 9 ? "9+" : c.unread_count}
                                         </span>
                                     )}
@@ -148,18 +148,18 @@ export function ConversationList({
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-baseline justify-between gap-2">
                                         <span className="truncate text-xs font-semibold text-foreground">{c.other_name || c.other_email || c.other_user_id.slice(0, 8)}</span>
-                                        <span className="shrink-0 font-mono text-[10px] text-muted-foreground">{isToday ? time : dateLabel}</span>
+                                        <span className="shrink-0 font-mono text-micro text-muted-foreground">{isToday ? time : dateLabel}</span>
                                     </div>
                                     {c.job_title && (
-                                        <p className="truncate text-[10px] font-medium text-violet-600 dark:text-violet-300">Re: {c.job_title}{c.job_company ? ` · ${c.job_company}` : ""}</p>
+                                        <p className="truncate text-micro font-medium text-violet-600 dark:text-violet-300">Re: {c.job_title}{c.job_company ? ` · ${c.job_company}` : ""}</p>
                                     )}
                                     {c.other_company && !c.job_title && (
-                                        <p className="truncate text-[10px] text-muted-foreground">{c.other_company}</p>
+                                        <p className="truncate text-micro text-muted-foreground">{c.other_company}</p>
                                     )}
                                     <p className={cn("truncate text-xs", c.unread_count > 0 ? "font-semibold text-foreground" : "text-muted-foreground")}>
                                         {c.last_message || "—"}
                                     </p>
-                                    {expiresLabel && <p className="font-mono text-[10px] text-amber-600">{expiresLabel} lagi</p>}
+                                    {expiresLabel && <p className="font-mono text-micro text-amber-600">{expiresLabel} lagi</p>}
                                 </div>
                             </button>
                             <button onClick={(e) => handleDelete(e, c.id)} className="hidden shrink-0 rounded p-1.5 text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 group-hover:flex" title="Hapus chat">

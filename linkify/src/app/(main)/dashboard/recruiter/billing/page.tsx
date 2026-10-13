@@ -82,7 +82,7 @@ export default function BillingPage() {
                             <div className="flex items-center gap-2">
                                 <div className="flex size-8 items-center justify-center rounded-full bg-muted"><Users className="size-4" /></div>
                                 <h3 className="text-sm font-bold">Gratis</h3>
-                                {!isPremium && <span className="ml-auto rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-bold text-white">Dipakai</span>}
+                                {!isPremium && <span className="ml-auto rounded-full bg-violet-600 px-2 py-0.5 text-micro font-bold text-white">Dipakai</span>}
                             </div>
                             <p className="mt-3">
                                 <span className="text-2xl font-bold">Rp 0</span> <span className="text-xs text-muted-foreground">/ bulan</span>
@@ -98,7 +98,7 @@ export default function BillingPage() {
                             <button disabled className="mt-6 w-full rounded-full border border-border bg-muted px-4 py-2 text-xs font-bold text-muted-foreground">
                                 {isPremium ? "Gratis" : "Dipakai"}
                             </button>
-                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">2/2 terpakai</p>
+                            <p className="mt-2 text-center font-mono text-meta text-muted-foreground">2/2 terpakai</p>
                         </div>
                     </Spotlight>
                 </Reveal>
@@ -110,7 +110,7 @@ export default function BillingPage() {
                             <div className="flex items-center gap-2">
                                 <div className="flex size-8 items-center justify-center rounded-full bg-violet-600 text-white"><Sparkles className="size-4" /></div>
                                 <h3 className="text-sm font-bold">Talent Search</h3>
-                                <span className="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">Populer</span>
+                                <span className="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-micro font-bold text-white">Populer</span>
                             </div>
                             <p className="mt-3">
                                 <span className="text-2xl font-bold">Rp 499rb</span> <span className="text-xs text-muted-foreground">/ bulan</span>
@@ -130,7 +130,7 @@ export default function BillingPage() {
                             >
                                 {toggle.isPending ? "..." : isPremium ? "Batalkan → Gratis" : "Bayar via QRIS"}
                             </button>
-                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">{isPremium ? "Premium aktif" : "Belum aktif"}</p>
+                            <p className="mt-2 text-center font-mono text-meta text-muted-foreground">{isPremium ? "Premium aktif" : "Belum aktif"}</p>
                         </div>
                     </Spotlight>
                 </Reveal>
@@ -160,13 +160,13 @@ export default function BillingPage() {
                             >
                                 Bayar via QRIS
                             </button>
-                            <p className="mt-2 text-center font-mono text-[11px] text-muted-foreground">QRIS → chat admin • <a href="mailto:hello@githire.com?subject=Managed%20Hiring" className="underline">email</a> juga</p>
+                            <p className="mt-2 text-center font-mono text-meta text-muted-foreground">QRIS → chat admin • <a href="mailto:hello@githire.com?subject=Managed%20Hiring" className="underline">email</a> juga</p>
                         </div>
                     </Spotlight>
                 </Reveal>
             </div>
 
-            <p className="text-center font-mono text-[11px] text-muted-foreground">Semua paket: pelamar masuk ∞ · CV ATS · reset Senin 00:00 WIB</p>
+            <p className="text-center font-mono text-meta text-muted-foreground">Semua paket: pelamar masuk ∞ · CV ATS · reset Senin 00:00 WIB</p>
 
             <QrisModal
                 open={qris.open}

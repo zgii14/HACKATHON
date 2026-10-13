@@ -166,7 +166,7 @@ export default function OnboardingPage() {
             <div className="w-full max-w-2xl">
                 <PageHeader crumb="dasbor / onboarding / selesai" title="Profil berhasil disinkronkan" sub={`${skillCount} skill terdeteksi dari GitHub dan CV-mu.`} />
                 <Reveal delay={0.07} className="pt-6">
-                    <p className="font-mono text-[11px] uppercase tracking-[0.07em] text-muted-foreground">Langkah selanjutnya</p>
+                    <p className="font-mono text-meta uppercase tracking-[0.07em] text-muted-foreground">Langkah selanjutnya</p>
                     <div className="mt-2 border-t border-border">
                         {steps.map((s) => (
                             <button
@@ -178,7 +178,7 @@ export default function OnboardingPage() {
                                     <span className="block text-[14px] font-semibold">{s.t}</span>
                                     <span className="mt-0.5 block text-xs text-muted-foreground">{s.d}</span>
                                 </span>
-                                <span className="font-mono text-[13px] font-semibold text-primary transition-transform group-hover:translate-x-1">→</span>
+                                <span className="font-mono text-body font-semibold text-primary transition-transform group-hover:translate-x-1">→</span>
                             </button>
                         ))}
                     </div>
@@ -208,7 +208,7 @@ export default function OnboardingPage() {
                                     key={key}
                                     onClick={() => toggleInterest(key)}
                                     aria-pressed={active}
-                                    className={`flex items-center gap-2 rounded-md border px-3 py-2.5 text-left text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                                    className={`flex items-center gap-2 rounded-md border px-3 py-2.5 text-left text-body transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                                         active
                                             ? "border-primary/50 bg-primary/[0.08] font-semibold text-primary"
                                             : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
@@ -221,21 +221,21 @@ export default function OnboardingPage() {
                         })}
                     </div>
                     {selectedInterests.length === 0 && (
-                        <p className="mt-3 font-mono text-[11.5px] text-warning">Pilih minimal 1 bidang agar skill gap lebih relevan.</p>
+                        <p className="mt-3 font-mono text-meta text-warning">Pilih minimal 1 bidang agar skill gap lebih relevan.</p>
                     )}
                     <div className="mt-6 flex items-center gap-4">
                         <button
                             onClick={() => saveInterests.mutate()}
                             disabled={saveInterests.isPending || selectedInterests.length === 0}
-                            className="rounded-md bg-primary px-5 py-2.5 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                            className="rounded-md bg-primary px-5 py-2.5 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                         >
                             {saveInterests.isPending ? "Menyimpan…" : "Simpan & lanjutkan →"}
                         </button>
-                        <button onClick={() => setShowSuccess(true)} className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        <button onClick={() => setShowSuccess(true)} className="text-[13px] font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             Lewati
                         </button>
                     </div>
-                    <p className="mt-4 text-[11.5px] text-muted-foreground">Kamu bisa mengubah pilihan ini kapan saja lewat halaman Skill Gap.</p>
+                    <p className="mt-4 text-meta text-muted-foreground">Kamu bisa mengubah pilihan ini kapan saja lewat halaman Skill Gap.</p>
                 </Reveal>
             </div>
         );
@@ -264,33 +264,33 @@ export default function OnboardingPage() {
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold">@{existingProfile.github_username ?? "-"}</p>
-                                    <p className="font-mono text-[11px] text-muted-foreground">
+                                    <p className="font-mono text-meta text-muted-foreground">
                                         {existingProfile.merged_skills?.length ?? 0} skill · {existingProfile.github_signals?.commits ?? 0} commits · {existingProfile.github_signals?.stars ?? 0} stars
                                     </p>
                                 </div>
                             </div>
-                            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-600">Terhubung</span>
+                            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono text-meta font-bold text-emerald-600">Terhubung</span>
                         </div>
                         {existingProfile.merged_skills && existingProfile.merged_skills.length > 0 && (
                             <div className="mt-3 flex flex-wrap gap-1.5">
                                 {existingProfile.merged_skills.slice(0, 8).map((s) => (
-                                    <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px]">
+                                    <span key={s} className="rounded-full border border-border bg-muted px-2 py-0.5 text-meta">
                                         {s}
                                     </span>
                                 ))}
                                 {(existingProfile.merged_skills.length ?? 0) > 8 && (
-                                    <span className="px-1 py-0.5 font-mono text-[11px] text-muted-foreground">+{existingProfile.merged_skills.length - 8}</span>
+                                    <span className="px-1 py-0.5 font-mono text-meta text-muted-foreground">+{existingProfile.merged_skills.length - 8}</span>
                                 )}
                             </div>
                         )}
                         <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
                             <div className="min-w-0 flex-1">
                                 <p className="text-xs font-medium">CV terhubung</p>
-                                <p className="truncate font-mono text-[11px] text-muted-foreground">
+                                <p className="truncate font-mono text-meta text-muted-foreground">
                                     {existingProfile.cv_filename ?? "cv.pdf"} · {existingProfile.cv_data ? "teks OK" : "belum ada"} · {existingProfile.updated_at ? new Date(existingProfile.updated_at).toLocaleDateString("id-ID") : "-"}
                                 </p>
                             </div>
-                            <span className="rounded-full bg-violet-600/10 px-2 py-0.5 font-mono text-[10px] font-bold text-violet-600">PDF</span>
+                            <span className="rounded-full bg-violet-600/10 px-2 py-0.5 font-mono text-micro font-bold text-violet-600">PDF</span>
                         </div>
                         <p className="mt-3 border-l-2 border-warning/50 bg-warning/[0.05] px-3 py-2 text-[12px] leading-relaxed text-muted-foreground">
                             <span className="font-semibold text-foreground">Sync ulang?</span> Jika skill tidak berubah, roadmap tetap aman. Jika berubah, roadmap di-generate ulang.
@@ -302,8 +302,8 @@ export default function OnboardingPage() {
                     <div className="mb-5 flex items-center gap-3 border border-border px-4 py-3">
                         <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         <div>
-                            <p className="font-mono text-[13px] font-medium">{SYNC_STEPS[stepIndex]}</p>
-                            <p className="font-mono text-[11px] text-muted-foreground">biasanya 10–20 detik</p>
+                            <p className="font-mono text-body font-medium">{SYNC_STEPS[stepIndex]}</p>
+                            <p className="font-mono text-meta text-muted-foreground">biasanya 10–20 detik</p>
                         </div>
                     </div>
                 )}
@@ -311,7 +311,7 @@ export default function OnboardingPage() {
                 {/* Form */}
                 <div className="space-y-5">
                     <div>
-                        <label htmlFor="gh" className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                        <label htmlFor="gh" className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                             GitHub URL atau username
                         </label>
                         <input
@@ -325,7 +325,7 @@ export default function OnboardingPage() {
                     </div>
 
                     <div>
-                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">CV (hanya PDF)</label>
+                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">CV (hanya PDF)</label>
                         <label
                             htmlFor="cv"
                             className={`flex w-full cursor-pointer items-center justify-center rounded-md border-2 border-dashed px-4 py-5 transition-colors ${
@@ -336,14 +336,14 @@ export default function OnboardingPage() {
                                 <div className="flex w-full items-center gap-3">
                                     <div className="min-w-0 flex-1">
                                         <p className="truncate text-sm font-medium">{file.name}</p>
-                                        <p className="font-mono text-[11px] text-muted-foreground">{(file.size / 1024).toFixed(0)} KB · PDF</p>
+                                        <p className="font-mono text-meta text-muted-foreground">{(file.size / 1024).toFixed(0)} KB · PDF</p>
                                     </div>
-                                    <span className="font-mono text-[11px] font-semibold text-success">✓ dipilih</span>
+                                    <span className="font-mono text-meta font-semibold text-success">✓ dipilih</span>
                                 </div>
                             ) : (
                                 <div className="py-2 text-center">
                                     <p className="text-sm font-medium">Klik untuk pilih file PDF</p>
-                                    <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">hanya .pdf yang diterima</p>
+                                    <p className="mt-0.5 font-mono text-meta text-muted-foreground">hanya .pdf yang diterima</p>
                                 </div>
                             )}
                         </label>
@@ -365,18 +365,18 @@ export default function OnboardingPage() {
                             disabled={sync.isPending}
                         />
                         {file && (
-                            <button type="button" onClick={() => setFile(null)} className="mt-2 text-[11.5px] text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <button type="button" onClick={() => setFile(null)} className="mt-2 text-meta text-muted-foreground hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                                 Hapus file
                             </button>
                         )}
-                        <p className="mt-2 font-mono text-[11px] text-muted-foreground">pastikan CV berbasis teks, bukan hasil scan/foto</p>
+                        <p className="mt-2 font-mono text-meta text-muted-foreground">pastikan CV berbasis teks, bukan hasil scan/foto</p>
                     </div>
 
                     <button
                         type="button"
                         disabled={sync.isPending || !githubUrl.trim() || !file}
                         onClick={handleSyncClick}
-                        className="rounded-md bg-primary px-5 py-2.5 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        className="rounded-md bg-primary px-5 py-2.5 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                         {sync.isPending ? "Syncing…" : hasExistingProfile ? "Sync ulang profil" : "Mulai sync profil"}
                     </button>

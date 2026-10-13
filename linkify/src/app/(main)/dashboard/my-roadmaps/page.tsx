@@ -97,7 +97,7 @@ export default function MyRoadmapsPage() {
                                             <p className="truncate text-[14px] font-semibold leading-tight">
                                                 {b.title}
                                                 {isDone && (
-                                                    <span className="ml-2 rounded-[3px] border border-success/40 px-1.5 py-px align-[2px] font-mono text-[10px] font-semibold tracking-[0.05em] text-success">
+                                                    <span className="ml-2 rounded-[3px] border border-success/40 px-1.5 py-px align-[2px] font-mono text-micro font-semibold tracking-[0.05em] text-success">
                                                         SELESAI
                                                     </span>
                                                 )}
@@ -110,11 +110,11 @@ export default function MyRoadmapsPage() {
                                         </div>
 
                                         <div className="flex items-center gap-3 sm:w-64 sm:shrink-0">
-                                            <span className="font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                                            <span className="font-mono text-meta tabular-nums text-muted-foreground">
                                                 {b.completed_steps}/{b.total_steps || 0}
                                             </span>
                                             <BarFill pct={pct} tone={isDone ? "success" : "primary"} className="flex-1" />
-                                            <span className="min-w-[34px] text-right font-mono text-[12.5px] font-semibold tabular-nums">
+                                            <span className="min-w-[34px] text-right font-mono text-[13px] font-semibold tabular-nums">
                                                 {pct}%
                                             </span>
                                         </div>
@@ -123,7 +123,7 @@ export default function MyRoadmapsPage() {
                                             <Link
                                                 href={`/dashboard/roadmap?job_id=${b.job_id}`}
                                                 prefetch={false}
-                                                className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                             >
                                                 Buka roadmap →
                                             </Link>

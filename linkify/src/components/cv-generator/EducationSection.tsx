@@ -42,7 +42,7 @@ export function EducationSection({ education, setEducation }: Props) {
                         <button
                             type="button"
                             onClick={addEducation}
-                            className="rounded-md border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="rounded-md border border-border px-3 py-1.5 text-[13px] font-semibold hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             + Tambah Sekolah
                         </button>
@@ -62,7 +62,7 @@ export function EducationSection({ education, setEducation }: Props) {
                                 </button>
                                 <div className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-2">
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Nama Universitas / Sekolah
                                         </label>
                                         <input
@@ -73,7 +73,7 @@ export function EducationSection({ education, setEducation }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Lokasi
                                         </label>
                                         <input
@@ -84,7 +84,7 @@ export function EducationSection({ education, setEducation }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Gelar / Bidang Studi
                                         </label>
                                         <input
@@ -95,7 +95,7 @@ export function EducationSection({ education, setEducation }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Jurusan / Fokus
                                         </label>
                                         <input
@@ -106,7 +106,7 @@ export function EducationSection({ education, setEducation }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             Periode (Tanggal)
                                         </label>
                                         <input
@@ -117,7 +117,7 @@ export function EducationSection({ education, setEducation }: Props) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                             IPK / Rata-rata
                                         </label>
                                         <input

@@ -36,9 +36,9 @@ export default function RecruiterSettingsPage() {
         <div className="w-full max-w-2xl space-y-6">
             <PageHeader crumb="dasbor / perusahaan / pengaturan" title="Pengaturan Perusahaan" sub="Ubah nama perusahaan yang tampil di chat. Lowongan lama tetap nama lama." />
             <Reveal delay={0.06} className="rounded-xl border border-border bg-card p-5">
-                <label className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Nama perusahaan *</label>
+                <label className="font-mono text-meta uppercase tracking-widest text-muted-foreground">Nama perusahaan *</label>
                 <input value={name} onChange={(e) => setName(e.target.value)} placeholder="PT Maju Jaya" className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500/30" />
-                <p className="mt-1 font-mono text-[11px] text-muted-foreground">Min 3 karakter. Tampil di daftar chat kandidat.</p>
+                <p className="mt-1 font-mono text-meta text-muted-foreground">Min 3 karakter. Tampil di daftar chat kandidat.</p>
                 <div className="mt-4 flex gap-2">
                     <button onClick={() => mut.mutate()} disabled={mut.isPending || name.trim().length < 3} className="rounded-full bg-violet-600 px-5 py-2 text-xs font-bold text-white hover:bg-violet-700 disabled:opacity-40">
                         {mut.isPending ? "Menyimpan..." : "Simpan"}

@@ -125,7 +125,7 @@ export default function CVGeneratorPage() {
             <div className="pt-8">
                 <EmptyState title="Gagal memuat profil">{(error as any)?.message || "Terjadi kesalahan saat memuat data."}</EmptyState>
                 <div className="mt-4 flex justify-center">
-                    <button onClick={() => refetch()} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110">Coba lagi</button>
+                    <button onClick={() => refetch()} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground transition hover:brightness-110">Coba lagi</button>
                 </div>
             </div>
         </div>
@@ -144,7 +144,7 @@ export default function CVGeneratorPage() {
                                     onClick={() => saveMutation.mutate()}
                                     disabled={!authReady || saveMutation.isPending}
                                     title="Data diri belum disimpan — klik untuk menyimpan"
-                                    className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground shadow-sm ring-2 ring-primary/30 transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                                    className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground shadow-sm ring-2 ring-primary/30 transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                                 >
                                     {saveMutation.isPending ? "Menyimpan…" : <><Save className="size-3.5" /> Simpan data diri</>}
                                 </button>
@@ -153,7 +153,7 @@ export default function CVGeneratorPage() {
                             <button
                                 onClick={() => saveMutation.mutate()}
                                 disabled={!authReady || saveMutation.isPending}
-                                className="text-[12.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 {saveMutation.isPending ? "Menyimpan…" : "Simpan riwayat"}
                             </button>
@@ -162,7 +162,7 @@ export default function CVGeneratorPage() {
                             onClick={handleDownload}
                             disabled={!authReady || !form.bioComplete}
                             title={!authReady ? "Auth belum siap" : !form.bioComplete ? "Lengkapi data diri dulu" : undefined}
-                            className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
+                            className="rounded-md bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100"
                         >
                             Unduh CV (.docx)
                         </button>
@@ -191,7 +191,7 @@ export default function CVGeneratorPage() {
                                 onClick={previewSentCV}
                                 disabled={!authReady || !form.bioComplete}
                                 title={!authReady ? "Auth belum siap" : !form.bioComplete ? "Lengkapi data diri dulu" : undefined}
-                                className="shrink-0 rounded-md border border-border px-3 py-1.5 text-[11.5px] font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                className="shrink-0 rounded-md border border-border px-3 py-1.5 text-meta font-semibold text-muted-foreground transition-colors hover:border-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Preview CV terkirim
                             </button>
@@ -206,10 +206,10 @@ export default function CVGeneratorPage() {
                             className={`rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${cvPref === "form" ? "border-primary/60 bg-primary/[0.05]" : "border-border hover:border-muted-foreground"}`}
                         >
                             <div className="flex items-center justify-between">
-                                <span className="text-[12.5px] font-bold">Versi form (ATS)</span>
-                                <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-primary">disarankan</span>
+                                <span className="text-[13px] font-bold">Versi form (ATS)</span>
+                                <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-micro font-semibold uppercase tracking-wide text-primary">disarankan</span>
                             </div>
-                            <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+                            <p className="mt-1 text-meta leading-relaxed text-muted-foreground">
                                 CV terstruktur ramah ATS dari data di bawah. <span className="text-amber-600 dark:text-amber-500">Pastikan sudah kamu cek</span> — hasil ekstraksi AI bisa keliru.
                             </p>
                         </button>
@@ -221,10 +221,10 @@ export default function CVGeneratorPage() {
                             className={`rounded-md border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${cvPref === "original" ? "border-primary/60 bg-primary/[0.05]" : "border-border hover:border-muted-foreground"}`}
                         >
                             <div className="flex items-center justify-between">
-                                <span className="text-[12.5px] font-bold">CV asli saya</span>
+                                <span className="text-[13px] font-bold">CV asli saya</span>
                                 {cvPref === "original" && <CheckCircle2 className="size-3.5 text-primary" />}
                             </div>
-                            <p className="mt-1 truncate text-[11.5px] leading-relaxed text-muted-foreground">
+                            <p className="mt-1 truncate text-meta leading-relaxed text-muted-foreground">
                                 {profile?.cv_filename ? `PDF asli: ${profile.cv_filename}` : "Belum ada PDF asli — upload CV dulu di onboarding."}
                             </p>
                         </button>

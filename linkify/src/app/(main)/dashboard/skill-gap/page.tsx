@@ -164,7 +164,7 @@ export default function SkillGapPage() {
                                 type="button"
                                 onClick={() => setMode(t.key)}
                                 aria-current={mode === t.key ? "true" : undefined}
-                                className={`-mb-px border-b-2 px-3 py-2 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
+                                className={`-mb-px border-b-2 px-3 py-2 text-body font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
                                     mode === t.key
                                         ? "border-primary text-foreground"
                                         : "border-transparent text-muted-foreground hover:text-foreground"
@@ -172,14 +172,14 @@ export default function SkillGapPage() {
                             >
                                 {t.label}
                                 {t.key === "auto" && data?.interests && data.interests.length > 0 && (
-                                    <span className="ml-1.5 font-mono text-[10.5px] text-primary">{data.interests.length}</span>
+                                    <span className="ml-1.5 font-mono text-[11px] text-primary">{data.interests.length}</span>
                                 )}
                             </button>
                         ))}
                     </div>
                     <Link
                         href="/dashboard/onboarding"
-                        className="font-mono text-[11px] text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        className="font-mono text-meta text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                         ubah minat →
                     </Link>
@@ -208,7 +208,7 @@ export default function SkillGapPage() {
                             <CountUp value={readiness.ready_jobs} className="font-mono text-[52px] font-semibold leading-none tracking-tight" />
                             <span className="font-mono text-lg text-muted-foreground">/ {readiness.relevant_jobs}</span>
                         </div>
-                        <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                        <p className="mt-1 font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                             lowongan siap dilamar · {readyLabel}
                         </p>
                         <BarFill
@@ -242,9 +242,9 @@ export default function SkillGapPage() {
                         return (
                             <li key={s.canonical_skill} className="flex items-center gap-4 border-b border-border/60 py-3">
                                 <span className="w-5 shrink-0 font-mono text-[12px] tabular-nums text-muted-foreground">{i + 1}</span>
-                                <span className="min-w-0 flex-1 text-[13.5px] font-semibold">{s.skill}</span>
+                                <span className="min-w-0 flex-1 text-[14px] font-semibold">{s.skill}</span>
                                 <BarFill pct={pct} className="w-28 shrink-0" />
-                                <span className="w-16 shrink-0 text-right font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                                <span className="w-16 shrink-0 text-right font-mono text-meta tabular-nums text-muted-foreground">
                                     {s.job_count} job
                                 </span>
                             </li>
@@ -260,11 +260,11 @@ export default function SkillGapPage() {
                     <div className="mt-3 flex flex-wrap gap-1.5">
                         {unprovenDemand.map((s) => (
                             <span key={s.canonical_skill} className="rounded-md border border-warning/40 px-2 py-1 text-[12px] text-warning">
-                                {s.skill} <span className="font-mono text-[10.5px] opacity-70">{s.job_count} job</span>
+                                {s.skill} <span className="font-mono text-[11px] opacity-70">{s.job_count} job</span>
                             </span>
                         ))}
                     </div>
-                    <p className="mt-3 border-l-2 border-warning/50 pl-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                    <p className="mt-3 border-l-2 border-warning/50 pl-3 text-[13px] leading-relaxed text-muted-foreground">
                         Nama skill ini belum muncul di bahasa atau topic repo GitHub-mu. Bukan berarti kamu lemah — bisa jadi kerjanya di repo privat.
                         Publikasikan project kecil agar recruiter melihat buktinya.
                     </p>
@@ -279,7 +279,7 @@ export default function SkillGapPage() {
                     aria-expanded={showCategories}
                     className="flex w-full items-center justify-between border-b border-border pb-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                    <span className="text-[13px] font-bold tracking-tight">
+                    <span className="text-body font-bold tracking-tight">
                         {missingTotal} skill belum dimiliki · rincian {missingDemand.length} teratas
                     </span>
                     <motion.span
@@ -309,10 +309,10 @@ export default function SkillGapPage() {
                                     .map(([cat, skills]) => (
                                         <div key={cat}>
                                             <div className="mb-1.5 flex items-baseline justify-between">
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{cat}</span>
-                                                <span className="font-mono text-[11px] text-muted-foreground">{skills.length}</span>
+                                                <span className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{cat}</span>
+                                                <span className="font-mono text-meta text-muted-foreground">{skills.length}</span>
                                             </div>
-                                            <p className="text-[13px] leading-relaxed">
+                                            <p className="text-body leading-relaxed">
                                                 {skills.map((s, i) => (
                                                     <span key={s.canonical_skill}>
                                                         {i > 0 && <span className="mx-1.5 text-border">·</span>}
@@ -338,7 +338,7 @@ export default function SkillGapPage() {
                         <span className="block text-[14px] font-semibold">Lihat job rekomendasi</span>
                         <span className="mt-0.5 block text-xs text-muted-foreground">Lowongan yang cocok dengan skillmu saat ini</span>
                     </span>
-                    <span className="font-mono text-[13px] font-semibold text-primary transition-transform group-hover:translate-x-1">→</span>
+                    <span className="font-mono text-body font-semibold text-primary transition-transform group-hover:translate-x-1">→</span>
                 </Link>
             </Reveal>
         </div>

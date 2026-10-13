@@ -200,7 +200,7 @@ export function ChatPanel({ onClose }: { onClose?: () => void }) {
                                 </div>
                                 <div className="min-w-0">
                                     <p className="truncate text-sm font-semibold leading-none">{selectedConv?.other_name ?? selectedConv?.other_email ?? selectedId.slice(0, 8)}</p>
-                                    <p className="truncate text-[11px] text-muted-foreground">
+                                    <p className="truncate text-meta text-muted-foreground">
                                         {selectedConv?.other_company ?? selectedConv?.job_company ?? "—"}
                                         {selectedConv?.job_title ? ` · Re: ${selectedConv.job_title}` : ""}
                                         {selectedConv?.expires_at ? ` · Sisa ${formatDistanceToNow(new Date(selectedConv.expires_at), { locale: localeId })}` : ""}

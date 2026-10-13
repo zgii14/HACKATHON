@@ -142,7 +142,7 @@ export default function RecruiterJobsPage() {
                             key={job.id}
                             className={`rounded-2xl border bg-card p-5 space-y-3 hover:shadow-lg transition-all duration-300 relative group ${job.is_closed ? "border-amber-500/30 bg-amber-500/[0.03]" : "border-border"}`}
                         >
-                            <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                            <div className="flex flex-wrap items-center gap-2 text-micro">
                                 {job.is_closed ? (
                                     <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 font-bold text-amber-600"><Archive className="size-3" /> Tutup</span>
                                 ) : (
@@ -158,7 +158,7 @@ export default function RecruiterJobsPage() {
                                         {job.title}
                                     </h3>
                                     <p className="text-xs text-muted-foreground font-semibold">{job.company}</p>
-                                    <div className="flex flex-wrap items-center gap-3 pt-1 text-[10px] text-muted-foreground">
+                                    <div className="flex flex-wrap items-center gap-3 pt-1 text-micro text-muted-foreground">
                                         <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{job.location || "Indonesia"} ({job.work_type || "Hybrid"})</span>
                                         {job.salary && <span>• Gaji: {job.salary}</span>}
                                     </div>
@@ -166,7 +166,7 @@ export default function RecruiterJobsPage() {
                                 <div className="flex items-center gap-4 shrink-0 mt-2 md:mt-0">
                                     <div className="text-right">
                                         <span className="text-2xl font-black text-foreground flex items-center justify-end gap-1"><Users className="w-4 h-4 text-primary" />{job.applicant_count}</span>
-                                        <p className="text-[10px] text-muted-foreground font-medium">Total Pelamar</p>
+                                        <p className="text-micro text-muted-foreground font-medium">Total Pelamar</p>
                                     </div>
                                     <Link href={`/dashboard/recruiter/jobs/${job.id}`}>
                                         <Button variant="outline" size="sm" className="h-8 text-xs gap-1 px-3.5 rounded-lg border-muted-foreground/20 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] font-semibold"><UserCheck className="w-3.5 h-3.5" />Review</Button>
@@ -175,7 +175,7 @@ export default function RecruiterJobsPage() {
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                                 {job.required_skills.map((skill) => (
-                                    <Badge key={skill} variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md font-medium bg-muted/60 text-muted-foreground border-none">{skill}</Badge>
+                                    <Badge key={skill} variant="secondary" className="text-micro px-2 py-0.5 rounded-md font-medium bg-muted/60 text-muted-foreground border-none">{skill}</Badge>
                                 ))}
                             </div>
                             <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-3">

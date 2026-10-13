@@ -214,27 +214,27 @@ export default function DashboardHomePage() {
     if (!hasProfile) {
         return (
             <Reveal className="mx-auto max-w-xl py-16">
-                <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+                <p className="font-mono text-meta uppercase tracking-[0.08em] text-muted-foreground">
                     dasbor / onboarding
                 </p>
                 <h1 className="mt-3 text-2xl font-bold tracking-tight">
                     Selamat {greeting}, {firstName}. Bangun profil GitHire dulu.
                 </h1>
-                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                <p className="mt-3 text-read leading-relaxed text-muted-foreground">
                     Setelah GitHub dan CV tersambung, dasbor ini menampilkan match score, skill gap, roadmap
                     belajar, dan status lamaran dalam satu alur kerja.
                 </p>
                 <Link
                     href="/dashboard/onboarding"
-                    className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className="mt-8 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-[14px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                     Mulai onboarding →
                 </Link>
                 <div className="mt-10 border-t border-border pt-5">
                     <ul className="space-y-2.5">
                         {["Hubungkan akun GitHub", "Upload CV", "Sistem gabungkan skill + verifikasi dari repo"].map((step, i) => (
-                            <li key={step} className="flex items-baseline gap-3 text-[13px] text-muted-foreground">
-                                <span className="font-mono text-[11px] tabular-nums text-primary">{i + 1}.</span>
+                            <li key={step} className="flex items-baseline gap-3 text-body text-muted-foreground">
+                                <span className="font-mono text-meta tabular-nums text-primary">{i + 1}.</span>
                                 {step}
                             </li>
                         ))}
@@ -250,7 +250,7 @@ export default function DashboardHomePage() {
             <Reveal>
                 <div className="flex flex-col gap-6 pb-6 pt-1 md:flex-row md:items-end md:justify-between">
                     <div>
-                        <p className="font-mono text-[11px] text-muted-foreground">
+                        <p className="font-mono text-meta text-muted-foreground">
                             dasbor / <span className="font-medium text-foreground">ringkasan</span> · {today}
                         </p>
                         <h1 className="mt-2 text-[22px] font-bold tracking-tight">
@@ -259,7 +259,7 @@ export default function DashboardHomePage() {
                     </div>
                     <div className="md:text-right">
                         <div className="flex items-baseline gap-2.5 md:justify-end">
-                            <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                            <span className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                                 Kesiapan profil
                             </span>
                             <CountUp value={readinessScore} className="font-mono text-[28px] font-semibold tabular-nums tracking-tight" />
@@ -270,7 +270,7 @@ export default function DashboardHomePage() {
                             <Link
                                 href={`https://github.com/${profile.github_username}`}
                                 target="_blank"
-                                className="mt-2 inline-block font-mono text-[11.5px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="mt-2 inline-block font-mono text-meta text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 github.com/{profile.github_username} ↗
                             </Link>
@@ -296,13 +296,13 @@ export default function DashboardHomePage() {
                                 i > 0 ? "border-l border-border max-md:[&:nth-child(3)]:border-l-0" : ""
                             } max-md:[&:nth-child(n+3)]:border-t max-md:[&:nth-child(n+3)]:border-border`}
                         >
-                            <p className="font-mono text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                            <p className="font-mono text-meta font-medium uppercase tracking-[0.06em] text-muted-foreground">
                                 {s.k}
                             </p>
                             <p className="mt-1 font-mono text-[30px] font-semibold tabular-nums tracking-tight">
                                 <CountUp value={s.v} />
                             </p>
-                            <p className="font-mono text-[11.5px] text-muted-foreground transition-colors group-hover:text-foreground">
+                            <p className="font-mono text-meta text-muted-foreground transition-colors group-hover:text-foreground">
                                 {s.d}
                             </p>
                             <span
@@ -323,7 +323,7 @@ export default function DashboardHomePage() {
                             {readinessItems.map((item) => (
                                 <li
                                     key={item.label}
-                                    className="flex items-center gap-3 border-b border-border/60 py-3 text-[13.5px]"
+                                    className="flex items-center gap-3 border-b border-border/60 py-3 text-body"
                                 >
                                     <span
                                         className={`grid size-[15px] shrink-0 place-items-center rounded-[3px] border-[1.5px] ${
@@ -341,19 +341,19 @@ export default function DashboardHomePage() {
                                     <span className={item.complete ? "text-muted-foreground line-through decoration-muted-foreground/50" : ""}>
                                         {item.label}
                                     </span>
-                                    <span className="ml-auto font-mono text-[11px] text-muted-foreground">{item.helper}</span>
+                                    <span className="ml-auto font-mono text-meta text-muted-foreground">{item.helper}</span>
                                 </li>
                             ))}
                         </ul>
 
                         {/* Langkah berikutnya */}
                         <div className="mt-5 border-l-2 border-primary py-1 pl-4">
-                            <p className="text-[13.5px] font-bold">{nextAction.title}</p>
-                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{nextAction.description}</p>
+                            <p className="text-body font-bold">{nextAction.title}</p>
+                            <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">{nextAction.description}</p>
                             <Link
                                 href={nextAction.href}
                                 prefetch={false}
-                                className="mt-2.5 inline-block text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="mt-2.5 inline-block text-body font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 {nextAction.cta} →
                             </Link>
@@ -365,7 +365,7 @@ export default function DashboardHomePage() {
                     <section aria-label="Lowongan paling cocok">
                         <SecTitle title="Match teratas untukmu" meta={`${topMatches.length} dari ${recommended?.length ?? 0} rekomendasi`} />
                         {topMatches.length === 0 ? (
-                            <p className="py-7 text-center text-[13px] text-muted-foreground">
+                            <p className="py-7 text-center text-body text-muted-foreground">
                                 Belum ada rekomendasi.{" "}
                                 <Link href="/dashboard/jobs" className="font-semibold text-primary hover:underline">
                                     Browse lowongan
@@ -375,8 +375,8 @@ export default function DashboardHomePage() {
                         ) : (
                             <>
                                 <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-4 pb-2 pt-3">
-                                    <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.07em] text-muted-foreground">Posisi</span>
-                                    <span className="text-right font-mono text-[10.5px] font-medium uppercase tracking-[0.07em] text-muted-foreground">Match</span>
+                                    <span className="font-mono text-meta font-medium uppercase tracking-[0.07em] text-muted-foreground">Posisi</span>
+                                    <span className="text-right font-mono text-meta font-medium uppercase tracking-[0.07em] text-muted-foreground">Match</span>
                                     <span className="w-4" aria-hidden="true" />
                                 </div>
                                 <ul>
@@ -385,12 +385,12 @@ export default function DashboardHomePage() {
                                     ))}
                                 </ul>
                                 <div className="flex items-center justify-between border-t border-border/60 pt-3">
-                                    <span className="font-mono text-[11.5px] text-muted-foreground">
+                                    <span className="font-mono text-meta text-muted-foreground">
                                         Klik baris untuk lihat deskripsi · {recommended?.length ?? 0} cocok total
                                     </span>
                                     <Link
                                         href="/dashboard/jobs/recommended"
-                                        className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="text-body font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     >
                                         Lihat semua →
                                     </Link>
@@ -420,7 +420,7 @@ export default function DashboardHomePage() {
                                 ))}
                             </div>
                         ) : bookmarks.length === 0 ? (
-                            <p className="py-7 text-center text-[13px] text-muted-foreground">
+                            <p className="py-7 text-center text-body text-muted-foreground">
                                 Belum ada roadmap target.{" "}
                                 <Link href="/dashboard/jobs" className="font-semibold text-primary hover:underline">
                                     Pilih lowongan
@@ -440,24 +440,24 @@ export default function DashboardHomePage() {
                                                 className="flex items-center gap-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                             >
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="truncate text-[13.5px] font-semibold leading-tight">
+                                                    <p className="truncate text-[14px] font-semibold leading-tight">
                                                         {bookmark.title}
                                                         {isDone && (
-                                                            <span className="ml-2 rounded-[3px] border border-success/40 px-1.5 py-px align-[2px] font-mono text-[10px] font-semibold tracking-[0.05em] text-success">
+                                                            <span className="ml-2 rounded-[3px] border border-success/40 px-1.5 py-px align-[2px] font-mono text-micro font-semibold tracking-[0.05em] text-success">
                                                                 SELESAI
                                                             </span>
                                                         )}
                                                     </p>
-                                                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                                    <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
                                                         {bookmark.company}
                                                         {bookmark.is_remote ? " · remote" : ""}
                                                     </p>
                                                 </div>
-                                                <span className="font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                                                <span className="font-mono text-meta tabular-nums text-muted-foreground">
                                                     {bookmark.completed_steps}/{bookmark.total_steps || 0}
                                                 </span>
                                                 <BarFill pct={pct} className="w-20 shrink-0" />
-                                                <span className="min-w-[34px] text-right font-mono text-[12.5px] font-semibold tabular-nums">
+                                                <span className="min-w-[34px] text-right font-mono text-body font-semibold tabular-nums">
                                                     {pct}%
                                                 </span>
                                             </Link>
@@ -490,7 +490,7 @@ export default function DashboardHomePage() {
                                         <p className="font-mono text-[24px] font-semibold tabular-nums tracking-tight">
                                             <CountUp value={s.v} />
                                         </p>
-                                        <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{s.k}</p>
+                                        <p className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{s.k}</p>
                                     </div>
                                 ))}
                             </div>
@@ -507,24 +507,24 @@ export default function DashboardHomePage() {
                             />
                             {gapCount > 0 ? (
                                 <div className="pt-3">
-                                    <p className="text-[13px] leading-relaxed text-muted-foreground">
+                                    <p className="text-body leading-relaxed text-muted-foreground">
                                         {(gap?.missing_skills ?? []).slice(0, 8).map((skill, i) => (
                                             <span key={skill}>
                                                 {i > 0 && <span className="mx-1.5 text-border">·</span>}
                                                 <span className="font-semibold text-foreground">{skill}</span>
                                             </span>
                                         ))}
-                                        {gapCount > 8 && <span className="ml-1.5 font-mono text-xs">+{gapCount - 8} lagi</span>}
+                                        {gapCount > 8 && <span className="ml-1.5 font-mono text-meta">+{gapCount - 8} lagi</span>}
                                     </p>
                                     {weakCount > 0 && (
-                                        <p className="mt-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
+                                        <p className="mt-3 border-t border-border/60 pt-3 text-[14px] text-muted-foreground">
                                             <span className="font-mono font-semibold text-warning">{weakCount}</span> skill ada di
                                             CV tapi belum punya bukti kuat dari GitHub.
                                         </p>
                                     )}
                                 </div>
                             ) : (
-                                <p className="pt-3 text-[13px] text-muted-foreground">
+                                <p className="pt-3 text-body text-muted-foreground">
                                     Skill utama pasar sudah tertutup. Saatnya{" "}
                                     <Link href="/dashboard/jobs" className="font-semibold text-primary hover:underline">
                                         pilih target job

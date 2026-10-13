@@ -59,7 +59,7 @@ function SkillTag({
         >
             <span className={`size-1.5 shrink-0 rounded-full ${dot}`} />
             {skill}
-            {verified && <span className="font-mono text-[11px] text-success">✓</span>}
+            {verified && <span className="font-mono text-meta text-success">✓</span>}
         </span>
     );
 }
@@ -151,10 +151,10 @@ export default function ProfilePage() {
                 sub={`Sync terakhir ${updatedAt}. Skill digabung dari GitHub + CV, ditandai berdasarkan sumbernya.`}
                 right={
                     <div className="flex items-center gap-4">
-                        <Link href="/dashboard/cv-generator" className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        <Link href="/dashboard/cv-generator" className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             Buat CV
                         </Link>
-                        <Link href="/dashboard/onboarding" className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        <Link href="/dashboard/onboarding" className="text-[13px] font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             Sync ulang
                         </Link>
                     </div>
@@ -174,7 +174,7 @@ export default function ProfilePage() {
                             key={s.k}
                             className={`px-5 py-4 ${i > 0 ? "border-l border-border max-md:[&:nth-child(3)]:border-l-0" : ""} max-md:[&:nth-child(n+3)]:border-t max-md:[&:nth-child(n+3)]:border-border`}
                         >
-                            <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{s.k}</p>
+                            <p className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{s.k}</p>
                             <p className="mt-1 font-mono text-[28px] font-semibold tabular-nums tracking-tight">
                                 <CountUp value={s.v} />
                             </p>
@@ -204,7 +204,7 @@ export default function ProfilePage() {
                                 <span className="font-mono text-lg text-muted-foreground">%</span>
                             </div>
                             <BarFill pct={ghBackedPct} tone={ghBackedPct >= 60 ? "success" : "primary"} className="mt-3 w-full max-w-[240px]" />
-                            <p className="mt-2 font-mono text-[11.5px] leading-relaxed text-muted-foreground">
+                            <p className="mt-2 font-mono text-meta leading-relaxed text-muted-foreground">
                                 {ghBacked}/{mergedSkills.length} skill namanya muncul di GitHub. Bukti commit dihitung
                                 terpisah di bagian skill terverifikasi.
                             </p>
@@ -233,10 +233,10 @@ export default function ProfilePage() {
                                 {sortedLangs.slice(0, 8).map(([lang, bytes]) => {
                                     const pct = Math.round((bytes / totalBytes) * 100);
                                     return (
-                                        <div key={lang} className="flex items-center gap-2 text-[12.5px]">
+                                        <div key={lang} className="flex items-center gap-2 text-[13px]">
                                             <span className="size-2.5 shrink-0 rounded-sm" style={{ background: LANG_COLORS[lang] ?? "hsl(var(--primary))" }} />
                                             <span className="truncate">{lang}</span>
-                                            <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">{pct}%</span>
+                                            <span className="ml-auto font-mono text-meta tabular-nums text-muted-foreground">{pct}%</span>
                                         </div>
                                     );
                                 })}
@@ -255,7 +255,7 @@ export default function ProfilePage() {
                     />
                     {verifiedSkills.length > 0 ? (
                         <>
-                            <p className="pt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                            <p className="pt-3 text-[13px] leading-relaxed text-muted-foreground">
                                 Skill di bawah punya jejak commit milikmu sendiri di repo non-fork. Level dihitung dari
                                 volume kode, jumlah repo, dan kapan terakhir dipakai.
                             </p>
@@ -264,7 +264,7 @@ export default function ProfilePage() {
                             </div>
                         </>
                     ) : (
-                        <p className="pt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                        <p className="pt-3 text-[13px] leading-relaxed text-muted-foreground">
                             Belum ada skill dengan bukti commit yang cukup. Skillmu tetap tersimpan sebagai{" "}
                             <span className="font-semibold text-foreground">declared</span> dan dipakai untuk mencocokkan
                             lowongan. Commit rutin ke repo sendiri (bukan fork), lalu{" "}
@@ -281,7 +281,7 @@ export default function ProfilePage() {
             <Reveal delay={0.33} className="pt-10">
                 <section aria-label="Semua skill">
                     <SecTitle title="Semua skill" meta={`${mergedSkills.length} total · GitHub + CV`} />
-                    <div className="flex flex-wrap gap-4 pt-3 font-mono text-[11px] text-muted-foreground">
+                    <div className="flex flex-wrap gap-4 pt-3 font-mono text-meta text-muted-foreground">
                         <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-success" /> keduanya ({bySource.both.length})</span>
                         <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary" /> github ({bySource.github.length})</span>
                         <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-muted-foreground" /> cv ({bySource.cv.length})</span>
@@ -293,7 +293,7 @@ export default function ProfilePage() {
                         ))}
                     </div>
                     {declaredSkills.length > 0 && (
-                        <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                        <p className="mt-3 font-mono text-meta leading-relaxed text-muted-foreground">
                             {declaredSkills.length} skill masih declared — belum ada bukti repo.
                         </p>
                     )}
@@ -312,7 +312,7 @@ export default function ProfilePage() {
                                 </span>
                             ))}
                         </div>
-                        <p className="mt-3 border-l-2 border-warning/50 pl-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                        <p className="mt-3 border-l-2 border-warning/50 pl-3 text-[13px] leading-relaxed text-muted-foreground">
                             Nama skill ini tidak muncul di bahasa atau topic repo GitHub-mu. Publikasikan project yang memakainya agar recruiter punya bukti kode.
                         </p>
                     </section>
@@ -335,7 +335,7 @@ export default function ProfilePage() {
                                 <span className="block text-[14px] font-semibold">{c.t}</span>
                                 <span className="mt-0.5 block text-xs text-muted-foreground">{c.d}</span>
                             </span>
-                            <span className="font-mono text-[13px] font-semibold text-primary transition-transform group-hover:translate-x-1">→</span>
+                            <span className="font-mono text-body font-semibold text-primary transition-transform group-hover:translate-x-1">→</span>
                         </Link>
                     ))}
                 </div>

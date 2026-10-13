@@ -29,7 +29,7 @@ export function MessageBubble({ body, createdAt, isMine, status, replyTo, jobTit
         >
             <div
                 className={cn(
-                    "group relative max-w-[78%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed shadow-sm",
+                    "group relative max-w-[78%] rounded-2xl px-3.5 py-2.5 text-body leading-relaxed shadow-sm",
                     "border",
                     isMine
                         ? "rounded-br-md border-violet-500/20 bg-violet-600 text-white shadow-violet-500/10"
@@ -38,7 +38,7 @@ export function MessageBubble({ body, createdAt, isMine, status, replyTo, jobTit
             >
                 {/* Job context header — opsi 2: tampil kalau ada, hanya di bubble pertama grup */}
                 {isFirstOfGroup && jobTitle && (
-                    <div className={cn("mb-1.5 flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium", isMine ? "bg-white/15 text-white/90" : "bg-violet-500/10 text-violet-600 dark:text-violet-300")}>
+                    <div className={cn("mb-1.5 flex items-center gap-1 rounded-md px-2 py-1 text-micro font-medium", isMine ? "bg-white/15 text-white/90" : "bg-violet-500/10 text-violet-600 dark:text-violet-300")}>
                         <CornerDownRight className="size-3 shrink-0" />
                         <span className="truncate">Re: {jobTitle}{jobCompany ? ` · ${jobCompany}` : ""}</span>
                     </div>
@@ -50,7 +50,7 @@ export function MessageBubble({ body, createdAt, isMine, status, replyTo, jobTit
                     </div>
                 )}
                 <p className="whitespace-pre-wrap break-words pr-6">{body}</p>
-                <div className={cn("mt-1 flex items-center justify-end gap-1 font-mono text-[10px]", isMine ? "text-white/70" : "text-muted-foreground")}>
+                <div className={cn("mt-1 flex items-center justify-end gap-1 font-mono text-micro", isMine ? "text-white/70" : "text-muted-foreground")}>
                     <span>{time}</span>
                     {isMine && (
                         <span className="ml-0.5">

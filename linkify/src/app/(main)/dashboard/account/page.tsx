@@ -85,22 +85,22 @@ export default function AccountPage() {
                     <div className="min-w-0">
                         <p className="flex items-center gap-2 text-[15px] font-semibold">
                             {user?.fullName ?? user?.username ?? "—"}
-                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-[10px] font-semibold text-success">VERIFIED</span>
+                            <span className="rounded-[3px] border border-success/40 px-1.5 py-px font-mono text-micro font-semibold text-success">VERIFIED</span>
                         </p>
                         <p className="mt-0.5 font-mono text-[12px] text-muted-foreground">{user?.primaryEmailAddress?.emailAddress ?? "—"}</p>
                     </div>
                 </div>
                 <dl className="grid grid-cols-2 border-y border-border">
                     <div className="px-5 py-3">
-                        <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Username</dt>
-                        <dd className="mt-0.5 truncate text-[13.5px] font-medium">{user?.username ?? "—"}</dd>
+                        <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Username</dt>
+                        <dd className="mt-0.5 truncate text-[14px] font-medium">{user?.username ?? "—"}</dd>
                     </div>
                     <div className="border-l border-border px-5 py-3">
-                        <dt className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">Bergabung</dt>
-                        <dd className="mt-0.5 font-mono text-[13.5px] tabular-nums">{joined}</dd>
+                        <dt className="font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">Bergabung</dt>
+                        <dd className="mt-0.5 font-mono text-[14px] tabular-nums">{joined}</dd>
                     </div>
                 </dl>
-                <p className="mt-2.5 text-[11.5px] text-muted-foreground">
+                <p className="mt-2.5 text-meta text-muted-foreground">
                     Untuk mengubah email, password, atau foto profil, gunakan menu akun di pojok kanan bawah sidebar.
                 </p>
             </Reveal>
@@ -135,7 +135,7 @@ export default function AccountPage() {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {FIELDS.map(({ key, label, placeholder, wide }) => (
                                 <div key={key} className={wide ? "sm:col-span-2" : ""}>
-                                    <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{label}</label>
+                                    <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{label}</label>
                                     <input
                                         value={form[key] ?? ""}
                                         onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value || null }))}
@@ -149,13 +149,13 @@ export default function AccountPage() {
                             <button
                                 onClick={() => saveMutation.mutate(form)}
                                 disabled={saveMutation.isPending}
-                                className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                                className="rounded-md bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                             >
                                 {saveMutation.isPending ? "Menyimpan…" : "Simpan data diri"}
                             </button>
                             <button
                                 onClick={() => setEditing(false)}
-                                className="text-[12.5px] font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="text-[13px] font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
                                 Batal
                             </button>
@@ -165,12 +165,12 @@ export default function AccountPage() {
                     <dl className="pt-1">
                         {FIELDS.filter(({ key }) => !!bio?.[key]).map(({ key, label }) => (
                             <div key={key} className="flex items-baseline gap-4 border-b border-border/60 py-3">
-                                <dt className="w-32 shrink-0 font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">{label}</dt>
-                                <dd className="text-[13.5px] font-medium">{bio?.[key]}</dd>
+                                <dt className="w-32 shrink-0 font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">{label}</dt>
+                                <dd className="text-[14px] font-medium">{bio?.[key]}</dd>
                             </div>
                         ))}
                         {FIELDS.filter(({ key }) => !bio?.[key]).length > 0 && (
-                            <p className="pt-3 text-[11.5px] text-muted-foreground">
+                            <p className="pt-3 text-meta text-muted-foreground">
                                 {FIELDS.filter(({ key }) => !bio?.[key]).length} field belum diisi ·{" "}
                                 <button onClick={() => setEditing(true)} className="font-semibold text-primary hover:underline">
                                     lengkapi sekarang
@@ -179,14 +179,14 @@ export default function AccountPage() {
                         )}
                     </dl>
                 ) : (
-                    <p className="mt-4 border-l-2 border-warning/50 pl-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                    <p className="mt-4 border-l-2 border-warning/50 pl-3 text-[13px] leading-relaxed text-muted-foreground">
                         Data diri belum diisi. Surat lamaran yang di-generate hanya akan berisi nama saja. Isi sekarang untuk hasil yang lebih profesional.
                     </p>
                 )}
             </Reveal>
 
             <Reveal delay={0.19} className="pt-9">
-                <p className="border-l-2 border-primary bg-primary/[0.04] px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                <p className="border-l-2 border-primary bg-primary/[0.04] px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
                     <span className="font-semibold text-foreground">Data diri dipakai untuk generate surat lamaran.</span> Nama, tempat/tanggal lahir,
                     alamat, dan nomor telepon otomatis terisi di surat yang dibuat AI. Semakin lengkap, semakin profesional hasilnya.
                 </p>

@@ -258,7 +258,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                 <h4 className="font-bold text-xs text-foreground truncate">
                                     {app.applicant.fullName || "Kandidat Tanpa Nama"}
                                 </h4>
-                                <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${
+                                <span className={`text-micro px-2 py-0.5 rounded-full font-semibold ${
                                     {
                                         applied: "bg-blue-500/10 text-blue-400",
                                         interview: "bg-amber-500/10 text-amber-400",
@@ -270,7 +270,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     {app.status === "interview_confirmed" ? "CONFIRMED" : app.status.toUpperCase()}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                            <div className="flex items-center gap-3 text-micro text-muted-foreground">
                                 <span className="flex items-center gap-1 font-medium">
                                     <Github className="w-3.5 h-3.5" />
                                     {app.applicant.github || "-"}
@@ -313,7 +313,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     <p className="text-xs text-muted-foreground font-semibold">
                                         {selectedApp.applicant.email}
                                     </p>
-                                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground pt-1.5">
+                                    <div className="flex items-center gap-3 text-micro text-muted-foreground pt-1.5">
                                         <span>Telp: {selectedApp.applicant.phone || "-"}</span>
                                         <span>•</span>
                                         <span>Alamat: {selectedApp.applicant.address || "-"}</span>
@@ -329,7 +329,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                         <Download className="w-3.5 h-3.5" />
                                         Unduh CV (PDF)
                                     </Button>
-                                    <span className="text-[9px] text-muted-foreground">
+                                    <span className="text-micro text-muted-foreground">
                                         {selectedApp.applicant.cv_preference === "original"
                                             ? "versi: PDF asli kandidat"
                                             : "versi: form (ATS)"}
@@ -349,7 +349,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     <button
                                         onClick={() => refreshScreening.mutate()}
                                         disabled={refreshScreening.isPending || !selectedApp?.id}
-                                        className="text-[10px] font-semibold flex items-center gap-1 text-violet-300 hover:text-violet-200 disabled:opacity-50"
+                                        className="text-micro font-semibold flex items-center gap-1 text-violet-300 hover:text-violet-200 disabled:opacity-50"
                                     >
                                         <Sparkles className="w-3 h-3 text-amber-400" />
                                         {refreshScreening.isPending ? "Menganalisis…" : "Analisis ulang"}
@@ -364,13 +364,13 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                 ) : aiLoading ? (
                                     <div className="flex flex-col items-center justify-center py-6 space-y-2">
                                         <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                                        <p className="text-[10px] text-muted-foreground animate-pulse font-medium">Gemini sedang menganalisis kecocokan pelamar...</p>
+                                        <p className="text-micro text-muted-foreground animate-pulse font-medium">Gemini sedang menganalisis kecocokan pelamar...</p>
                                     </div>
                                 ) : aiResult ? (
                                     <div>
                                     {aiResult.recommendation && (
                                         <div className="mb-4 space-y-2">
-                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${VERDICT[aiResult.recommendation]?.cls ?? ""}`}>
+                                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-micro font-bold ${VERDICT[aiResult.recommendation]?.cls ?? ""}`}>
                                                 {VERDICT[aiResult.recommendation]?.label ?? aiResult.recommendation}
                                             </span>
                                             {aiResult.reasoning && (
@@ -389,13 +389,13 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                                 </svg>
                                                 <span className="absolute text-base font-black text-violet-300">{aiResult.match_score}%</span>
                                             </div>
-                                            <span className="text-[9px] font-semibold text-violet-400 mt-1 uppercase tracking-wider">Match Score</span>
+                                            <span className="text-micro font-semibold text-violet-400 mt-1 uppercase tracking-wider">Match Score</span>
                                         </div>
 
                                         {/* Strengths & Weaknesses */}
                                         <div className="md:col-span-8 space-y-3">
                                             <div className="space-y-1">
-                                                <span className="text-[9px] font-bold text-emerald-400 uppercase">Kekuatan (Strengths)</span>
+                                                <span className="text-micro font-bold text-emerald-400 uppercase">Kekuatan (Strengths)</span>
                                                 {aiResult.strengths.map((str, idx) => (
                                                     <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1">
                                                         <span className="text-emerald-400 mt-0.5">•</span>
@@ -404,7 +404,7 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                                 ))}
                                             </div>
                                             <div className="space-y-1 pt-1">
-                                                <span className="text-[9px] font-bold text-rose-400 uppercase">Kesenjangan (Weaknesses)</span>
+                                                <span className="text-micro font-bold text-rose-400 uppercase">Kesenjangan (Weaknesses)</span>
                                                 {aiResult.weaknesses.map((weak, idx) => (
                                                     <p key={idx} className="text-xs text-muted-foreground flex items-start gap-1">
                                                         <span className="text-rose-400 mt-0.5">•</span>
@@ -440,28 +440,28 @@ export default function JobApplicantsPage({ params }: { params: { id: string } }
                                     <>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-0.5">
-                                                <span className="text-[9px] text-muted-foreground font-semibold uppercase">Username</span>
+                                                <span className="text-micro text-muted-foreground font-semibold uppercase">Username</span>
                                                 <p className="text-xs font-bold text-foreground">@{selectedApp.applicant.github}</p>
                                             </div>
                                             <div className="space-y-0.5">
-                                                <span className="text-[9px] text-muted-foreground font-semibold uppercase">Declared Skills (GitHub + CV)</span>
+                                                <span className="text-micro text-muted-foreground font-semibold uppercase">Declared Skills (GitHub + CV)</span>
                                                 <div className="flex flex-wrap gap-1 pt-1">
                                                     {selectedApp.applicant.merged_skills.slice(0, 5).map((s) => (
-                                                        <Badge key={s} variant="outline" className="text-[8px] px-1.5 py-0.5 rounded bg-muted/40 font-medium">
+                                                        <Badge key={s} variant="outline" className="text-micro px-1.5 py-0.5 rounded bg-muted/40 font-medium">
                                                             {s}
                                                         </Badge>
                                                     ))}
                                                     {selectedApp.applicant.merged_skills.length > 5 && (
-                                                        <span className="text-[8px] text-muted-foreground font-semibold">+{selectedApp.applicant.merged_skills.length - 5} lainnya</span>
+                                                        <span className="text-micro text-muted-foreground font-semibold">+{selectedApp.applicant.merged_skills.length - 5} lainnya</span>
                                                     )}
                                                 </div>
-                                                <p className="text-[9px] text-muted-foreground pt-1">Klaim dari CV/topics — belum tentu ada bukti commit.</p>
+                                                <p className="text-micro text-muted-foreground pt-1">Klaim dari CV/topics — belum tentu ada bukti commit.</p>
                                             </div>
                                         </div>
 
                                         {/* Skill terverifikasi — bukti commit di repo non-fork milik kandidat */}
                                         <div className="border-t border-border pt-3">
-                                            <span className="text-[9px] text-muted-foreground font-semibold uppercase">
+                                            <span className="text-micro text-muted-foreground font-semibold uppercase">
                                                 Skill terverifikasi (bukti commit)
                                             </span>
                                             {(selectedApp.applicant.verified_skills ?? []).length > 0 ? (

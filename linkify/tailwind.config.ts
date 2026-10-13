@@ -71,6 +71,12 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontSize: {
+        micro: ["10.5px", { lineHeight: "15px" }],
+        meta: ["11.5px", { lineHeight: "16px" }],
+        body: ["14px", { lineHeight: "21px" }],
+        read: ["15px", { lineHeight: "24px" }],
+      },
       fontFamily: {
         "heading": ["Satoshi", "Plus Jakarta Sans", "sans-serif"],
         "default": ["Satoshi", "Plus Jakarta Sans", "sans-serif"],

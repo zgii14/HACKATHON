@@ -51,7 +51,7 @@ export function formatLastUsed(value: string | null | undefined): string {
 export function LevelBadge({ level }: { level: VerifiedSkillLevel }) {
     return (
         <span
-            className={`shrink-0 rounded-[3px] border px-1.5 py-px font-mono text-[10px] uppercase tracking-[0.06em] ${LEVEL_STYLE[level] ?? LEVEL_STYLE.pemula}`}
+            className={`shrink-0 rounded-[3px] border px-1.5 py-px font-mono text-micro uppercase tracking-[0.06em] ${LEVEL_STYLE[level] ?? LEVEL_STYLE.pemula}`}
         >
             {level}
         </span>
@@ -72,13 +72,13 @@ export function VerifiedSkillRow({
     return (
         <div className="border-b border-border py-3 last:border-b-0">
             <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-                <span className="text-[13.5px] font-semibold">{item.skill}</span>
+                <span className="text-[14px] font-semibold">{item.skill}</span>
                 <LevelBadge level={item.level} />
-                <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
+                <span className="ml-auto font-mono text-meta tabular-nums text-muted-foreground">
                     skor {item.score}
                 </span>
             </div>
-            <p className="mt-1 font-mono text-[11.5px] leading-relaxed text-muted-foreground">
+            <p className="mt-1 font-mono text-meta leading-relaxed text-muted-foreground">
                 dipakai di {ev.repos ?? 0} repo · {ev.own_commits ?? 0} commit sendiri · terakhir{" "}
                 {formatLastUsed(ev.last_used)}
             </p>
@@ -90,7 +90,7 @@ export function VerifiedSkillRow({
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-mono text-[11px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="font-mono text-meta text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             {names[i] ?? url} ↗
                         </a>
@@ -131,7 +131,7 @@ export function VerifiedSkillList({
                     type="button"
                     onClick={() => setExpanded((v) => !v)}
                     aria-expanded={expanded}
-                    className="mt-2 font-mono text-[11.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="mt-2 font-mono text-meta font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                     {expanded ? "Tampilkan lebih sedikit" : `Lihat semua (${items.length}) →`}
                 </button>
@@ -164,7 +164,7 @@ export function VerifiedSkillChips({
                 </span>
             ))}
             {rest > 0 && (
-                <span className="font-mono text-[11px] text-muted-foreground">+{rest} lagi</span>
+                <span className="font-mono text-meta text-muted-foreground">+{rest} lagi</span>
             )}
         </div>
     );

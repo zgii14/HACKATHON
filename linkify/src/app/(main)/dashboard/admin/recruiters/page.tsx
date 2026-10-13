@@ -56,7 +56,7 @@ export default function AdminRecruitersPage() {
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-semibold">{r.company_name} <span className="font-normal text-muted-foreground">· {r.industry}</span></p>
                                     <p className="mt-1 font-mono text-xs text-muted-foreground">{r.user_email} · {r.company_website} · {r.company_size} · {r.wa_pic}</p>
-                                    <p className="mt-1 font-mono text-[11px] text-muted-foreground">Approved by {r.reviewed_by} · {r.reviewed_at ? new Date(r.reviewed_at).toLocaleString("id-ID") : "-"}</p>
+                                    <p className="mt-1 font-mono text-meta text-muted-foreground">Approved by {r.reviewed_by} · {r.reviewed_at ? new Date(r.reviewed_at).toLocaleString("id-ID") : "-"}</p>
                                 </div>
                                 <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-600">approved</span>
                             </div>

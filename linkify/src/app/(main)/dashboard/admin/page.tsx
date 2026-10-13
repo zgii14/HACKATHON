@@ -54,28 +54,28 @@ export default function AdminDashboardPage() {
                     <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
                         <div className="flex items-center gap-2 text-xs font-medium text-amber-600"><Clock className="size-4" /> Pending</div>
                         <div className="mt-2 text-2xl font-bold"><CountUp value={stats?.pending ?? 0} /></div>
-                        <p className="font-mono text-[11px] text-muted-foreground">Menunggu review</p>
+                        <p className="font-mono text-meta text-muted-foreground">Menunggu review</p>
                     </div>
                 </Reveal>
                 <Reveal delay={0.1}>
                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
                         <div className="flex items-center gap-2 text-xs font-medium text-emerald-600"><ShieldCheck className="size-4" /> Approved</div>
                         <div className="mt-2 text-2xl font-bold"><CountUp value={stats?.approved ?? 0} /></div>
-                        <p className="font-mono text-[11px] text-muted-foreground">Recruiter aktif</p>
+                        <p className="font-mono text-meta text-muted-foreground">Recruiter aktif</p>
                     </div>
                 </Reveal>
                 <Reveal delay={0.14}>
                     <div className="rounded-xl border border-border bg-card p-5">
                         <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><Users className="size-4" /> Total permohonan</div>
                         <div className="mt-2 text-2xl font-bold"><CountUp value={stats?.total ?? 0} /></div>
-                        <p className="font-mono text-[11px] text-muted-foreground">Semua status</p>
+                        <p className="font-mono text-meta text-muted-foreground">Semua status</p>
                     </div>
                 </Reveal>
                 <Reveal delay={0.18}>
                     <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-5">
                         <div className="flex items-center gap-2 text-xs font-medium text-violet-600"><Crown className="size-4" /> Premium / Jobs</div>
                         <div className="mt-2 text-2xl font-bold"><CountUp value={stats?.premium ?? 0} /> <span className="text-sm font-normal text-muted-foreground">/ {stats?.total_jobs ?? 0}</span></div>
-                        <p className="font-mono text-[11px] text-muted-foreground">Premium & lowongan</p>
+                        <p className="font-mono text-meta text-muted-foreground">Premium & lowongan</p>
                     </div>
                 </Reveal>
             </div>
@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
                                     <p className="truncate text-sm font-medium">{r.company_name} <span className="text-xs text-muted-foreground">· {r.industry}</span></p>
                                     <p className="truncate font-mono text-xs text-muted-foreground">{r.user_email} · {r.company_size}</p>
                                 </div>
-                                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-600">pending</span>
+                                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-meta font-bold text-amber-600">pending</span>
                             </Link>
                         ))}
                         {reqs?.length === 0 && <p className="p-5 text-center text-xs text-muted-foreground">Tidak ada pending.</p>}

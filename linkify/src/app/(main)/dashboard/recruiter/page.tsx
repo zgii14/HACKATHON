@@ -59,7 +59,7 @@ export default function RecruiterDashboardPage() {
                             </span>
                             <span className="font-mono text-xs text-muted-foreground">/ {billing?.jobs.limit ?? 2}</span>
                         </div>
-                        <p className="mt-1 font-mono text-[11px] text-muted-foreground">
+                        <p className="mt-1 font-mono text-meta text-muted-foreground">
                             {billing?.is_premium ? "Premium · 10 slot" : "Free · 2 slot"} · {billing?.jobs.remaining ?? 0} sisa
                         </p>
                         <Link href="/dashboard/recruiter/jobs/new" className="mt-4 inline-flex text-xs font-medium text-violet-600 hover:underline">
@@ -75,7 +75,7 @@ export default function RecruiterDashboardPage() {
                         <div className="mt-3 text-3xl font-bold tracking-tight">
                             <CountUp value={totalPelamar} />
                         </div>
-                        <p className="mt-1 font-mono text-[11px] text-muted-foreground">Total dari {jobs.length} lowongan</p>
+                        <p className="mt-1 font-mono text-meta text-muted-foreground">Total dari {jobs.length} lowongan</p>
                         <Link href="/dashboard/recruiter/jobs" className="mt-4 inline-flex text-xs font-medium text-violet-600 hover:underline">
                             Lihat lowongan <ArrowRight className="ml-1 size-3.5" />
                         </Link>
@@ -89,7 +89,7 @@ export default function RecruiterDashboardPage() {
                         <div className="mt-3 text-3xl font-bold tracking-tight">
                             <CountUp value={perluReview} />
                         </div>
-                        <p className="mt-1 font-mono text-[11px] text-muted-foreground">Buka detail lowongan untuk review</p>
+                        <p className="mt-1 font-mono text-meta text-muted-foreground">Buka detail lowongan untuk review</p>
                         <Link href="/dashboard/recruiter/candidates" className="mt-4 inline-flex text-xs font-medium text-amber-600 hover:underline">
                             Cari kandidat <ArrowRight className="ml-1 size-3.5" />
                         </Link>

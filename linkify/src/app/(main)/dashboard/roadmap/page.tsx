@@ -43,10 +43,10 @@ function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitl
     if (application) {
         return (
             <div className="flex flex-wrap items-center gap-4">
-                <span className="font-mono text-[12.5px] font-semibold text-success">
+                <span className="font-mono text-[13px] font-semibold text-success">
                     ✓ sudah dilamar · <span className="capitalize">{application.status}</span>
                 </span>
-                <Link href="/dashboard/applications" className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Link href="/dashboard/applications" className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     Kelola lamaran →
                 </Link>
             </div>
@@ -57,7 +57,7 @@ function ApplyAtFinish({ jobId, jobTitle, jobCompany }: { jobId: string; jobTitl
         <div className="flex flex-wrap items-center gap-4">
             <Link
                 href={`/dashboard/jobs/${jobId}`}
-                className="rounded-md bg-primary px-4 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="rounded-md bg-primary px-4 py-2 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
                 Apply ke {jobTitle || jobCompany} →
             </Link>
@@ -233,17 +233,17 @@ function RoadmapContent() {
             <div className="flex items-center gap-1 border-b border-border">
                 {jobId ? (
                     <>
-                        <Link href="/dashboard/roadmap" className="-mb-px border-b-2 border-transparent px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+                        <Link href="/dashboard/roadmap" className="-mb-px border-b-2 border-transparent px-3 py-2 text-body font-medium text-muted-foreground transition-colors hover:text-foreground">
                             Roadmap umum
                         </Link>
-                        <span className="-mb-px border-b-2 border-primary px-3 py-2 text-[13px] font-semibold text-foreground">
+                        <span className="-mb-px border-b-2 border-primary px-3 py-2 text-body font-semibold text-foreground">
                             {data?.job_title ? (data.job_title.length > 22 ? data.job_title.slice(0, 22) + "…" : data.job_title) : "Job spesifik"}
                         </span>
                     </>
                 ) : (
                     <>
-                        <span className="-mb-px border-b-2 border-primary px-3 py-2 text-[13px] font-semibold text-foreground">Roadmap umum</span>
-                        <Link href="/dashboard/my-roadmaps" prefetch={false} className="-mb-px border-b-2 border-transparent px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">
+                        <span className="-mb-px border-b-2 border-primary px-3 py-2 text-body font-semibold text-foreground">Roadmap umum</span>
+                        <Link href="/dashboard/my-roadmaps" prefetch={false} className="-mb-px border-b-2 border-transparent px-3 py-2 text-body font-medium text-muted-foreground transition-colors hover:text-foreground">
                             Pilih job target
                         </Link>
                     </>
@@ -253,7 +253,7 @@ function RoadmapContent() {
             {/* Header */}
             <div className="flex flex-col gap-4 pb-6 pt-5 md:flex-row md:items-end md:justify-between">
                 <div className="min-w-0">
-                    <p className="font-mono text-[11px] text-muted-foreground">
+                    <p className="font-mono text-meta text-muted-foreground">
                         dasbor / roadmap / <span className="font-medium text-foreground">{data?.job_title ? "job" : "umum"}</span>
                     </p>
                     <h1 className="mt-2 text-[22px] font-bold tracking-tight">Roadmap belajar</h1>
@@ -275,18 +275,18 @@ function RoadmapContent() {
             {/* Progress */}
             {totalCount > 0 && (
                 <div className="border-y border-border py-4">
-                    <div className="mb-2 flex items-baseline justify-between font-mono text-[11.5px] text-muted-foreground">
+                    <div className="mb-2 flex items-baseline justify-between font-mono text-meta text-muted-foreground">
                         <span>
                             <span className="text-foreground">{completedCount}</span>/{totalCount} langkah selesai
                         </span>
-                        <span className="text-[13px] font-semibold text-foreground">{progressPct}%</span>
+                        <span className="text-body font-semibold text-foreground">{progressPct}%</span>
                     </div>
                     <BarFill pct={progressPct} tone={progressPct === 100 ? "success" : "primary"} className="w-full" />
                 </div>
             )}
 
             {!jobId && !isLoading && data && (
-                <p className="mt-5 border-l-2 border-primary bg-primary/[0.04] px-4 py-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                <p className="mt-5 border-l-2 border-primary bg-primary/[0.04] px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
                     <span className="font-semibold text-foreground">Ini roadmap generik</span> — dari keseluruhan skill gap.{" "}
                     <Link href="/dashboard/jobs/recommended" className="font-semibold text-primary hover:underline">
                         Pilih job target
@@ -299,13 +299,13 @@ function RoadmapContent() {
                 <div className="py-6">
                     <div className="flex items-center gap-3">
                         <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        <span className="font-mono text-[13px] font-medium text-muted-foreground">{LOADING_MESSAGES[loadingMsgIdx]}</span>
+                        <span className="font-mono text-body font-medium text-muted-foreground">{LOADING_MESSAGES[loadingMsgIdx]}</span>
                     </div>
-                    <p className="mt-1 pl-7 font-mono text-[11px] text-muted-foreground">biasanya 10–20 detik</p>
+                    <p className="mt-1 pl-7 font-mono text-meta text-muted-foreground">biasanya 10–20 detik</p>
                 </div>
             )}
             {error && (
-                <p className="mt-5 border-l-2 border-destructive bg-destructive/[0.06] px-4 py-3 text-[13px] text-destructive">
+                <p className="mt-5 border-l-2 border-destructive bg-destructive/[0.06] px-4 py-3 text-body text-destructive">
                     {(error as Error).message || "Gagal memuat roadmap. Selesaikan onboarding terlebih dahulu."}
                 </p>
             )}
@@ -349,11 +349,11 @@ function RoadmapContent() {
                                                 {step.title}
                                             </h3>
                                             {isCurrent && !isCompleted && (
-                                                <span className="shrink-0 rounded-[3px] border border-primary/40 px-1.5 py-px font-mono text-[10px] font-semibold text-primary">SEKARANG</span>
+                                                <span className="shrink-0 rounded-[3px] border border-primary/40 px-1.5 py-px font-mono text-micro font-semibold text-primary">SEKARANG</span>
                                             )}
                                         </div>
 
-                                        {step.description && <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{step.description}</p>}
+                                        {step.description && <p className="mt-1.5 text-body leading-relaxed text-muted-foreground">{step.description}</p>}
 
                                         {step.resources && step.resources.length > 0 && (
                                             <p className="mt-2 text-xs leading-relaxed">
@@ -368,7 +368,7 @@ function RoadmapContent() {
                                         )}
 
                                         {step.target && (
-                                            <p className="mt-2 border-l-2 border-primary/50 pl-3 text-[12.5px] text-muted-foreground">
+                                            <p className="mt-2 border-l-2 border-primary/50 pl-3 text-[13px] text-muted-foreground">
                                                 <span className="font-mono uppercase tracking-[0.06em]">target</span> — {step.target}
                                             </p>
                                         )}
@@ -410,12 +410,12 @@ function RoadmapContent() {
                                                                 className="space-y-3"
                                                             >
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className={`font-mono text-[11px] font-semibold ${quizResult.passed ? "text-success" : "text-destructive"}`}>
+                                                                    <span className={`font-mono text-meta font-semibold ${quizResult.passed ? "text-success" : "text-destructive"}`}>
                                                                         {quizResult.passed ? "✓ VERIFIKASI BERHASIL" : "✗ BELUM LULUS"}
                                                                     </span>
-                                                                    <span className="font-mono text-[11px] text-muted-foreground">skor {quizResult.score}/{quizResult.total}</span>
+                                                                    <span className="font-mono text-meta text-muted-foreground">skor {quizResult.score}/{quizResult.total}</span>
                                                                 </div>
-                                                                <p className="text-[12.5px] leading-relaxed text-muted-foreground">
+                                                                <p className="text-[13px] leading-relaxed text-muted-foreground">
                                                                     {quizResult.passed
                                                                         ? "Pemahamanmu tervalidasi Gemini AI. Langkah ini otomatis ditandai selesai."
                                                                         : "Baca kembali keterangan di atas, lalu coba uji lagi. Kamu pasti bisa."}
@@ -451,28 +451,28 @@ function RoadmapContent() {
                                                                     transition={{ duration: 0.25, ease: EASE_OUT }}
                                                                     className="space-y-3"
                                                                 >
-                                                                    <div className="flex items-center justify-between font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
+                                                                    <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
                                                                         <span className="font-semibold text-primary">AI verification quiz</span>
                                                                         <span>soal {currentQuestionIdx + 1}/{quizQuestions.length}</span>
                                                                     </div>
                                                                     <BarFill pct={((currentQuestionIdx + 1) / quizQuestions.length) * 100} className="w-full" />
-                                                                    <p className="text-[13.5px] font-semibold leading-snug">{quizQuestions[currentQuestionIdx].question}</p>
+                                                                    <p className="text-[14px] font-semibold leading-snug">{quizQuestions[currentQuestionIdx].question}</p>
                                                                     <div className="grid gap-2 pt-1">
                                                                         {quizQuestions[currentQuestionIdx].options.map((opt, oIdx) => (
                                                                             <button
                                                                                 key={oIdx}
                                                                                 onClick={() => handleAnswerSelect(oIdx)}
                                                                                 disabled={submitQuiz.isPending}
-                                                                                className="group flex items-center gap-2.5 rounded-md border border-border px-3 py-2.5 text-left text-[13px] font-medium transition-colors hover:border-primary/50 hover:bg-primary/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                                                                                className="group flex items-center gap-2.5 rounded-md border border-border px-3 py-2.5 text-left text-body font-medium transition-colors hover:border-primary/50 hover:bg-primary/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                                                                             >
-                                                                                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted font-mono text-[10px] font-bold text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                                                                                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-muted font-mono text-micro font-bold text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
                                                                                     {String.fromCharCode(65 + oIdx)}
                                                                                 </span>
                                                                                 <span className="flex-1">{opt}</span>
                                                                             </button>
                                                                         ))}
                                                                     </div>
-                                                                    <button onClick={() => setActiveQuizIdx(null)} className="pt-1 font-mono text-[10.5px] text-muted-foreground hover:text-foreground">
+                                                                    <button onClick={() => setActiveQuizIdx(null)} className="pt-1 font-mono text-[11px] text-muted-foreground hover:text-foreground">
                                                                         batal & keluar kuis
                                                                     </button>
                                                                 </motion.div>

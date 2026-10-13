@@ -56,7 +56,7 @@ function GlobalXpBadge() {
     return (
         <div
             title={`Level ${xp.level} ${xp.tier} · Progress ke level berikutnya: ${xp.progress_pct}%`}
-            className="mr-2 flex items-center rounded-full border border-primary/20 bg-primary/[0.08] px-2.5 py-1 text-[11px] font-bold text-primary transition-colors hover:bg-primary/[0.12] hover:border-primary/30 cursor-default"
+            className="mr-2 flex items-center rounded-full border border-primary/20 bg-primary/[0.08] px-2.5 py-1 text-meta font-bold text-primary transition-colors hover:bg-primary/[0.12] hover:border-primary/30 cursor-default"
         >
             ⚡ {xp.total_xp} XP
         </div>
@@ -249,12 +249,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                                 <span className="truncate flex-1">{item.title}</span>
                             )}
                             {showLabel && isMyRoadmaps && bookmarkCount > 0 && (
-                                <span className="ml-auto rounded-[3px] border border-primary/40 bg-primary/10 px-1.5 py-px font-mono text-[10px] font-semibold text-primary">
+                                <span className="ml-auto rounded-[3px] border border-primary/40 bg-primary/10 px-1.5 py-px font-mono text-micro font-semibold text-primary">
                                     {bookmarkCount > 9 ? "9+" : bookmarkCount}
                                 </span>
                             )}
                             {showLabel && isApplications && applicationCount > 0 && (
-                                <span className="ml-auto rounded-[3px] border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-px font-mono text-[10px] font-semibold text-emerald-500">
+                                <span className="ml-auto rounded-[3px] border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-px font-mono text-micro font-semibold text-emerald-500">
                                     {applicationCount > 9 ? "9+" : applicationCount}
                                 </span>
                             )}
@@ -264,7 +264,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 {showAdmin && (
                     <>
                         <div className="mt-4 mb-1 px-3">
-                            {showLabel && <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Admin</p>}
+                            {showLabel && <p className="font-mono text-micro uppercase tracking-widest text-muted-foreground">Admin</p>}
                             {!showLabel && <div className="h-px bg-border" />}
                         </div>
                         {ADMIN_LINKS.map((item) => {

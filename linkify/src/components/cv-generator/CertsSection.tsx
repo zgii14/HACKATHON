@@ -31,7 +31,7 @@ export function CertsSection({ certifications, setCertifications }: Props) {
                         <button
                             type="button"
                             onClick={addCertificate}
-                            className="rounded-md border border-border px-3 py-1.5 text-[12.5px] font-semibold hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="rounded-md border border-border px-3 py-1.5 text-[13px] font-semibold hover:border-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             + Tambah Sertifikat
                         </button>

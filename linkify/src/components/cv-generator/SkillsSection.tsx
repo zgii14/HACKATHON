@@ -25,7 +25,7 @@ export function SkillsSection({
                 <SecTitle title="7. Keahlian & Bahasa" />
                 <div className="space-y-4 py-4">
                     <div>
-                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                             Soft Skills (Pisahkan dengan koma)
                         </label>
                         <input
@@ -36,7 +36,7 @@ export function SkillsSection({
                         />
                     </div>
                     <div>
-                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                             Hard Skills (Pisahkan dengan koma)
                         </label>
                         <input
@@ -47,7 +47,7 @@ export function SkillsSection({
                         />
                     </div>
                     <div>
-                        <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+                        <label className="mb-1.5 block font-mono text-meta uppercase tracking-[0.06em] text-muted-foreground">
                             Bahasa (Pisahkan dengan koma)
                         </label>
                         <input

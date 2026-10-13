@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const ACTION_CLS =
-    "inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[12.5px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+    "inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-[13px] font-bold text-primary-foreground transition hover:brightness-110 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
@@ -111,8 +111,8 @@ export function BarFill({
 export function SecTitle({ title, meta }: { title: string; meta?: React.ReactNode }) {
     return (
         <div className="flex items-baseline justify-between border-b border-border pb-2.5">
-            <h2 className="text-[13px] font-bold tracking-tight">{title}</h2>
-            {meta && <span className="font-mono text-[11px] text-muted-foreground">{meta}</span>}
+            <h2 className="text-body font-bold tracking-tight">{title}</h2>
+            {meta && <span className="font-mono text-meta text-muted-foreground">{meta}</span>}
         </div>
     );
 }
@@ -121,7 +121,7 @@ export function SecTitle({ title, meta }: { title: string; meta?: React.ReactNod
 export function Crumb({ path }: { path: string }) {
     const segs = path.split("/").map((s) => s.trim());
     return (
-        <p className="font-mono text-[11px] text-muted-foreground">
+        <p className="font-mono text-meta text-muted-foreground">
             {segs.map((s, i) => (
                 <span key={i}>
                     {i > 0 && " / "}
@@ -165,7 +165,7 @@ export function MatchCell({ score }: { score: number | null }) {
     const low = pct < 70;
     return (
         <span className="flex items-center justify-end gap-2.5">
-            <span className="min-w-[34px] text-right font-mono text-[13px] font-semibold tabular-nums">{pct}%</span>
+            <span className="min-w-[34px] text-right font-mono text-body font-semibold tabular-nums">{pct}%</span>
             <BarFill pct={pct} tone={low ? "warning" : "primary"} className="w-14" />
         </span>
     );
@@ -235,7 +235,7 @@ export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: numbe
                     <span className="w-6 shrink-0 font-mono text-[12px] tabular-nums text-muted-foreground">{rank}</span>
                 )}
                 <span className="min-w-0">
-                    <span className="block truncate text-[13.5px] font-semibold leading-tight">{job.title}</span>
+                    <span className="block truncate text-[14px] font-semibold leading-tight">{job.title}</span>
                     <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                         {job.company}
                         {job.location ? ` · ${job.location}` : ""}
@@ -274,7 +274,7 @@ export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: numbe
                             transition={{ duration: reduced ? 0 : 0.28, ease: EASE_OUT, delay: reduced ? 0 : 0.05 }}
                         >
                             {(job.salary || job.work_type || job.min_experience) && (
-                                <p className="mb-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11.5px] text-muted-foreground">
+                                <p className="mb-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-meta text-muted-foreground">
                                     {job.salary && <span className="text-success">{job.salary}</span>}
                                     {job.work_type && <span>{job.work_type}</span>}
                                     {job.min_experience && <span>pengalaman {job.min_experience}</span>}
@@ -282,9 +282,9 @@ export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: numbe
                             )}
 
                             {job.description ? (
-                                <p className="max-w-prose text-[13px] leading-relaxed text-muted-foreground">{job.description}</p>
+                                <p className="max-w-prose text-[14px] leading-relaxed text-muted-foreground">{job.description}</p>
                             ) : (
-                                <p className="text-[13px] text-muted-foreground">Deskripsi belum tersedia untuk lowongan ini.</p>
+                                <p className="text-[14px] text-muted-foreground">Deskripsi belum tersedia untuk lowongan ini.</p>
                             )}
 
                             {job.required_skills.length > 0 && (
@@ -309,12 +309,12 @@ export function JobListRow({ job, rank, index }: { job: JobRowData; rank?: numbe
                                 <Link
                                     href={`/dashboard/roadmap?job_id=${job.id}`}
                                     prefetch={false}
-                                    className="text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    className="text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 >
                                     Buat roadmap
                                 </Link>
                                 {pct != null && (
-                                    <span className="font-mono text-[11.5px] text-muted-foreground">match {pct}% dengan profilmu</span>
+                                    <span className="font-mono text-meta text-muted-foreground">match {pct}% dengan profilmu</span>
                                 )}
                             </div>
                         </motion.div>
@@ -364,7 +364,7 @@ export function JobCard({
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         {rank != null && (
-                            <span className="font-mono text-[10.5px] uppercase tracking-[0.07em] text-muted-foreground">
+                            <span className="font-mono text-[11px] uppercase tracking-[0.07em] text-muted-foreground">
                                 #{rank}
                                 {featured ? " · pilihan teratas" : ""}
                             </span>
@@ -372,7 +372,7 @@ export function JobCard({
                         <h3 className={`mt-1 line-clamp-2 text-[15px] leading-tight tracking-tight ${featured ? "font-bold text-primary" : "font-bold"}`}>
                             {job.title}
                         </h3>
-                        <p className="mt-1 truncate text-[12.5px] text-muted-foreground">
+                        <p className="mt-1 truncate text-[13px] text-muted-foreground">
                             {job.company}
                             {job.location ? ` · ${job.location}` : ""}
                             {job.is_remote ? " · remote" : ""}
@@ -380,7 +380,7 @@ export function JobCard({
                     </div>
                     {badge != null && (
                         <span
-                            className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.05em] ${
+                            className={`shrink-0 rounded-full border px-2 py-0.5 font-mono text-micro font-semibold uppercase tracking-[0.05em] ${
                                 badge === "Top match"
                                     ? "border-primary/50 bg-primary/10 text-primary"
                                     : "border-border bg-muted/40 text-muted-foreground"
@@ -391,12 +391,12 @@ export function JobCard({
                     )}
                 </div>
 
-                {job.salary && <p className="mt-2.5 text-[13.5px] font-semibold text-success">{job.salary}</p>}
+                {job.salary && <p className="mt-2.5 text-[14px] font-semibold text-success">{job.salary}</p>}
 
                 {pct != null && (
                     <div className="mt-3">
                         <div className="flex items-baseline justify-between">
-                            <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-muted-foreground">Match</span>
+                            <span className="font-mono text-micro uppercase tracking-[0.06em] text-muted-foreground">Match</span>
                             <span className="font-mono text-[16px] font-semibold tabular-nums tracking-tight">{pct}%</span>
                         </div>
                         <BarFill pct={pct} tone={pct >= 60 ? "primary" : "warning"} className="mt-1 w-full" />
@@ -406,23 +406,23 @@ export function JobCard({
                 {job.required_skills.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                         {job.required_skills.slice(0, 5).map((skill) => (
-                            <span key={skill} className="rounded-[4px] border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                            <span key={skill} className="rounded-[4px] border border-border bg-muted/40 px-1.5 py-0.5 text-meta text-muted-foreground">
                                 {skill}
                             </span>
                         ))}
                         {job.required_skills.length > 5 && (
-                            <span className="px-1 py-0.5 text-[11px] text-muted-foreground">+{job.required_skills.length - 5}</span>
+                            <span className="px-1 py-0.5 text-meta text-muted-foreground">+{job.required_skills.length - 5}</span>
                         )}
                     </div>
                 )}
 
                 {job.created_at && (
-                    <div className="mt-3 flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+                    <div className="mt-3 flex items-center gap-1 font-mono text-micro text-muted-foreground">
                         <span className="size-1 rounded-full bg-emerald-500" /> Dipost {formatDistanceToNow(new Date(job.created_at), { addSuffix: true, locale: localeId })}
                     </div>
                 )}
                 <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
-                    <span className="truncate font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
+                    <span className="truncate font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
                         {job.work_type || (job.is_remote ? "Remote" : "On-site")}
                         {job.min_experience ? ` · ${job.min_experience}` : ""}
                     </span>
@@ -430,14 +430,14 @@ export function JobCard({
                         <Link
                             href={`/dashboard/roadmap?job_id=${job.id}`}
                             prefetch={false}
-                            className="relative z-10 text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="relative z-10 text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             Buat roadmap
                         </Link>
                         <Link
                             href={`/dashboard/jobs/${job.id}`}
                             prefetch={false}
-                            className="relative z-10 inline-flex items-center gap-1 text-[12.5px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="relative z-10 inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                             Lihat detail
                             <svg
@@ -495,7 +495,7 @@ export function EmptyState({
     return (
         <div className="border-y border-border py-14 text-center">
             <p className="text-[15px] font-bold">{title}</p>
-            {children && <p className="mx-auto mt-1.5 max-w-md text-[13.5px] text-muted-foreground">{children}</p>}
+            {children && <p className="mx-auto mt-1.5 max-w-md text-[14px] text-muted-foreground">{children}</p>}
         </div>
     );
 }

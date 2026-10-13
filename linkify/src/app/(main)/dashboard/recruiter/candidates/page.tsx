@@ -248,25 +248,25 @@ export default function CandidateSearchPage() {
                     <div className="space-y-5 pt-2">
                         {/* Filter content duplicated for mobile dialog - same as desktop */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Kata Kunci Utama</label>
+                            <label className="text-micro font-bold text-muted-foreground uppercase">Kata Kunci Utama</label>
                             <div className="relative">
                                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <input type="text" placeholder="Nama, lokasi, username github..." value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} className="w-full bg-background rounded-xl border border-border pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-primary" />
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Domisili / Kota</label>
+                            <label className="text-micro font-bold text-muted-foreground uppercase">Domisili / Kota</label>
                             <div className="relative">
                                 <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <input type="text" placeholder="Jakarta, Bengkulu, Remote..." value={location} onChange={(e) => { setLocation(e.target.value); setPage(1); }} className="w-full bg-background rounded-xl border border-border pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-primary" />
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Minimal Komit GitHub</label>
+                            <label className="text-micro font-bold text-muted-foreground uppercase">Minimal Komit GitHub</label>
                             <input type="number" min="0" placeholder="Contoh: 10, 50, 100" value={minCommits} onChange={(e) => { const val = e.target.value; setMinCommits(val === "" ? "" : Number(val)); setPage(1); }} className="w-full bg-background rounded-xl border border-border px-3 py-2 text-xs focus:outline-none focus:border-primary" />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Keahlian (Skills)</label>
+                            <label className="text-micro font-bold text-muted-foreground uppercase">Keahlian (Skills)</label>
                             <div className="flex gap-2">
                                 <input type="text" placeholder="Tambah skill (e.g. python)" value={skillInput} onChange={(e) => setSkillInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddSkill(skillInput); } }} className="flex-1 bg-background rounded-xl border border-border px-3 py-2 text-xs focus:outline-none focus:border-primary" />
                                 <Button size="sm" onClick={() => handleAddSkill(skillInput)} className="rounded-xl px-3 h-8 bg-muted hover:bg-muted/80 text-foreground">+</Button>
@@ -274,7 +274,7 @@ export default function CandidateSearchPage() {
                             {selectedSkills.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                     {selectedSkills.map((skill) => (
-                                        <Badge key={skill} variant="secondary" className="text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 bg-primary/10 text-primary border-transparent hover:bg-primary/20">{skill}<X className="w-3 h-3 cursor-pointer hover:text-rose-500" onClick={() => handleRemoveSkill(skill)} /></Badge>
+                                        <Badge key={skill} variant="secondary" className="text-micro px-2 py-0.5 rounded-md flex items-center gap-1 bg-primary/10 text-primary border-transparent hover:bg-primary/20">{skill}<X className="w-3 h-3 cursor-pointer hover:text-rose-500" onClick={() => handleRemoveSkill(skill)} /></Badge>
                                     ))}
                                 </div>
                             )}
@@ -295,7 +295,7 @@ export default function CandidateSearchPage() {
 
                     {/* General Text Search */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Kata Kunci Utama</label>
+                        <label className="text-micro font-bold text-muted-foreground uppercase">Kata Kunci Utama</label>
                         <div className="relative">
                             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                             <input
@@ -310,7 +310,7 @@ export default function CandidateSearchPage() {
 
                     {/* Location Filter */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Domisili / Kota</label>
+                        <label className="text-micro font-bold text-muted-foreground uppercase">Domisili / Kota</label>
                         <div className="relative">
                             <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                             <input
@@ -325,7 +325,7 @@ export default function CandidateSearchPage() {
 
                     {/* GitHub Commits Filter */}
                     <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Minimal Komit GitHub</label>
+                        <label className="text-micro font-bold text-muted-foreground uppercase">Minimal Komit GitHub</label>
                         <input
                             type="number"
                             min="0"
@@ -343,7 +343,7 @@ export default function CandidateSearchPage() {
                     {/* Skills Filter */}
                     <div className="space-y-3">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase">Keahlian (Skills)</label>
+                            <label className="text-micro font-bold text-muted-foreground uppercase">Keahlian (Skills)</label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -375,7 +375,7 @@ export default function CandidateSearchPage() {
                                     <Badge
                                         key={skill}
                                         variant="secondary"
-                                        className="text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 bg-primary/10 text-primary border-transparent hover:bg-primary/20"
+                                        className="text-micro px-2 py-0.5 rounded-md flex items-center gap-1 bg-primary/10 text-primary border-transparent hover:bg-primary/20"
                                     >
                                         {skill}
                                         <X
@@ -389,7 +389,7 @@ export default function CandidateSearchPage() {
 
                         {/* Popular Skills Quick Clicks */}
                         <div className="space-y-1">
-                            <span className="text-[9px] font-semibold text-muted-foreground">Rekomendasi Cepat:</span>
+                            <span className="text-micro font-semibold text-muted-foreground">Rekomendasi Cepat:</span>
                             <div className="flex flex-wrap gap-1">
                                 {POPULAR_SKILLS.map((skill) => {
                                     const active = selectedSkills.some(s => s.toLowerCase() === skill.toLowerCase());
@@ -397,7 +397,7 @@ export default function CandidateSearchPage() {
                                         <button
                                             key={skill}
                                             onClick={() => active ? handleRemoveSkill(skill) : handleAddSkill(skill)}
-                                            className={`text-[9px] px-2 py-0.5 rounded-full border transition-all duration-150 ${
+                                            className={`text-micro px-2 py-0.5 rounded-full border transition-all duration-150 ${
                                                 active
                                                     ? "bg-primary text-white border-transparent"
                                                     : "bg-background text-muted-foreground border-border hover:bg-muted"
@@ -428,7 +428,7 @@ export default function CandidateSearchPage() {
                                     setSelectedSkills([]);
                                     setPage(1);
                                 }}
-                                className="text-[10px] text-primary hover:underline font-bold"
+                                className="text-micro text-primary hover:underline font-bold"
                             >
                                 Reset Semua Filter
                             </button>
@@ -448,7 +448,7 @@ export default function CandidateSearchPage() {
                     {isError && (
                         <div className="text-center py-12 border rounded-2xl bg-rose-500/5 text-rose-500 border-rose-500/20">
                             <p className="text-xs font-semibold">Gagal memuat basis data kandidat.</p>
-                            <p className="text-[10px] mt-1 text-muted-foreground">Pastikan server backend Anda berjalan.</p>
+                            <p className="text-micro mt-1 text-muted-foreground">Pastikan server backend Anda berjalan.</p>
                         </div>
                     )}
 
@@ -487,7 +487,7 @@ export default function CandidateSearchPage() {
                                                     <h3 className="truncate font-bold text-sm text-foreground">
                                                         {candidate.fullName || "Kandidat Tanpa Nama"}
                                                     </h3>
-                                                    <div className="flex min-w-0 flex-wrap items-center gap-1 truncate text-[10px] text-muted-foreground mt-0.5">
+                                                    <div className="flex min-w-0 flex-wrap items-center gap-1 truncate text-micro text-muted-foreground mt-0.5">
                                                         {candidate.address && (
                                                             <span className="inline-flex min-w-0 items-center gap-0.5 truncate">
                                                                 <MapPin className="size-3 shrink-0" />
@@ -540,13 +540,13 @@ export default function CandidateSearchPage() {
                                         {/* Bidang minat kandidat — tambah jarak di HP */}
                                         {candidate.interests?.length > 0 && (
                                             <div className="flex flex-wrap items-center gap-1.5 mt-4">
-                                                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Minat:</span>
+                                                <span className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">Minat:</span>
                                                 {candidate.interests.map((key) => {
                                                     const it = INTEREST_LABELS[key];
                                                     return (
                                                         <span
                                                             key={key}
-                                                            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-[10px] font-medium text-foreground"
+                                                            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/30 px-2 py-0.5 text-micro font-medium text-foreground"
                                                         >
                                                             <span>{it?.emoji ?? "🎯"}</span>
                                                             {it?.label ?? key}
@@ -557,7 +557,7 @@ export default function CandidateSearchPage() {
                                         )}
 
                                         {/* Contacts & GitHub Signals Row — flat */}
-                                        <div className="grid grid-cols-1 gap-3 border-t border-border pt-3 text-[10px] sm:grid-cols-2">
+                                        <div className="grid grid-cols-1 gap-3 border-t border-border pt-3 text-micro sm:grid-cols-2">
                                             {/* Details & Contacts */}
                                             <div className="space-y-1 min-w-0">
                                                 <div className="flex min-w-0 items-center gap-1.5 text-foreground">
@@ -574,20 +574,20 @@ export default function CandidateSearchPage() {
                                             {candidate.github ? (
                                                 <div className="flex flex-wrap gap-x-4 gap-y-1 md:justify-end items-center">
                                                     <div className="flex flex-col text-left md:text-right">
-                                                        <span className="text-[9px] text-muted-foreground uppercase font-bold"> GitHub Commits</span>
+                                                        <span className="text-micro text-muted-foreground uppercase font-bold"> GitHub Commits</span>
                                                         <span className="font-black text-sm text-foreground">{commits}</span>
                                                     </div>
                                                     <div className="flex flex-col text-left md:text-right">
-                                                        <span className="text-[9px] text-muted-foreground uppercase font-bold"> Stars</span>
+                                                        <span className="text-micro text-muted-foreground uppercase font-bold"> Stars</span>
                                                         <span className="font-black text-sm text-foreground">{stars}</span>
                                                     </div>
                                                     <div className="flex flex-col text-left md:text-right">
-                                                        <span className="text-[9px] text-muted-foreground uppercase font-bold"> Repos</span>
+                                                        <span className="text-micro text-muted-foreground uppercase font-bold"> Repos</span>
                                                         <span className="font-black text-sm text-foreground">{repos}</span>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="text-right text-[9px] text-muted-foreground italic flex items-center justify-end">
+                                                <div className="text-right text-micro text-muted-foreground italic flex items-center justify-end">
                                                     Akun GitHub tidak terhubung
                                                 </div>
                                             )}
@@ -595,7 +595,7 @@ export default function CandidateSearchPage() {
 
                                         {/* Skills list tags — tampil setengah */}
                                         <div className="space-y-1.5">
-                                            <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+                                            <div className="flex items-center gap-1 text-micro text-muted-foreground font-bold uppercase tracking-wider">
                                                 <Code className="w-3.5 h-3.5" />
                                                 Declared Skills (CV + GitHub) · {candidate.merged_skills?.length ?? 0}
                                             </div>
@@ -607,7 +607,7 @@ export default function CandidateSearchPage() {
                                                             <Badge
                                                                 key={skill}
                                                                 variant="secondary"
-                                                                className={`text-[9px] px-2 py-0.5 rounded-md border-transparent ${
+                                                                className={`text-micro px-2 py-0.5 rounded-md border-transparent ${
                                                                     isFiltered 
                                                                         ? "bg-primary/20 text-primary font-bold" 
                                                                         : "bg-muted text-muted-foreground"
@@ -618,10 +618,10 @@ export default function CandidateSearchPage() {
                                                         );
                                                     })
                                                 ) : (
-                                                    <span className="text-[10px] text-muted-foreground italic">Belum ada keahlian terdata</span>
+                                                    <span className="text-micro text-muted-foreground italic">Belum ada keahlian terdata</span>
                                                 )}
                                                 {candidate.merged_skills && candidate.merged_skills.length > 6 && (
-                                                    <button onClick={() => setExpandedSkills((p) => ({ ...p, [candidate.id]: !p[candidate.id] }))} className="text-[10px] font-medium text-violet-600 hover:underline">
+                                                    <button onClick={() => setExpandedSkills((p) => ({ ...p, [candidate.id]: !p[candidate.id] }))} className="text-micro font-medium text-violet-600 hover:underline">
                                                         {expandedSkills[candidate.id] ? "Sembunyikan" : `+${candidate.merged_skills.length - Math.ceil(candidate.merged_skills.length / 2)} lagi`}
                                                     </button>
                                                 )}
@@ -630,14 +630,14 @@ export default function CandidateSearchPage() {
 
                                         {/* Skill terverifikasi — punya bukti commit di repo sendiri */}
                                         <div className="space-y-1.5">
-                                            <div className="flex items-center gap-1 text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+                                            <div className="flex items-center gap-1 text-micro text-muted-foreground font-bold uppercase tracking-wider">
                                                 <Code className="w-3.5 h-3.5" />
                                                 Terverifikasi ({candidate.verified_skill_count ?? 0}) · bukti commit
                                             </div>
                                             {(candidate.verified_skills ?? []).length > 0 ? (
                                                 <VerifiedSkillChips items={candidate.verified_skills ?? []} />
                                             ) : (
-                                                <span className="text-[10px] text-muted-foreground italic">
+                                                <span className="text-micro text-muted-foreground italic">
                                                     Belum ada bukti commit yang cukup
                                                 </span>
                                             )}
@@ -710,7 +710,7 @@ export default function CandidateSearchPage() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-sm">Undangan Direct Interview</h3>
-                                <p className="text-[10px] text-muted-foreground">
+                                <p className="text-micro text-muted-foreground">
                                     Kirim tawaran wawancara langsung ke <span className="text-foreground font-bold">{inviteCandidate.fullName}</span>
                                 </p>
                             </div>
@@ -720,7 +720,7 @@ export default function CandidateSearchPage() {
                         <form onSubmit={handleInviteSubmit} className="space-y-4 pt-4">
                             {/* Target Job selection */}
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-muted-foreground uppercase">Pilih Lowongan Pekerjaan</label>
+                                <label className="text-micro font-bold text-muted-foreground uppercase">Pilih Lowongan Pekerjaan</label>
                                 <select
                                     required
                                     value={selectedJobId}
@@ -739,7 +739,7 @@ export default function CandidateSearchPage() {
                             {/* Interview Method & Date Row */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-muted-foreground uppercase">Metode Wawancara</label>
+                                    <label className="text-micro font-bold text-muted-foreground uppercase">Metode Wawancara</label>
                                     <select
                                         value={interviewMethod}
                                         onChange={(e) => {
@@ -754,7 +754,7 @@ export default function CandidateSearchPage() {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-muted-foreground uppercase">Tanggal & Waktu</label>
+                                    <label className="text-micro font-bold text-muted-foreground uppercase">Tanggal & Waktu</label>
                                     <input
                                         required
                                         type="datetime-local"
@@ -767,7 +767,7 @@ export default function CandidateSearchPage() {
 
                             {/* Interview Link / Location address */}
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                                <label className="text-micro font-bold text-muted-foreground uppercase flex items-center gap-1">
                                     {interviewMethod === "online" ? (
                                         <>
                                             <Video className="w-3.5 h-3.5 text-primary" />
@@ -793,7 +793,7 @@ export default function CandidateSearchPage() {
                             {/* Contact Person Details */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-[9px] font-bold text-muted-foreground uppercase">Kontak HR (WhatsApp / Telepon)</label>
+                                    <label className="text-micro font-bold text-muted-foreground uppercase">Kontak HR (WhatsApp / Telepon)</label>
                                     <input
                                         type="text"
                                         value={hrPhone}
@@ -806,7 +806,7 @@ export default function CandidateSearchPage() {
 
                             {/* HR Custom Invitation Note Message */}
                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-bold text-muted-foreground uppercase">Pesan Tambahan untuk Kandidat</label>
+                                <label className="text-micro font-bold text-muted-foreground uppercase">Pesan Tambahan untuk Kandidat</label>
                                 <textarea
                                     rows={3}
                                     value={hrMessage}
