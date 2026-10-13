@@ -27,6 +27,7 @@ type Repo = {
 type Profile = {
     cv_data: Record<string, unknown> | null;
     github_signals: { repos_detail?: Repo[] } | null;
+    github_connection?: "verified" | "legacy_unverified" | "none";
 };
 
 const contactLabels = {
@@ -309,12 +310,16 @@ export function PortfolioEditor() {
     }
 
     if (!profile?.cv_data || !profile.github_signals) {
+        const needsGithub = (profile?.github_connection ?? "none") === "none";
         return (
             <div className="w-full">
                 <PageHeader crumb="dasbor / portfolio" title="Portfolio saya" />
                 <div className="pt-8">
-                    <EmptyState title="CV dan GitHub belum lengkap">
-                        Sync CV dan GitHub terlebih dahulu. <Link className="font-semibold text-primary hover:underline" href="/dashboard/onboarding">Buka onboarding →</Link>
+                    <EmptyState title={needsGithub ? "Hubungkan GitHub dulu" : "CV belum lengkap"}>
+                        {needsGithub
+                            ? "Portfolio dibangun dari repo GitHub-mu. Hubungkan GitHub lalu upload CV. "
+                            : "Upload CV terlebih dahulu. "}
+                        <Link className="font-semibold text-primary hover:underline" href="/dashboard/onboarding">Buka Data GitHub & CV →</Link>
                     </EmptyState>
                 </div>
             </div>

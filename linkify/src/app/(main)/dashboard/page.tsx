@@ -10,6 +10,7 @@ import Link from "next/link";
 
 type Profile = {
     github_username: string | null;
+    github_connection?: "verified" | "legacy_unverified" | "none";
     merged_skills: string[] | null;
     updated_at: string | null;
 } | null;
@@ -278,6 +279,21 @@ export default function DashboardHomePage() {
                     </div>
                 </div>
             </Reveal>
+
+            {profile?.github_connection && profile.github_connection !== "verified" && (
+                <Reveal delay={0.04}>
+                    <div className="mb-6 flex flex-col gap-2 border-l-2 border-primary bg-primary/[0.04] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-[13px] leading-relaxed text-muted-foreground">
+                            {profile.github_connection === "none"
+                                ? "Hubungkan GitHub untuk skill terverifikasi dari repo dan portfolio publik."
+                                : "Verifikasi GitHub-mu agar recruiter melihat label terverifikasi."}
+                        </p>
+                        <Link href="/dashboard/onboarding" prefetch={false} className="shrink-0 text-[13px] font-semibold text-primary hover:underline">
+                            {profile.github_connection === "none" ? "Hubungkan GitHub →" : "Verifikasi sekarang →"}
+                        </Link>
+                    </div>
+                </Reveal>
+            )}
 
             {/* ── Stat strip: 4 angka, hairline, nol ikon ── */}
             <Reveal delay={0.07}>
