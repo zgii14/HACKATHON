@@ -1,4 +1,4 @@
-import { parseApiError } from "./errors";
+import { parseApiErrorDetail } from "./errors";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -8,11 +8,14 @@ export type FetchOptions = RequestInit & {
 
 export class ApiError extends Error {
     status: number;
+    /** Kode error terstruktur dari backend, mis. "GITHUB_REQUIRED". */
+    code?: string;
 
-    constructor(message: string, status: number) {
+    constructor(message: string, status: number, code?: string) {
         super(message);
         this.name = "ApiError";
         this.status = status;
+        this.code = code;
     }
 }
 
@@ -38,8 +41,8 @@ export async function apiFetch<T>(
     });
 
     if (!res.ok) {
-        const message = await parseApiError(res);
-        throw new ApiError(message, res.status);
+        const { message, code } = await parseApiErrorDetail(res);
+        throw new ApiError(message, res.status, code);
     }
 
     if (res.status === 204) {
@@ -61,8 +64,8 @@ export async function apiFetchBlob(
     }
     const res = await fetch(`${API_BASE.replace(/\/$/, "")}${path}`, { ...rest, body, headers: h });
     if (!res.ok) {
-        const message = await parseApiError(res);
-        throw new ApiError(message, res.status);
+        const { message, code } = await parseApiErrorDetail(res);
+        throw new ApiError(message, res.status, code);
     }
     return res.blob();
 }

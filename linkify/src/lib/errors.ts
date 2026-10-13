@@ -29,18 +29,24 @@ type FastApiValidationError = {
  * FastAPI mengembalikan error dalam format:
  * - `{ "detail": "pesan string" }` → untuk HTTPException
  * - `{ "detail": [{ loc, msg, type }] }` → untuk validation error (422)
+ * - `{ "detail": { "code", "message" } }` → error terstruktur (mis. GITHUB_REQUIRED)
  */
 export async function parseApiError(res: Response): Promise<string> {
+    return (await parseApiErrorDetail(res)).message;
+}
+
+/** Sama seperti parseApiError, plus `code` bila backend mengirim error terstruktur. */
+export async function parseApiErrorDetail(res: Response): Promise<{ message: string; code?: string }> {
     const statusFallback = STATUS_MESSAGES[res.status] ?? `Error ${res.status}`;
 
     let text = "";
     try {
         text = await res.text();
     } catch {
-        return statusFallback;
+        return { message: statusFallback };
     }
 
-    if (!text.trim()) return statusFallback;
+    if (!text.trim()) return { message: statusFallback };
 
     // Coba parse sebagai JSON
     try {
@@ -48,7 +54,14 @@ export async function parseApiError(res: Response): Promise<string> {
 
         // Format 1: { "detail": "string" } — HTTPException standard FastAPI
         if (typeof json.detail === "string" && json.detail.trim()) {
-            return json.detail.trim();
+            return { message: json.detail.trim() };
+        }
+
+        // Format terstruktur: { "detail": { "code": "...", "message": "..." } }
+        if (json.detail && typeof json.detail === "object" && !Array.isArray(json.detail)) {
+            const code = typeof json.detail.code === "string" ? json.detail.code : undefined;
+            const message = typeof json.detail.message === "string" && json.detail.message.trim() ? json.detail.message.trim() : statusFallback;
+            return { message, code };
         }
 
         // Format 2: { "detail": [{loc, msg, type}] } — Pydantic validation error
@@ -62,22 +75,22 @@ export async function parseApiError(res: Response): Promise<string> {
                 .filter(Boolean);
 
             if (messages.length > 0) {
-                return messages.join(" · ");
+                return { message: messages.join(" · ") };
             }
         }
 
         // Format 3: { "message": "..." } — format non-standard
         if (typeof json.message === "string" && json.message.trim()) {
-            return json.message.trim();
+            return { message: json.message.trim() };
         }
     } catch {
         // Bukan JSON — mungkin plain text dari server/proxy
         const trimmed = text.trim();
         // Jangan tampilkan HTML error page (nginx/proxy)
         if (trimmed && !trimmed.startsWith("<")) {
-            return trimmed;
+            return { message: trimmed };
         }
     }
 
-    return statusFallback;
+    return { message: statusFallback };
 }
