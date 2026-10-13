@@ -1,6 +1,8 @@
 "use client";
 
-import { cn, DASHBOARD_LINKS } from "@/utils";
+import { cn, CANDIDATE_NAV_GROUPS } from "@/utils";
+import type { DashboardNavLink, NavBadge } from "@/utils/constants/nav-links";
+import { findActiveHref } from "@/utils/functions/nav-active";
 import { AppRole, redirectForRole } from "@/utils/constants/roles";
 import { useApi } from "@/hooks/use-api";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -219,54 +221,61 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     const NavLinks = ({ showLabel = true }: { showLabel?: boolean }) => {
         // Role belum dipilih → jangan tampilkan menu apa pun (user sedang di role picker)
         if (role == null) return null;
-        const links = role === "recruiter" ? RECRUITER_LINKS : DASHBOARD_LINKS;
         const showAdmin = !!profile?.is_admin;
+        const groups: { label?: string; links: DashboardNavLink[] }[] =
+            role === "recruiter" ? [{ links: RECRUITER_LINKS }] : CANDIDATE_NAV_GROUPS;
+        const activeHref = findActiveHref(pathname, groups.flatMap((group) => group.links));
+        const badgeCount: Record<NavBadge, number> = { bookmarks: bookmarkCount, applications: applicationCount };
+        const badgeTone: Record<NavBadge, string> = {
+            bookmarks: "border-primary/40 bg-primary/10 text-primary",
+            applications: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500",
+        };
+
+        const heading = (label: string) => (
+            <div className="mt-4 mb-1 px-3">
+                {showLabel && label && <p className="font-mono text-micro uppercase tracking-widest text-muted-foreground">{label}</p>}
+                {(!showLabel || !label) && <div className="h-px bg-border" />}
+            </div>
+        );
 
         return (
             <nav className="flex flex-col gap-1">
-                {links.map((item) => {
-                    const active =
-                        pathname === item.href ||
-                        (item.href !== "/dashboard" && pathname.startsWith(item.href));
-                    const isMyRoadmaps = item.href === "/dashboard/my-roadmaps";
-                    const isApplications = item.href === "/dashboard/applications";
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            prefetch={false}
-                            title={!showLabel ? item.title : undefined}
-                            className={cn(
-                                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-all duration-150",
-                                showLabel ? "justify-start" : "justify-center",
-                                active
-                                    ? "bg-primary/10 text-foreground font-medium"
-                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                            )}
-                        >
-                            <item.icon className="size-4 shrink-0" />
-                            {showLabel && (
-                                <span className="truncate flex-1">{item.title}</span>
-                            )}
-                            {showLabel && isMyRoadmaps && bookmarkCount > 0 && (
-                                <span className="ml-auto rounded-[3px] border border-primary/40 bg-primary/10 px-1.5 py-px font-mono text-micro font-semibold text-primary">
-                                    {bookmarkCount > 9 ? "9+" : bookmarkCount}
-                                </span>
-                            )}
-                            {showLabel && isApplications && applicationCount > 0 && (
-                                <span className="ml-auto rounded-[3px] border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-px font-mono text-micro font-semibold text-emerald-500">
-                                    {applicationCount > 9 ? "9+" : applicationCount}
-                                </span>
-                            )}
-                        </Link>
-                    );
-                })}
+                {groups.map((group, groupIndex) => (
+                    <div key={group.label ?? `group-${groupIndex}`} className="flex flex-col gap-1">
+                        {group.label !== undefined && heading(group.label)}
+                        {group.links.map((item) => {
+                            const active = item.href === activeHref;
+                            const count = item.badge ? badgeCount[item.badge] : 0;
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    prefetch={false}
+                                    title={!showLabel ? item.title : undefined}
+                                    aria-current={active ? "page" : undefined}
+                                    className={cn(
+                                        "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-all duration-150",
+                                        showLabel ? "justify-start" : "justify-center",
+                                        active
+                                            ? "bg-primary/10 text-foreground font-medium"
+                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    )}
+                                >
+                                    <item.icon className="size-4 shrink-0" />
+                                    {showLabel && <span className="truncate flex-1">{item.title}</span>}
+                                    {showLabel && item.badge && count > 0 && (
+                                        <span className={cn("ml-auto rounded-[3px] border px-1.5 py-px font-mono text-micro font-semibold", badgeTone[item.badge])}>
+                                            {count > 9 ? "9+" : count}
+                                        </span>
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                ))}
                 {showAdmin && (
                     <>
-                        <div className="mt-4 mb-1 px-3">
-                            {showLabel && <p className="font-mono text-micro uppercase tracking-widest text-muted-foreground">Admin</p>}
-                            {!showLabel && <div className="h-px bg-border" />}
-                        </div>
+                        {heading("Admin")}
                         {ADMIN_LINKS.map((item) => {
                             const active = pathname === item.href || pathname.startsWith(item.href);
                             return (
