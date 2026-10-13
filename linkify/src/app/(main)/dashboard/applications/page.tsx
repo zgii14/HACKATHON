@@ -600,7 +600,7 @@ export default function ApplicationsPage() {
                         <EmptyState title="Belum ada lamaran">
                             Apply ke lowongan pertamamu untuk mulai tracking.{" "}
                             <Link href="/dashboard/jobs" className="font-semibold text-primary hover:underline">
-                                Browse lowongan →
+                                Lihat semua lowongan →
                             </Link>
                         </EmptyState>
                     </div>

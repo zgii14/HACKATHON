@@ -115,7 +115,7 @@ export default function JobsPage() {
         <div className="w-full">
             <PageHeader
                 crumb="dasbor / lowongan"
-                title="Browse lowongan"
+                title="Semua lowongan"
                 sub="Semua posisi tersedia dengan match score terhadap profilmu. Klik kartu untuk detail."
                 right={<div className="text-[12px] text-muted-foreground"><span className="text-foreground">{jobs.length}</span> posisi</div>}
             />

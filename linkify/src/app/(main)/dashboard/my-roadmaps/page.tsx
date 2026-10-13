@@ -62,9 +62,9 @@ export default function MyRoadmapsPage() {
     return (
         <div className="w-full">
             <PageHeader
-                crumb="dasbor / my roadmaps"
-                title="Roadmap tersimpan"
-                sub="Job yang sedang kamu kejar. Tiap job punya roadmap dan progress belajar tersendiri."
+                crumb="dasbor / roadmap"
+                title="Roadmap"
+                sub="Roadmap umum dari skill gap-mu, plus roadmap untuk tiap job yang sedang kamu kejar."
                 right={
                     <div className="text-[12px] text-muted-foreground">
                         <span className="text-foreground">{bookmarks.length}</span> dibookmark ·{" "}
@@ -73,13 +73,31 @@ export default function MyRoadmapsPage() {
                 }
             />
 
+            <Reveal delay={0.04}>
+                <div className="mt-6 flex flex-col gap-3 border-y border-border py-4 sm:flex-row sm:items-center sm:gap-5">
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[14px] font-semibold leading-tight">Roadmap umum</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">Dari keseluruhan skill gap, tidak terikat satu job.</p>
+                    </div>
+                    <Link
+                        href="/dashboard/roadmap"
+                        prefetch={false}
+                        className="shrink-0 text-[13px] font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                        Buka roadmap →
+                    </Link>
+                </div>
+            </Reveal>
+
+            <h2 className="mt-8 text-body font-bold tracking-tight">Roadmap per job</h2>
+
             {bookmarks.length === 0 ? (
-                <div className="pt-8">
+                <div className="pt-4">
                     <EmptyState title="Belum ada roadmap tersimpan">
                         Buka detail job lalu klik <span className="font-semibold text-foreground">Buat Roadmap untuk Job Ini</span>{" "}
                         untuk mulai menyimpan target.{" "}
                         <Link href="/dashboard/jobs" className="font-semibold text-primary hover:underline">
-                            Browse lowongan →
+                            Lihat semua lowongan →
                         </Link>
                     </EmptyState>
                 </div>

@@ -205,7 +205,7 @@ export default function DashboardHomePage() {
                 }
               : {
                     title: "Cari lowongan baru",
-                    description: "Browse lowongan fresh graduate dan buat roadmap dari job yang ingin dikejar.",
+                    description: "Lihat lowongan fresh graduate dan buat roadmap dari job yang ingin dikejar.",
                     href: "/dashboard/jobs",
                     cta: "Browse jobs",
                 };
@@ -368,7 +368,7 @@ export default function DashboardHomePage() {
                             <p className="py-7 text-center text-body text-muted-foreground">
                                 Belum ada rekomendasi.{" "}
                                 <Link href="/dashboard/jobs" className="font-semibold text-primary hover:underline">
-                                    Browse lowongan
+                                    Lihat semua lowongan
                                 </Link>{" "}
                                 atau update profil untuk mulai.
                             </p>

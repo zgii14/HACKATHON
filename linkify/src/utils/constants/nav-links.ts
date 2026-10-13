@@ -63,7 +63,7 @@ export const CANDIDATE_NAV_GROUPS: DashboardNavGroup[] = [
         label: "Tingkatkan skill",
         links: [
             { title: "Skill Gap", href: "/dashboard/skill-gap", icon: TargetIcon },
-            { title: "Roadmap",   href: "/dashboard/roadmap",   icon: BookmarkIcon, match: ["/dashboard/my-roadmaps"], badge: "bookmarks" },
+            { title: "Roadmap",   href: "/dashboard/my-roadmaps", icon: BookmarkIcon, match: ["/dashboard/roadmap"], badge: "bookmarks" },
         ],
     },
     { label: "", links: [{ title: "Kelola Akun", href: "/dashboard/account", icon: UserCircle2 }] },

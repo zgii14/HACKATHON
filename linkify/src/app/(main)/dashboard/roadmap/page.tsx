@@ -231,6 +231,9 @@ function RoadmapContent() {
         <div className="w-full max-w-2xl">
             {/* Mode tabs */}
             <div className="flex items-center gap-1 border-b border-border">
+                <Link href="/dashboard/my-roadmaps" prefetch={false} className="-mb-px border-b-2 border-transparent px-3 py-2 text-body font-medium text-muted-foreground transition-colors hover:text-foreground">
+                    Daftar roadmap
+                </Link>
                 {jobId ? (
                     <>
                         <Link href="/dashboard/roadmap" className="-mb-px border-b-2 border-transparent px-3 py-2 text-body font-medium text-muted-foreground transition-colors hover:text-foreground">
@@ -243,9 +246,6 @@ function RoadmapContent() {
                 ) : (
                     <>
                         <span className="-mb-px border-b-2 border-primary px-3 py-2 text-body font-semibold text-foreground">Roadmap umum</span>
-                        <Link href="/dashboard/my-roadmaps" prefetch={false} className="-mb-px border-b-2 border-transparent px-3 py-2 text-body font-medium text-muted-foreground transition-colors hover:text-foreground">
-                            Pilih job target
-                        </Link>
                     </>
                 )}
             </div>

@@ -246,7 +246,7 @@ export default function OnboardingPage() {
         <div className="w-full max-w-2xl">
             <PageHeader
                 crumb="dasbor / onboarding"
-                title={hasExistingProfile ? "Data GitHub + CV" : "Onboarding"}
+                title={hasExistingProfile ? "Data GitHub & CV" : "Onboarding"}
                 sub={
                     hasExistingProfile
                         ? `Profil @${existingProfile?.github_username} · ${existingProfile?.merged_skills?.length ?? 0} skill terhubung. Upload PDF baru untuk sync ulang.`
