@@ -97,11 +97,14 @@ def select_repositories(repositories: Any, repo_names: list[str] | None) -> list
 def _fallback_project(repo: dict, language: str) -> dict:
     tech_stack = _dedupe_strings(list((repo.get("languages") or {}).keys()), 8)
     name = repo["name"].strip()
-    stack_label = ", ".join(tech_stack)
+    stack_label = ", ".join(tech_stack[:4])
+    commits = max(int(repo.get("own_commits") or 0), 0)
     if language == "en":
-        description = f"A GitHub project built with {stack_label}." if stack_label else f"Public GitHub project: {name}."
+        description = f"{name} is a {stack_label} project" if stack_label else f"{name} is a public GitHub project"
+        description += f" with {commits} commits by the owner." if commits else "."
     else:
-        description = f"Proyek GitHub yang dibangun dengan {stack_label}." if stack_label else f"Proyek GitHub publik: {name}."
+        description = f"{name} adalah proyek {stack_label}" if stack_label else f"{name} adalah proyek GitHub publik"
+        description += f" dengan {commits} commit dari pemilik." if commits else "."
     return {
         "repo_name": name,
         "url": repo["html_url"],

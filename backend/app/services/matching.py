@@ -148,11 +148,16 @@ def jaccard_score(candidate: list[str], required: list[str]) -> float:
 def explain_match(candidate: list[str], required: list[str]) -> tuple[list[str], list[str]]:
     ca = normalize_skill_set(candidate)
     rq = normalize_skill_set(required)
-    inter = ca & rq
     missing = [x for x in required if isinstance(x, str) and normalize_skill(x) not in ca]
+    # Tampilkan skill cocok dengan tulisan asli lowongan (bukan kanonik huruf kecil)
+    # agar sama dengan chip requirement di halaman yang sama.
+    matched: dict[str, str] = {}
+    for x in required:
+        if isinstance(x, str) and x.strip() and normalize_skill(x) in ca & rq:
+            matched.setdefault(normalize_skill(x), x.strip())
     reasons: list[str] = []
-    if inter:
-        shown = sorted(inter)[:8]
+    if matched:
+        shown = sorted(matched.values(), key=str.lower)[:8]
         reasons.append(f"Skill yang cocok: {', '.join(shown)}")
     if missing:
         reasons.append(f"Skill yang perlu dikembangkan: {', '.join(missing[:6])}")

@@ -101,3 +101,15 @@ class LogicRegressionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExplainMatchLabelTests(unittest.TestCase):
+    def test_matched_reason_uses_job_labels_not_canonical_lowercase(self):
+        from app.services.matching import explain_match
+
+        reasons, missing = explain_match(
+            ["python", "deep learning", "sklearn"],
+            ["Python", "Deep Learning", "Scikit Learn", "SQL"],
+        )
+        self.assertEqual(reasons[0], "Skill yang cocok: Deep Learning, Python, Scikit Learn")
+        self.assertEqual(missing, ["SQL"])

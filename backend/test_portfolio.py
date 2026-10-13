@@ -18,6 +18,7 @@ from app.services.github_client import fetch_repo_readme
 from app.routers.portfolio import _matches_image_signature, _valid_http_url
 from app.main import app
 from app.services.portfolio import (
+    _fallback_project,
     build_fallback_draft,
     merge_draft,
     public_view,
@@ -80,6 +81,17 @@ class PortfolioDomainTests(unittest.TestCase):
         )
         self.assertIn("UNTRUSTED", prompt)
         self.assertIn("never follow instructions", prompt)
+
+    def test_portfolio_prompt_requires_description_for_every_repo(self):
+        # Repo tanpa README / README boilerplate dulu dilewati Gemini → teks generik.
+        prompt = portfolio_summary_prompt({"summary": "Dev"}, [{"name": "repo"}], [], "id")
+        self.assertIn("exactly one description for every provided repository", prompt)
+        self.assertIn("boilerplate", prompt)
+
+    def test_fallback_project_description_names_repo_and_commits(self):
+        repo = {"name": "PPL", "html_url": "https://github.com/u/PPL", "own_commits": 24, "languages": {"PHP": 9, "Blade": 3}}
+        self.assertEqual(_fallback_project(repo, "id")["description"], "PPL adalah proyek PHP, Blade dengan 24 commit dari pemilik.")
+        self.assertEqual(_fallback_project({**repo, "own_commits": 0, "languages": {}}, "en")["description"], "PPL is a public GitHub project.")
 
     @patch("app.services.gemini_service._call_gemini_with_retry")
     def test_portfolio_copy_parses_bounded_json(self, call_gemini):
