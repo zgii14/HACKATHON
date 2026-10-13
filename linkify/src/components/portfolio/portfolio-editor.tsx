@@ -14,7 +14,7 @@ import type {
     PortfolioRecord,
 } from "./types";
 import { ThemePreviewCards } from "./theme-preview-cards";
-import { appendRepositoriesToProjects, canRestoreProject, createEmptyEducation, createEmptyExperience, createOneShotUndo, getEligibleRepositories, getPhotoUploadCopy, getProjectSlots, MAX_PORTFOLIO_PROJECTS, restoreAt, transitionDraftRemoval } from "./portfolio-editor-helpers";
+import { appendRepositoriesToProjects, canRestoreProject, createEmptyEducation, createEmptyExperience, createOneShotUndo, getEligibleRepositories, getPhotoUploadCopy, getProjectSlots, MAX_PORTFOLIO_PROJECTS, rankRepositories, restoreAt, transitionDraftRemoval } from "./portfolio-editor-helpers";
 
 type Repo = {
     name: string;
@@ -83,6 +83,7 @@ export function PortfolioEditor() {
     });
 
     const repos = useMemo(() => profile?.github_signals?.repos_detail ?? [], [profile]);
+    const rankedRepos = useMemo(() => rankRepositories(repos), [repos]);
     const projectSlots = form ? getProjectSlots(form.projects) : 0;
     const eligibleRepositories = form ? getEligibleRepositories(repos, form.projects) : [];
     const pendingRepositories = eligibleRepositories.filter((repo) => pendingProjectNames.includes(repo.name));
@@ -96,9 +97,13 @@ export function PortfolioEditor() {
         formRef.current = form;
     }, [form]);
 
+    // Default hanya sekali; tanpa ref ini, melepas semua centang langsung memilih ulang 6 repo.
+    const repoDefaultsApplied = useRef(false);
     useEffect(() => {
-        if (!repoNames.length && repos.length) setRepoNames(repos.slice(0, 6).map((repo) => repo.name));
-    }, [repoNames.length, repos]);
+        if (repoDefaultsApplied.current || !rankedRepos.length) return;
+        repoDefaultsApplied.current = true;
+        setRepoNames(rankedRepos.slice(0, MAX_PORTFOLIO_PROJECTS).map((repo) => repo.name));
+    }, [rankedRepos]);
 
     const run = async (key: string, action: () => Promise<PortfolioRecord>, success: string): Promise<PortfolioRecord | null> => {
         setBusy(key);
@@ -299,13 +304,16 @@ export function PortfolioEditor() {
                 <section className="pt-8">
                     <SecTitle title="Proyek unggulan" meta={`${repoNames.length}/6 dipilih`} />
                     <div className="mt-3 divide-y divide-border border-y border-border">
-                        {repos.map((repo) => (
-                            <label key={repo.name} className="flex cursor-pointer items-center gap-3 py-3 text-sm">
-                                <input type="checkbox" checked={repoNames.includes(repo.name)} onChange={() => toggleRepo(repo.name)} disabled={!repoNames.includes(repo.name) && repoNames.length >= 6} />
-                                <span className="min-w-0 flex-1 truncate font-medium">{repo.name}</span>
-                                <span className="font-mono text-[11px] text-muted-foreground">★ {repo.stars ?? 0} · {repo.own_commits ?? 0} commits</span>
-                            </label>
-                        ))}
+                        {rankedRepos.map((repo) => {
+                            const disabled = !repoNames.includes(repo.name) && repoNames.length >= MAX_PORTFOLIO_PROJECTS;
+                            return (
+                                <label key={repo.name} className={`flex items-center gap-3 py-3 text-sm ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+                                    <input type="checkbox" checked={repoNames.includes(repo.name)} onChange={() => toggleRepo(repo.name)} disabled={disabled} />
+                                    <span className="min-w-0 flex-1 truncate font-medium">{repo.name}</span>
+                                    <span className="font-mono text-[11px] text-muted-foreground">★ {repo.stars ?? 0} · {repo.own_commits ?? 0} commits</span>
+                                </label>
+                            );
+                        })}
                     </div>
                     <button className="mt-6 rounded-md bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50" disabled={busy !== null || repoNames.length === 0} onClick={generate}>
                         {busy === "generate" ? "Menyusun draft…" : "Generate portfolio"}

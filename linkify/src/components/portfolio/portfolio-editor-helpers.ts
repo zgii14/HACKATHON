@@ -11,6 +11,14 @@ export type GitHubPortfolioRepository = {
 
 export const MAX_PORTFOLIO_PROJECTS = 6;
 
+// Samakan dengan rank_repositories di backend: stars, lalu commit sendiri.
+// Sort stabil menjaga urutan pushed_at dari API sebagai tie-break.
+export function rankRepositories<T extends Pick<GitHubPortfolioRepository, "stars" | "own_commits">>(repositories: T[]): T[] {
+    return [...repositories].sort(
+        (a, b) => (b.stars ?? 0) - (a.stars ?? 0) || (b.own_commits ?? 0) - (a.own_commits ?? 0),
+    );
+}
+
 export function removeAt<T>(items: T[], index: number): { items: T[]; removed: T; index: number } | null {
     if (!Number.isInteger(index) || index < 0 || index >= items.length) return null;
     return {
