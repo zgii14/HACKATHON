@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from "react-toastify";
 import { Label } from "../ui/label";
-import GoogleAuthButton from "./google-auth-button";
+import OAuthButton from "./oauth-button";
 
 const SignInForm = () => {
 
@@ -79,7 +79,10 @@ const SignInForm = () => {
             </h2>
 
             <div className="w-full">
-                <GoogleAuthButton mode="sign-in" disabled={isLoading} />
+                <div className="space-y-2">
+                    <OAuthButton provider="github" mode="sign-in" disabled={isLoading} />
+                    <OAuthButton provider="google" mode="sign-in" disabled={isLoading} />
+                </div>
                 <div className="flex items-center gap-x-3 mt-6">
                     <span className="h-px flex-1 bg-border" />
                     <span className="text-xs text-muted-foreground">or</span>

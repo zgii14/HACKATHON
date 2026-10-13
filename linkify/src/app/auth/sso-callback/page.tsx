@@ -3,7 +3,7 @@
 import { AuthenticateWithRedirectCallback } from "@clerk/nextjs";
 
 /**
- * Titik pendaratan setelah Google mengembalikan user.
+ * Titik pendaratan setelah provider OAuth (Google/GitHub) mengembalikan user.
  *
  * Komponen Clerk menukar kode OAuth jadi sesi lalu meneruskan ke
  * `redirectUrlComplete` yang dikirim tombolnya (/auth/auth-callback).

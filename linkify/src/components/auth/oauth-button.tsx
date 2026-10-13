@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useSignIn, useSignUp } from "@clerk/nextjs";
-import { LoaderIcon } from "lucide-react";
+import { Github, LoaderIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
@@ -17,14 +17,22 @@ const GoogleIcon = () => (
     </svg>
 );
 
+const PROVIDERS = {
+    google: { strategy: "oauth_google", label: "Google", icon: <GoogleIcon /> },
+    github: { strategy: "oauth_github", label: "GitHub", icon: <Github className="w-4 h-4" aria-hidden="true" /> },
+} as const;
+
 interface Props {
+    /** Provider OAuth yang dipakai tombol ini. */
+    provider: keyof typeof PROVIDERS;
     /** Menentukan alur Clerk yang dipakai: masuk atau daftar. */
     mode: "sign-in" | "sign-up";
     /** Ikut dinonaktifkan saat form email sedang diproses. */
     disabled?: boolean;
 }
 
-const GoogleAuthButton = ({ mode, disabled }: Props) => {
+const OAuthButton = ({ provider, mode, disabled }: Props) => {
+    const config = PROVIDERS[provider];
     const { signIn, isLoaded: signInLoaded } = useSignIn();
     const { signUp, isLoaded: signUpLoaded } = useSignUp();
     const [isRedirecting, setIsRedirecting] = useState<boolean>(false);
@@ -32,7 +40,7 @@ const GoogleAuthButton = ({ mode, disabled }: Props) => {
 
     const isLoaded = mode === "sign-in" ? signInLoaded : signUpLoaded;
 
-    const handleGoogleAuth = async () => {
+    const handleOAuth = async () => {
         if (!isLoaded) return;
 
         setIsRedirecting(true);
@@ -44,7 +52,7 @@ const GoogleAuthButton = ({ mode, disabled }: Props) => {
                 ? `/auth/auth-callback?redirect_url=${encodeURIComponent(redirectUrl)}`
                 : "/auth/auth-callback";
             await flow!.authenticateWithRedirect({
-                strategy: "oauth_google",
+                strategy: config.strategy,
                 // Clerk menuntaskan OAuth di sini, lalu melempar ke auth-callback
                 // yang sudah ada — jalur setelah login tetap satu pintu.
                 redirectUrl: "/auth/sso-callback",
@@ -54,7 +62,7 @@ const GoogleAuthButton = ({ mode, disabled }: Props) => {
             // Sampai sini berarti redirect gagal dan halaman tidak berpindah,
             // jadi tombol harus bisa dipakai lagi.
             setIsRedirecting(false);
-            toast.error("Could not open Google sign-in. Please try again.");
+            toast.error(`Could not open ${config.label} sign-in. Please try again.`);
         }
     };
 
@@ -63,19 +71,19 @@ const GoogleAuthButton = ({ mode, disabled }: Props) => {
             type="button"
             variant="outline"
             disabled={!isLoaded || disabled || isRedirecting}
-            onClick={handleGoogleAuth}
+            onClick={handleOAuth}
             className="w-full gap-x-2"
         >
             {isRedirecting ? (
                 <LoaderIcon className="w-5 h-5 animate-spin" />
             ) : (
                 <>
-                    <GoogleIcon />
-                    Continue with Google
+                    {config.icon}
+                    Continue with {config.label}
                 </>
             )}
         </Button>
     );
 };
 
-export default GoogleAuthButton;
+export default OAuthButton;
