@@ -16,6 +16,7 @@ from app.services.gemini_service import (
     extract_skills_from_cv_text,
     extract_cv_data_from_text,
 )
+from app.services.github_identity import connect_github, merge_skills, skills_from_github
 from app.services.pdf_extract import extract_text_from_pdf
 from app.services.skill_verification import verify_skills
 
@@ -23,43 +24,6 @@ router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 # Rate limiter berbasis DB — tahan server restart
 _SYNC_COOLDOWN_SECONDS = 60
-
-
-def _skills_from_github(signals: dict | None) -> list[str]:
-    if not signals:
-        return []
-    langs = signals.get("languages") or {}
-    topics = signals.get("topics") or []
-    skills: list[str] = []
-    if isinstance(langs, dict):
-        for k in langs.keys():
-            if isinstance(k, str) and k.strip():
-                skills.append(k.strip())
-    if isinstance(topics, list):
-        for t in topics:
-            if isinstance(t, str) and t.strip():
-                skills.append(t.strip())
-    seen: set[str] = set()
-    out: list[str] = []
-    for s in skills:
-        low = s.lower()
-        if low not in seen:
-            seen.add(low)
-            out.append(s)
-    return out[:50]
-
-
-def _merge_skills(gh: list[str], cv: list[str]) -> list[str]:
-    seen: set[str] = set()
-    out: list[str] = []
-    for s in gh + cv:
-        if not isinstance(s, str) or not s.strip():
-            continue
-        low = s.lower()
-        if low not in seen:
-            seen.add(low)
-            out.append(s.strip())
-    return out
 
 
 def has_usable_cv_data(data: dict | None) -> bool:
@@ -165,8 +129,8 @@ async def sync_profile(
         if not has_usable_cv_data(cv_data):
             raise HTTPException(502, "AI tidak berhasil membaca struktur CV. Silakan coba PDF lain.")
 
-    gh_skills = _skills_from_github(gh_signals)
-    merged = _merge_skills(gh_skills, cv_skills)
+    gh_skills = skills_from_github(gh_signals)
+    merged = merge_skills(gh_skills, cv_skills)
     # Lapisan tambahan: skill dengan bukti commit. Tidak memengaruhi merged_skills
     # maupun matching — hanya dipakai untuk membedakan verified vs declared.
     verified = verify_skills(gh_signals, as_of=datetime.now(timezone.utc))
@@ -215,3 +179,17 @@ async def sync_profile(
         "verified_skills": verified,
         "cv_ai_cached": cached_cv,
     }
+
+
+@router.post("/github/connect")
+async def connect_github_account(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Tautkan GitHub yang sudah terhubung di Clerk ke profil kandidat."""
+    if user.role == "recruiter":
+        raise HTTPException(403, "Hanya untuk kandidat.")
+    profile = db.query(CandidateProfile).filter(CandidateProfile.user_id == user.id).first()
+    if not profile:
+        profile = CandidateProfile(user_id=user.id)
+        db.add(profile)
+        db.flush()
+    profile = await connect_github(db, user, profile)
+    return {"ok": True, "github_username": profile.github_username, "github_connection": "verified"}
