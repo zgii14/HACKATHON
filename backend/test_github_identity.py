@@ -178,3 +178,74 @@ class ConnectApiTests(unittest.TestCase):
         self.assertEqual(prof.merged_skills, ["SQL"])
         self.assertEqual(db.query(Portfolio).one().status, "draft")
         db.close()
+
+
+PDF = b"%PDF-1.4 fake"
+
+
+class SyncMatrixTests(ConnectApiTests):
+    def _sync(self, data=None, with_cv=True):
+        files = {"cv": ("cv.pdf", PDF, "application/pdf")} if with_cv else None
+        with patch("app.routers.profiles.extract_text_from_pdf", return_value="x" * 50), \
+             patch("app.routers.profiles.extract_skills_from_cv_text", return_value=["SQL"]), \
+             patch("app.routers.profiles.extract_cv_data_from_text", return_value={"summary": "s"}), \
+             patch("app.routers.profiles.reserve_ai_generation"), \
+             patch("app.routers.profiles._SYNC_COOLDOWN_SECONDS", 0), \
+             patch("app.routers.profiles.github_client.fetch_github_signals", AsyncMock(return_value=SIGNALS)):
+            return self.client.post("/profiles/sync", data=data or {}, files=files)
+
+    def test_cv_only_without_github(self):
+        res = self._sync()
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertIsNone(res.json()["github_username"])
+        self.assertIsNone(self._one(CandidateProfile).github_signals)
+
+    def test_github_only_reuses_existing_cv(self):
+        db = self.Session()
+        prof = db.query(CandidateProfile).one()
+        prof.github_user_id = 1001
+        prof.github_username = "octo"
+        db.commit()
+        db.close()
+        res = self._sync(with_cv=False)
+        self.assertEqual(res.status_code, 200, res.text)
+        prof = self._one(CandidateProfile)
+        self.assertEqual(prof.github_signals, SIGNALS)
+        self.assertEqual(prof.cv_skills, ["SQL"])
+
+    def test_nothing_returns_400(self):
+        db = self.Session()
+        prof = db.query(CandidateProfile).one()
+        prof.cv_skills = None
+        prof.cv_data = None
+        db.commit()
+        db.close()
+        self.assertEqual(self._sync(with_cv=False).status_code, 400)
+
+    def test_verified_username_wins_over_typed(self):
+        db = self.Session()
+        prof = db.query(CandidateProfile).one()
+        prof.github_user_id = 1001
+        prof.github_username = "octo"
+        db.commit()
+        db.close()
+        res = self._sync({"github_url": "someone-else"})
+        self.assertEqual(res.json()["github_username"], "octo")
+
+    def test_legacy_username_not_replaced_by_typed(self):
+        db = self.Session()
+        prof = db.query(CandidateProfile).one()
+        prof.github_username = "legacyuser"
+        prof.github_legacy_grandfathered = True
+        db.commit()
+        db.close()
+        res = self._sync({"github_url": "someone-else"})
+        self.assertEqual(res.json()["github_username"], "legacyuser")
+
+    def test_transition_typed_username_marks_legacy(self):
+        res = self._sync({"github_url": "octo"})
+        self.assertEqual(res.status_code, 200, res.text)
+        prof = self._one(CandidateProfile)
+        self.assertEqual(prof.github_username, "octo")
+        self.assertTrue(prof.github_legacy_grandfathered)
+        self.assertIsNone(prof.github_user_id)
