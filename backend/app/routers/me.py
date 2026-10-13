@@ -6,6 +6,7 @@ from fastapi.responses import Response
 from sqlalchemy import update as sa_update
 from sqlalchemy.orm import Session
 
+from app.services.github_identity import connection_state
 from app.auth import get_current_user, is_recruiter_email, is_admin_email
 from app.config import settings
 from app.database import get_db
@@ -339,6 +340,8 @@ def read_profile(user: User = Depends(get_current_user), db: Session = Depends(g
         "cv_filename": p.cv_filename,
         "cv_uploaded_at": p.cv_uploaded_at,
         "cv_preference": p.cv_preference,
+        "github_connection": connection_state(p),
+        "github_verified_at": p.github_verified_at,
     }
     return ProfileOut(**data)
 

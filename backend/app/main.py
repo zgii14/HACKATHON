@@ -352,6 +352,18 @@ async def lifespan(app: FastAPI):
         conn.execute(text("UPDATE conversations SET expires_at = created_at + INTERVAL '4 days' WHERE expires_at IS NULL"))
         conn.commit()
 
+    # DDL Migration: identitas GitHub terverifikasi via Clerk
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS github_user_id BIGINT NULL"))
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS github_verified_at TIMESTAMPTZ NULL"))
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS github_legacy_grandfathered BOOLEAN NOT NULL DEFAULT false"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_candidate_profiles_github_user_id ON candidate_profiles (github_user_id)"))
+        conn.execute(text(
+            "UPDATE candidate_profiles SET github_legacy_grandfathered = true "
+            "WHERE github_username IS NOT NULL AND github_user_id IS NULL AND github_legacy_grandfathered = false"
+        ))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)

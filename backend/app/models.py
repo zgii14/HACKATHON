@@ -3,6 +3,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     JSON,
+    BigInteger,
     Boolean,
     DateTime,
     ForeignKey,
@@ -50,6 +51,11 @@ class CandidateProfile(Base):
     )
     github_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     github_signals: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Identitas GitHub terverifikasi via Clerk (oauth_github). Unik per kandidat.
+    github_user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, unique=True)
+    github_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Profil lama yang username GitHub-nya diketik manual sebelum verifikasi ada.
+    github_legacy_grandfathered: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
     cv_ai_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
     cv_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)
     merged_skills: Mapped[list | None] = mapped_column(JSON, nullable=True)

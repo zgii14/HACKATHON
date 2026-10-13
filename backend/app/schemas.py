@@ -90,6 +90,9 @@ class ProfileOut(BaseModel):
     cv_filename: str | None = None
     cv_uploaded_at: datetime | None = None
     cv_preference: str | None = "form"
+    # Status koneksi GitHub: verified | legacy_unverified | none
+    github_connection: str = "none"
+    github_verified_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 

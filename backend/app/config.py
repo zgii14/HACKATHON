@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     github_token: str | None = None
     clerk_jwks_url: str = ""
     clerk_issuer: str = ""
+    clerk_secret_key: str = ""  # Backend API Clerk (baca akun GitHub terverifikasi)
+    clerk_webhook_secret: str = ""  # whsec_... untuk verifikasi webhook Svix
     cors_origins: str = "http://localhost:3000"
     cors_origin_regex: str | None = None  # regex origin CORS (mis. semua *.vercel.app)
     admin_secret: str | None = None  # Set di .env: ADMIN_SECRET=your_secret
