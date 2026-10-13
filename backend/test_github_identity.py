@@ -249,3 +249,43 @@ class SyncMatrixTests(ConnectApiTests):
         self.assertEqual(prof.github_username, "octo")
         self.assertTrue(prof.github_legacy_grandfathered)
         self.assertIsNone(prof.github_user_id)
+
+
+class GatingAndFlagsTests(ConnectApiTests):
+    def test_portfolio_generate_requires_github(self):
+        res = self.client.post("/me/portfolio/generate", json={"language": "id", "repo_names": []})
+        self.assertEqual(res.status_code, 409, res.text)
+        self.assertEqual(res.json()["detail"]["code"], "GITHUB_REQUIRED")
+
+    def test_public_portfolio_exposes_verified_flag(self):
+        db = self.Session()
+        prof = db.query(CandidateProfile).one()
+        prof.github_user_id = 1001
+        prof.github_username = "octo"
+        db.add(Portfolio(
+            user_id=self.user.id, public_id="pubflag", status="published",
+            draft_content={}, published_content={"name": "A", "headline": "H", "bio": "B"},
+        ))
+        db.commit()
+        db.close()
+        res = self.client.get("/portfolios/pubflag")
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertTrue(res.json()["github_verified"])
+
+    def test_recruiter_search_exposes_verified_flag(self):
+        db = self.Session()
+        legacy_user = User(id=uuid.uuid4(), clerk_user_id="user_l", email="l@example.com", role="candidate")
+        db.add_all([legacy_user, CandidateProfile(user_id=legacy_user.id, github_username="legacy", github_legacy_grandfathered=True, merged_skills=["Go"])])
+        prof = db.query(CandidateProfile).filter(CandidateProfile.user_id == self.user.id).one()
+        prof.github_user_id = 1001
+        prof.github_username = "octo"
+        db.commit()
+        db.close()
+        recruiter = User(id=uuid.uuid4(), clerk_user_id="rec", email="recruiter@githire.com", role="recruiter")
+        app.dependency_overrides[get_current_user] = lambda: recruiter
+        res = self.client.get("/recruiter/candidates/search")
+        self.assertEqual(res.status_code, 200, res.text)
+        body = res.json()
+        items = body if isinstance(body, list) else next(v for v in body.values() if isinstance(v, list))
+        flags = {c["github"]: c["github_verified"] for c in items}
+        self.assertEqual(flags, {"octo": True, "legacy": False})

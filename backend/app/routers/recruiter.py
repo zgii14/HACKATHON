@@ -8,6 +8,7 @@ from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
+from app.services.github_identity import connection_state
 from app.auth import get_current_user
 from app.config import settings
 from app.database import get_db
@@ -380,6 +381,7 @@ def get_job_applications(
                 "phone": profile.bio_phone if profile else None,
                 "address": profile.bio_address if profile else None,
                 "github": profile.github_username if profile else None,
+                "github_verified": connection_state(profile) == "verified",
                 "cv_skills": profile.cv_skills if profile else [],
                 "merged_skills": profile.merged_skills if profile else [],
                 "cv_data": profile.cv_data if profile else {},
@@ -666,6 +668,7 @@ def search_candidates(
             "phone": profile.bio_phone,
             "address": profile.bio_address,
             "github": profile.github_username,
+            "github_verified": connection_state(profile) == "verified",
             "cv_skills": profile.cv_skills or [],
             "merged_skills": profile.merged_skills or [],
             "cv_data": profile.cv_data or {},

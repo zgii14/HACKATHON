@@ -258,6 +258,7 @@ class PortfolioApiTests(unittest.TestCase):
         self.profile = CandidateProfile(
             user_id=self.user.id,
             github_username="candidate",
+            github_legacy_grandfathered=True,  # sama dengan hasil backfill migrasi
             github_signals=GITHUB_SIGNALS,
             cv_data=CV_DATA,
             verified_skills=[{"skill": "Python", "level": "menengah", "score": 7.5}],

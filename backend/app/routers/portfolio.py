@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
+from app.services.github_identity import connection_state
 from app.auth import get_current_user
 from app.config import settings
 from app.database import get_db
@@ -170,6 +171,8 @@ async def generate_my_portfolio(
 ):
     _require_candidate(user)
     profile = _profile(db, user.id)
+    if connection_state(profile) == "none":
+        raise HTTPException(409, {"code": "GITHUB_REQUIRED", "message": "Hubungkan GitHub dulu untuk membuat portfolio."})
     if not profile.cv_data or not profile.github_signals:
         raise HTTPException(400, "CV dan GitHub wajib disinkronkan sebelum generate portfolio.")
 
@@ -405,12 +408,16 @@ def get_public_portfolio(public_id: str, db: Session = Depends(get_db)):
     ).first()
     if not portfolio or not portfolio.published_content:
         raise HTTPException(404, "Portfolio tidak tersedia.")
+    owner = db.query(CandidateProfile).filter(CandidateProfile.user_id == portfolio.user_id).first()
+    view = public_view(
+        portfolio.public_id,
+        portfolio.published_content,
+        portfolio.published_content.get("_verified_skills_snapshot") or [],
+        bool(portfolio.published_photo),
+    )
+    # Status terkini (bukan snapshot): verifikasi bisa dicabut setelah publish.
+    view["github_verified"] = connection_state(owner) == "verified"
     return JSONResponse(
-        public_view(
-            portfolio.public_id,
-            portfolio.published_content,
-            portfolio.published_content.get("_verified_skills_snapshot") or [],
-            bool(portfolio.published_photo),
-        ),
+        view,
         headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow"},
     )
