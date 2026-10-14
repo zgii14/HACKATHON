@@ -61,7 +61,8 @@ export function ProofSection({ portfolio }: { portfolio: PublicPortfolio | null 
                         </div>
                     )}
                 </Reveal>
-                <Reveal delay={0.08}>
+                {/* Menempel saat kolom kiri digulir, supaya kolom kanan tidak menyisakan ruang kosong. */}
+                <Reveal delay={0.08} className="lg:sticky lg:top-24">
                     <ProductVideo poster="/landing/portfolio-professional.webp" label="Membuat portfolio dari GitHub dan CV di GitHire" />
                 </Reveal>
             </div>
