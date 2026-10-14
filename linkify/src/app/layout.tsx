@@ -1,7 +1,8 @@
 import { Providers } from "@/components";
 import { AppToastContainer } from "@/components/ui/app-toast";
 import "@/styles/globals.css";
-import { cn, generateMetadata, inter, jakarta, jetbrains } from "@/utils";
+import { cn, generateMetadata } from "@/utils";
+import { inter, jakarta, jetbrains } from "@/utils/constants/fonts";
 
 export const metadata = generateMetadata();
 

@@ -4,7 +4,9 @@ import { APP_DOMAIN, APP_HOSTNAMES, APP_NAME } from "./constants/site";
 import { DEFAULT_AVATAR_URL, PAGINATION_LIMIT, COMPANIES, PROCESS } from "./constants/misc";
 import { PLANS, PRICING_FEATURES, WORKSPACE_LIMIT } from "./constants/pricing";
 import { CANDIDATE_NAV_GROUPS, NAV_LINKS } from "./constants/nav-links";
-import { inter, jakarta, jetbrains } from "./constants/fonts";
+// Font sengaja TIDAK diekspor dari barrel ini: banyak komponen client mengimpor "@/utils",
+// dan CSS next/font lalu ditempel ke chunk mereka, bukan ke root layout. Impor dari
+// "@/utils/constants/fonts" (hanya app/layout.tsx).
 
 // functions
 import { cn } from "./functions/cn";
@@ -30,9 +32,6 @@ export {
     CANDIDATE_NAV_GROUPS,
     COMPANIES,
     PROCESS,
-    jakarta,
-    jetbrains,
-    inter,
 
     // functions
     cn,
