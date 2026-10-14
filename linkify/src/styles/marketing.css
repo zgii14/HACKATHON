@@ -1,0 +1,11 @@
+/* Satoshi khusus halaman marketing lama (About, How it works, Pricing, dst.).
+   Diimpor hanya dari app/(marketing)/layout.tsx supaya homepage tidak memuat
+   font pihak ketiga. Hapus saat halaman-halaman ini didesain ulang. */
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap');
+
+.font-satoshi .font-heading,
+.font-satoshi .font-default,
+.landing-satoshi,
+.landing-satoshi .font-heading {
+  font-family: "Satoshi", var(--font-jakarta), sans-serif;
+}

@@ -64,9 +64,9 @@ const Providers = ({ children }: Props) => {
         },
     }));
 
-    // Dashboard selalu terang; halaman marketing masih mengikuti tema lama.
+    // Homepage dan dashboard selalu terang; halaman marketing lain masih mengikuti tema lama.
     const pathname = usePathname();
-    const forcedTheme = pathname?.startsWith("/dashboard") ? "light" : undefined;
+    const forcedTheme = pathname === "/" || pathname?.startsWith("/dashboard") ? "light" : undefined;
 
     return (
         <ClerkProvider>

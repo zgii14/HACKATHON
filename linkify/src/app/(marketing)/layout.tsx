@@ -1,4 +1,5 @@
 import React from 'react';
+import "@/styles/marketing.css";
 import { Footer, Navbar } from "@/components";
 
 interface Props {
