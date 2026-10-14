@@ -3,6 +3,7 @@ import { Reveal } from "@/components/dashboard/ui";
 import type { PublicPortfolio } from "@/components/portfolio/types";
 import { cn } from "@/utils";
 import Link from "next/link";
+import { CtaLink } from "./cta-link";
 import { ProductVideo } from "./product-video";
 
 export type PublicJob = {
@@ -175,7 +176,7 @@ const PLANS = [
     { name: "Pro", price: "Rp 159.000", period: "/ bulan", soon: true, features: ["Semua fitur Premium", "Custom domain", "Tambah dan susun section bebas"] },
 ];
 
-export function PricingSection({ ctaHref }: { ctaHref: string }) {
+export function PricingSection() {
     return (
         <section id="harga" className="scroll-mt-20 border-t border-border bg-muted/40 py-20 md:py-28">
             <div className={container}>
@@ -201,9 +202,7 @@ export function PricingSection({ ctaHref }: { ctaHref: string }) {
                                     ))}
                                 </ul>
                                 {!plan.soon && (
-                                    <Link href={ctaHref} className={cn(pill, "mt-6 justify-center bg-primary text-primary-foreground hover:brightness-110")}>
-                                        Mulai gratis
-                                    </Link>
+                                    <CtaLink label="Mulai gratis" className={cn(pill, "mt-6 justify-center bg-primary text-primary-foreground hover:brightness-110")} />
                                 )}
                             </article>
                         ))}
@@ -215,14 +214,12 @@ export function PricingSection({ ctaHref }: { ctaHref: string }) {
 }
 
 /* ── Section 8: penutup (satu-satunya blok berwarna penuh) ── */
-export function ClosingSection({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
+export function ClosingSection() {
     return (
         <section className="px-5 py-20 sm:px-8 md:py-24">
             <Reveal className="mx-auto max-w-6xl rounded-2xl bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12 md:py-20">
                 <h2 className="text-[clamp(2rem,4.2vw,3.2rem)] font-extrabold leading-[1.05] tracking-[-0.04em]">Buat portfolio-mu hari ini.</h2>
-                <Link href={ctaHref} className={cn(pill, "mt-8 bg-white text-primary hover:bg-white/90")}>
-                    {ctaLabel}
-                </Link>
+                <CtaLink className={cn(pill, "mt-8 bg-white text-primary hover:bg-white/90")} />
             </Reveal>
         </section>
     );

@@ -20,9 +20,10 @@ const FRAME_HEIGHT = 800;
 type Props = { publicId: string; ownerName: string };
 
 /**
- * Panggung hero: poster WebP tiap tema tampil seketika (LCP berupa gambar),
- * iframe portfolio asli baru dipasang saat browser menganggur atau saat
- * pengunjung berinteraksi, dan tidak pernah dipasang dalam mode hemat data.
+ * Panggung hero: poster WebP tiap tema tampil seketika (LCP berupa gambar).
+ * Iframe portfolio asli (JS halaman /p + foto) baru dipasang saat pengunjung
+ * berinteraksi dengan panggung, hanya di layar >= 768px (di HP iframe 1280px
+ * diperkecil jadi tak terbaca), dan tidak pernah dalam mode hemat data.
  */
 export function PortfolioStage({ publicId, ownerName }: Props) {
     const [theme, setTheme] = useState<ThemeKey>("editorial");
@@ -36,18 +37,8 @@ export function PortfolioStage({ publicId, ownerName }: Props) {
 
     const goLive = useCallback(() => {
         const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-        if (!connection?.saveData) setLive(true);
+        if (!connection?.saveData && window.matchMedia("(min-width: 768px)").matches) setLive(true);
     }, []);
-
-    useEffect(() => {
-        const idle = window.requestIdleCallback
-            ? window.requestIdleCallback(goLive, { timeout: 4000 })
-            : window.setTimeout(goLive, 2500);
-        return () => {
-            if (window.cancelIdleCallback) window.cancelIdleCallback(idle as number);
-            else window.clearTimeout(idle as number);
-        };
-    }, [goLive]);
 
     useEffect(() => {
         const element = viewport.current;

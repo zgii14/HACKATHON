@@ -1,14 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CtaLink } from "./cta-link";
 import { PortfolioStage } from "./portfolio-stage";
 
 type Props = {
-    ctaHref: string;
-    ctaLabel: string;
     showcase: { publicId: string; ownerName: string } | null;
 };
 
-export function Hero({ ctaHref, ctaLabel, showcase }: Props) {
+export function Hero({ showcase }: Props) {
     return (
         <section className="px-5 pb-20 pt-12 sm:px-8 md:pt-16">
             <div className="mx-auto max-w-6xl">
@@ -20,12 +19,7 @@ export function Hero({ ctaHref, ctaLabel, showcase }: Props) {
                     Disusun dari repo GitHub dan CV-mu, dengan skill terverifikasi dari commit. Pilih tampilan, bagikan satu link.
                 </p>
                 <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
-                    <Link
-                        href={ctaHref}
-                        className="inline-flex rounded-full bg-primary px-6 py-3 text-[15px] font-semibold text-primary-foreground transition hover:brightness-110 active:translate-y-px"
-                    >
-                        {ctaLabel}
-                    </Link>
+                    <CtaLink className="inline-flex rounded-full bg-primary px-6 py-3 text-[15px] font-semibold text-primary-foreground transition hover:brightness-110 active:translate-y-px" />
                     {showcase && (
                         <Link href={`/p/${showcase.publicId}`} className="text-[15px] font-semibold text-foreground underline decoration-border underline-offset-4 transition-colors hover:decoration-foreground">
                             Lihat portfolio contoh
