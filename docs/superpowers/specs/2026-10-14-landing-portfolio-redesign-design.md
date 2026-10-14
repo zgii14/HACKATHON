@@ -72,7 +72,11 @@ Footer: logo + one line, links (Portfolio, Lowongan, Untuk recruiter, Harga, Pri
   - `theme=editorial|developer|professional|maestro`: overrides the rendered theme only (content unchanged).
   - `embed=1`: hides the email contact and the floating "GitHub terverifikasi oleh GitHire" chip.
 - Showcase id from env `NEXT_PUBLIC_SHOWCASE_PORTFOLIO_ID` (default `kBvAyQPhGD`).
-- Rendered at 1280×800 inside a frame and scaled with CSS `transform: scale()` to the container width (ResizeObserver). Frame has a browser bar with the real URL. `loading="eager"` for the first theme; tab switch swaps `src` with an opacity crossfade. `title` attribute for a11y; `sandbox="allow-scripts allow-same-origin allow-popups"`.
+- Performance-first loading:
+  - Each theme has a pre-rendered poster (`public/landing/portfolio-{theme}.webp`, 1280×800, ≤ 120 KB each, captured with headless Chrome from the live `/p/{showcaseId}?theme=…&embed=1`). The stage renders the poster for the active tab immediately (`next/image`, `priority` for the first), so the hero LCP is an image, never the iframe.
+  - The live iframe mounts only after the page is idle (`requestIdleCallback`, fallback 2.5 s after load) or on first interaction with the stage (pointer enter, tab click, focus). It is never mounted when `navigator.connection.saveData` is true. It fades in over the poster once its `load` event fires.
+  - Rendered at 1280×800 inside the frame and scaled with CSS `transform: scale()` to the container width (ResizeObserver), with the box size reserved so there is no layout shift. Frame shows a browser bar with the real URL. `title` for a11y; `sandbox="allow-scripts allow-same-origin allow-popups"`.
+  - Tab switch: poster swaps instantly; if the iframe is mounted, its `src` changes and it crossfades in when loaded.
 - Mobile: tabs horizontally scrollable; frame scales down (still 1280 wide source).
 - If the portfolio fetch fails or is unpublished, the stage shows a static fallback card linking to sign-up (no broken iframe).
 
@@ -80,7 +84,7 @@ Also fix: on the normal public page, do not render the floating verified chip fo
 
 ## Videos (owner-recorded)
 
-Slots in sections 3 and 4, framed like the hero. `<video muted loop playsInline autoPlay preload="none">` with `poster`, MP4 (H.264) + WebM, target ≤ 2 MB each, 1280×800, 6–10 s. Lazy start via IntersectionObserver; `prefers-reduced-motion` shows the poster only. Until files exist, the slot renders the poster image (a real screenshot) so the layout ships now.
+Slots in sections 3 and 4, framed like the hero. `<video muted loop playsInline preload="none">` with `poster`, MP4 (H.264) + WebM, target ≤ 2 MB each, 1280×800, 6–10 s. Sources are attached and playback starts only when the slot is within 200px of the viewport (IntersectionObserver); playback pauses when it leaves. `prefers-reduced-motion` or `saveData` shows the poster only and never downloads the video. Until files exist, the slot renders the poster image (a real screenshot) so the layout ships now.
 
 Recording script (owner, logged in, light theme, browser at 1280×800, cursor visible, no notifications):
 1. Video 1 "Dari GitHub ke portfolio": Data GitHub & CV page (verified) → Portfolio page → choose 4 repos → "Generate portfolio" → editor shows draft → switch theme preview. 8–10 s after trimming.
@@ -98,6 +102,14 @@ Claude trims, crops, speeds up dead time, encodes MP4 + WebM, extracts posters.
 - Data: `app/(home)/page.tsx` (server) fetches the showcase public portfolio and `/public/jobs` with `next: { revalidate: 300 }`; failures degrade per section.
 - Motion: framer-motion `Reveal` (existing) for section entrances; no GSAP on the homepage. Respect reduced motion.
 - Remove `components/landing/landing-redesign.tsx` usage from the homepage (file kept until the follow-up phase removes the old marketing pages' dependencies).
+
+## Performance Budget
+
+Measured with Lighthouse (mobile preset) on production, current landing first as a baseline, then the new one. Release gate:
+- LCP < 2.5 s, CLS < 0.1, TBT not worse than baseline.
+- Initial transfer (before idle/interaction) smaller than the current landing.
+- No third-party font requests on `/`.
+If a target is missed, fix before release.
 
 ## Testing
 
