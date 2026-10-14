@@ -4,7 +4,6 @@ import type { PublicPortfolio } from "@/components/portfolio/types";
 import { cn } from "@/utils";
 import Link from "next/link";
 import { CtaLink } from "./cta-link";
-import { ProductVideo } from "./product-video";
 
 export type PublicJob = {
     id: string;
@@ -32,8 +31,8 @@ export function ProofSection({ portfolio }: { portfolio: PublicPortfolio | null 
     const skills = (portfolio?.verified_skills ?? []).slice(0, 6);
     return (
         <section id="portfolio" className="scroll-mt-20 py-20 md:py-28">
-            <div className={cn(container, "grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-16")}>
-                <Reveal>
+            <div className={cn(container, "grid gap-12 lg:grid-cols-2 lg:items-end lg:gap-16")}>
+                <Reveal className="min-w-0">
                     <h2 className={h2}>Isinya dari kerja nyatamu, bukan klaim.</h2>
                     <ul className="mt-8 space-y-6">
                         {STEPS.map((step) => (
@@ -43,15 +42,17 @@ export function ProofSection({ portfolio }: { portfolio: PublicPortfolio | null 
                             </li>
                         ))}
                     </ul>
-                    {skills.length > 0 && (
-                        <div className="mt-10 rounded-xl border border-border bg-card p-5">
+                </Reveal>
+                {skills.length > 0 && (
+                    <Reveal delay={0.08} className="min-w-0">
+                        <div className="rounded-xl border border-border bg-card p-5">
                             <p className="text-[14px] font-bold">Skill terverifikasi dari commit</p>
                             <ul className="mt-3 divide-y divide-border">
                                 {skills.map((item) => (
                                     <li key={item.skill} className="flex items-baseline justify-between gap-4 py-2.5">
-                                        <span className="text-[14px] font-semibold">
+                                        <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-[14px] font-semibold">
                                             {item.skill}
-                                            {item.level && <span className="ml-2 font-normal text-muted-foreground">{item.level}</span>}
+                                            {item.level && <span className="font-normal text-muted-foreground">{item.level}</span>}
                                         </span>
                                         <span className="shrink-0 font-mono text-[12px] tabular-nums text-muted-foreground">
                                             {item.evidence?.repos ?? 0} repo · {item.evidence?.own_commits ?? 0} commit
@@ -60,12 +61,8 @@ export function ProofSection({ portfolio }: { portfolio: PublicPortfolio | null 
                                 ))}
                             </ul>
                         </div>
-                    )}
-                </Reveal>
-                {/* Menempel saat kolom kiri digulir, supaya kolom kanan tidak menyisakan ruang kosong. */}
-                <Reveal delay={0.08} className="lg:sticky lg:top-24">
-                    <ProductVideo poster="/landing/portfolio-professional.webp" label="Membuat portfolio dari GitHub dan CV di GitHire" />
-                </Reveal>
+                    </Reveal>
+                )}
             </div>
         </section>
     );
@@ -76,17 +73,16 @@ export function RecruiterViewSection({ portfolio }: { portfolio: PublicPortfolio
     const content = portfolio?.content;
     return (
         <section className="border-y border-border bg-muted/40 py-20 md:py-28">
-            <div className={cn(container, "grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16")}>
-                <Reveal className="order-2 lg:order-1">
-                    <ProductVideo poster="/landing/portfolio-developer.webp" label="Recruiter membuka portfolio kandidat di GitHire" />
-                </Reveal>
-                <Reveal delay={0.08} className="order-1 lg:order-2">
+            <div className={cn(container, "grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16")}>
+                <Reveal className="min-w-0">
                     <h2 className={h2}>Satu link yang langsung dibaca recruiter.</h2>
                     <p className="mt-5 text-[16px] leading-relaxed text-muted-foreground">
                         Recruiter melihat skill yang terbukti di repo, proyek yang kamu pilih, dan label GitHub terverifikasi sebelum membuka lamaran.
                     </p>
-                    {content && (
-                        <div className="mt-8 rounded-xl border border-border bg-card p-5">
+                </Reveal>
+                {content && (
+                    <Reveal delay={0.08} className="min-w-0">
+                        <div className="rounded-xl border border-border bg-card p-5">
                             <div className="flex flex-wrap items-center gap-2">
                                 <p className="text-[15px] font-bold">{content.name}</p>
                                 <GithubVerifiedLabel verified={portfolio?.github_verified} />
@@ -108,8 +104,8 @@ export function RecruiterViewSection({ portfolio }: { portfolio: PublicPortfolio
                                 ))}
                             </ul>
                         </div>
-                    )}
-                </Reveal>
+                    </Reveal>
+                )}
             </div>
         </section>
     );
