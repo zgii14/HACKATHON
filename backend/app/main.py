@@ -11,7 +11,7 @@ from app.auth import describe_admin_allowlist, describe_recruiter_allowlist
 from app.config import settings
 from app.database import Base, engine
 from app.routers import admin_recruiter, chat, jobs, me, portfolio, profiles, recruiter
-from app.routers import applications, webhooks
+from app.routers import applications, public, webhooks
 from app.seed import reseed_jobs, seed_jobs_if_empty
 from app.database import get_db
 from app.services import scraper_service
@@ -412,6 +412,7 @@ app.include_router(admin_recruiter.router)
 app.include_router(chat.router)
 app.include_router(portfolio.router)
 app.include_router(webhooks.router)
+app.include_router(public.router)
 
 
 @app.get("/health")
