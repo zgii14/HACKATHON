@@ -44,7 +44,8 @@ Derived API field `github_connection`:
 ### Identity service (`services/github_identity.py`)
 - `connect_github(db, user, profile) -> ConnectResult`: resolve id via Clerk, login via GitHub, reject if another profile owns the id (HTTP 409, generic message), handle account change, set `github_user_id`, `github_username`, `github_verified_at`, clear legacy flag, fetch GitHub signals, recompute `merged_skills` and `verified_skills` (same rules as sync, including roadmap reset only when merged skills change). Unique violation from a concurrent request → 409.
 - Account change (existing `github_user_id` differs): replace GitHub data and unpublish the public portfolio (draft kept).
-- `revoke_github(db, profile)`: clear `github_user_id`, `github_verified_at`, `github_username`, `github_signals`, `verified_skills`; recompute `merged_skills` from CV skills only; unpublish portfolio.
+- `revoke_github(db, profile)`: remember `github_last_user_id`, clear `github_user_id`, `github_verified_at`, `github_username`, `github_signals`, `verified_skills`; recompute `merged_skills` from CV skills only. The public portfolio stays published (only the verified label disappears).
+- Account change is detected against `github_user_id` or, after a revoke, `github_last_user_id`: connecting a different GitHub id unpublishes the portfolio; reconnecting the same id does not (amended 2026-10-14).
 
 ### Endpoints
 - `POST /profiles/github/connect` (candidate, rate limited by the existing sync cooldown pattern): calls `connect_github`; 404-style error `GITHUB_NOT_CONNECTED` if Clerk has no verified GitHub account.

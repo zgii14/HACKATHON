@@ -176,8 +176,35 @@ class ConnectApiTests(unittest.TestCase):
         self.assertIsNone(prof.github_signals)
         self.assertEqual(prof.verified_skills, [])
         self.assertEqual(prof.merged_skills, ["SQL"])
-        self.assertEqual(db.query(Portfolio).one().status, "draft")
+        # Pencabutan tidak menyembunyikan portfolio; ID terakhir diingat untuk deteksi ganti akun.
+        self.assertEqual(db.query(Portfolio).one().status, "published")
+        self.assertEqual(prof.github_last_user_id, 1001)
         db.close()
+
+    def _revoked_with_published_portfolio(self, public_id):
+        db = self.Session()
+        prof = db.query(CandidateProfile).one()
+        prof.github_user_id = 1001
+        prof.github_username = "octo"
+        db.add(Portfolio(user_id=self.user.id, public_id=public_id, status="published", draft_content={}, published_content={}))
+        db.commit()
+        github_identity.revoke_github(db, prof)
+        db.close()
+
+    def test_reconnect_same_account_after_revoke_keeps_portfolio_published(self):
+        self._revoked_with_published_portfolio("pub4")
+        p1, p2, p3 = self._patches(gh_id=1001)
+        with p1, p2, p3:
+            self.assertEqual(self.client.post("/profiles/github/connect").status_code, 200)
+        self.assertEqual(self._one(Portfolio).status, "published")
+
+    def test_connect_different_account_after_revoke_unpublishes(self):
+        self._revoked_with_published_portfolio("pub5")
+        p1, p2, p3 = self._patches(gh_id=2002, login="someone")
+        with p1, p2, p3:
+            self.assertEqual(self.client.post("/profiles/github/connect").status_code, 200)
+        self.assertEqual(self._one(Portfolio).status, "draft")
+        self.assertEqual(self._one(CandidateProfile).github_last_user_id, 2002)
 
 
 PDF = b"%PDF-1.4 fake"

@@ -54,6 +54,9 @@ class CandidateProfile(Base):
     # Identitas GitHub terverifikasi via Clerk (oauth_github). Unik per kandidat.
     github_user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, unique=True)
     github_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # ID GitHub terakhir yang pernah tertaut (tetap ada setelah dicabut) untuk membedakan
+    # sambung ulang akun yang sama dari ganti akun.
+    github_last_user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     # Profil lama yang username GitHub-nya diketik manual sebelum verifikasi ada.
     github_legacy_grandfathered: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
     cv_ai_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)

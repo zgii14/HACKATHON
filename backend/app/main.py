@@ -356,6 +356,7 @@ async def lifespan(app: FastAPI):
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS github_user_id BIGINT NULL"))
         conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS github_verified_at TIMESTAMPTZ NULL"))
+        conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS github_last_user_id BIGINT NULL"))
         conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS github_legacy_grandfathered BOOLEAN NOT NULL DEFAULT false"))
         conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_candidate_profiles_github_user_id ON candidate_profiles (github_user_id)"))
         conn.execute(text(

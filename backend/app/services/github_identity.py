@@ -115,10 +115,13 @@ async def connect_github(db: Session, user: User, profile: CandidateProfile) -> 
     login = await fetch_login_by_id(github_id)
     signals = await fetch_github_signals(login)
 
-    # Ganti ke akun GitHub lain: portfolio publik lama tidak lagi mewakili akun ini.
-    if profile.github_user_id is not None and profile.github_user_id != github_id:
+    # Ganti ke akun GitHub lain (termasuk setelah koneksi lama dicabut): portfolio
+    # publik lama tidak lagi mewakili akun ini. Sambung ulang akun yang sama aman.
+    previous_id = profile.github_user_id if profile.github_user_id is not None else profile.github_last_user_id
+    if previous_id is not None and previous_id != github_id:
         unpublish_portfolio(db, profile.user_id)
     profile.github_user_id = github_id
+    profile.github_last_user_id = github_id
     profile.github_verified_at = datetime.now(timezone.utc)
     profile.github_legacy_grandfathered = False
     apply_github_data(db, profile, login, signals)
@@ -136,12 +139,17 @@ async def connect_github(db: Session, user: User, profile: CandidateProfile) -> 
 
 
 def revoke_github(db: Session, profile: CandidateProfile) -> None:
-    """Cabut verifikasi + data turunan GitHub (dipanggil saat GitHub diputus di Clerk)."""
+    """Cabut verifikasi + data turunan GitHub (dipanggil saat GitHub diputus di Clerk).
+
+    Portfolio tetap publik; hanya label terverifikasi yang hilang. Unpublish terjadi
+    nanti di connect_github kalau yang disambungkan ternyata akun GitHub berbeda.
+    """
+    if profile.github_user_id is not None:
+        profile.github_last_user_id = profile.github_user_id
     profile.github_user_id = None
     profile.github_verified_at = None
     profile.github_legacy_grandfathered = False
     apply_github_data(db, profile, None, None)
-    unpublish_portfolio(db, profile.user_id)
     profile.updated_at = datetime.utcnow()
     db.commit()
     logger.info("github_revoke reason=webhook")
