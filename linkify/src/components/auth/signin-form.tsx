@@ -29,7 +29,7 @@ const SignInForm = () => {
 
         if (!email || !password) {
             setIsLoading(false);
-            toast.error("Email and password are required!");
+            toast.error("Email dan kata sandi wajib diisi.");
             return;
         }
 
@@ -49,22 +49,22 @@ const SignInForm = () => {
                 const redirectUrl = searchParams.get("redirect_url");
                 router.push(redirectUrl ? `/auth/auth-callback?redirect_url=${encodeURIComponent(redirectUrl)}` : "/auth/auth-callback");
             } else {
-                toast.error("Invalid email or password");
+                toast.error("Email atau kata sandi salah.");
                 setIsLoading(false);
             }
         } catch (error: any) {
             switch (error.errors[0]?.code) {
                 case "form_identifier_not_found":
-                    toast.error("This email is not registered. Please sign up first.");
+                    toast.error("Email ini belum terdaftar. Daftar dulu.");
                     break;
                 case "form_password_incorrect":
-                    toast.error("Incorrect password. Please try again.");
+                    toast.error("Kata sandi salah. Coba lagi.");
                     break;
                 case "too_many_attempts":
-                    toast.error("Too many attempts. Please try again later.");
+                    toast.error("Terlalu banyak percobaan. Coba lagi nanti.");
                     break;
                 default:
-                    toast.error("An error occurred. Please try again");
+                    toast.error("Terjadi kesalahan. Coba lagi.");
                     break;
             }
         } finally {
@@ -73,9 +73,9 @@ const SignInForm = () => {
     };
 
     return (
-        <div className="flex flex-col items-start gap-y-6 py-8 w-full px-0.5">
-            <h2 className="text-2xl font-semibold">
-                Sign in to GitHire
+        <div className="flex flex-col items-start gap-y-6 w-full">
+            <h2 className="text-2xl font-bold tracking-[-0.02em]">
+                Masuk ke GitHire
             </h2>
 
             <div className="w-full">
@@ -85,7 +85,7 @@ const SignInForm = () => {
                 </div>
                 <div className="flex items-center gap-x-3 mt-6">
                     <span className="h-px flex-1 bg-border" />
-                    <span className="text-xs text-muted-foreground">or</span>
+                    <span className="text-xs text-muted-foreground">atau</span>
                     <span className="h-px flex-1 bg-border" />
                 </div>
             </div>
@@ -101,13 +101,13 @@ const SignInForm = () => {
                         value={email}
                         disabled={!isLoaded || isLoading}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
+                        placeholder="nama@email.com"
                         className="w-full focus-visible:border-foreground"
                     />
                 </div>
                 <div className="mt-4 space-y-2">
                     <Label htmlFor="password">
-                        Password
+                        Kata sandi
                     </Label>
                     <div className="relative w-full">
                         <Input
@@ -116,7 +116,7 @@ const SignInForm = () => {
                             value={password}
                             disabled={!isLoaded || isLoading}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
+                            placeholder="Kata sandi"
                             className="w-full focus-visible:border-foreground"
                         />
                         <Button
@@ -142,7 +142,7 @@ const SignInForm = () => {
                     >
                         {isLoading ? (
                             <LoaderIcon className="w-5 h-5 animate-spin" />
-                        ) : "Sign in with email"}
+                        ) : "Masuk dengan email"}
                     </Button>
                 </div>
             </form>

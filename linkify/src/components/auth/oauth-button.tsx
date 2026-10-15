@@ -62,7 +62,7 @@ const OAuthButton = ({ provider, mode, disabled }: Props) => {
             // Sampai sini berarti redirect gagal dan halaman tidak berpindah,
             // jadi tombol harus bisa dipakai lagi.
             setIsRedirecting(false);
-            toast.error(`Could not open ${config.label} sign-in. Please try again.`);
+            toast.error(`Tidak bisa membuka login ${config.label}. Coba lagi.`);
         }
     };
 
@@ -79,7 +79,7 @@ const OAuthButton = ({ provider, mode, disabled }: Props) => {
             ) : (
                 <>
                     {config.icon}
-                    Continue with {config.label}
+                    Lanjut dengan {config.label}
                 </>
             )}
         </Button>

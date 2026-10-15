@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSignIn } from "@clerk/nextjs";
 import { Eye, EyeOff, LoaderIcon } from "lucide-react";
+import { AuthShell } from "@/components/auth/auth-shell";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -35,14 +36,14 @@ const ForgotPasswordPage = () => {
                 strategy: "reset_password_email_code",
                 identifier: email,
             });
-            toast.success("Reset code sent! Check your email.");
+            toast.success("Kode reset sudah dikirim. Cek email-mu.");
             setStep("code");
         } catch (err: any) {
             const errCode = err.errors?.[0]?.code;
             if (errCode === "form_identifier_not_found") {
-                toast.error("This email is not registered.");
+                toast.error("Email ini belum terdaftar.");
             } else {
-                toast.error("Failed to send reset email. Try again.");
+                toast.error("Gagal mengirim email reset. Coba lagi.");
             }
         } finally {
             setIsLoading(false);
@@ -55,15 +56,15 @@ const ForgotPasswordPage = () => {
         if (!isLoaded) return;
 
         if (!code) {
-            toast.error("Please enter the reset code from your email.");
+            toast.error("Masukkan kode reset dari email-mu.");
             return;
         }
         if (password.length < 8) {
-            toast.error("Password must be at least 8 characters.");
+            toast.error("Kata sandi minimal 8 karakter.");
             return;
         }
         if (password !== confirmPassword) {
-            toast.error("Passwords do not match.");
+            toast.error("Kata sandi tidak sama.");
             return;
         }
 
@@ -77,19 +78,19 @@ const ForgotPasswordPage = () => {
 
             if (result.status === "complete") {
                 await setActive({ session: result.createdSessionId });
-                toast.success("Password reset successful!");
+                toast.success("Kata sandi berhasil diganti.");
                 router.push("/dashboard");
             } else {
-                toast.error("Something went wrong. Please try again.");
+                toast.error("Terjadi kesalahan. Coba lagi.");
             }
         } catch (err: any) {
             const errCode = err.errors?.[0]?.code;
             if (errCode === "form_code_incorrect") {
-                toast.error("Invalid code. Please check your email and try again.");
+                toast.error("Kode salah. Cek email-mu lalu coba lagi.");
             } else if (errCode === "form_password_pwned") {
-                toast.error("This password is too common. Choose a stronger one.");
+                toast.error("Kata sandi terlalu umum. Pilih yang lebih kuat.");
             } else {
-                toast.error("An error occurred. Please try again.");
+                toast.error("Terjadi kesalahan. Coba lagi.");
             }
         } finally {
             setIsLoading(false);
@@ -97,24 +98,17 @@ const ForgotPasswordPage = () => {
     };
 
     return (
-        <div className="flex flex-col items-start max-w-sm mx-auto min-h-dvh pt-4 md:pt-20 px-4 pb-6">
-            {/* Logo */}
-            <div className="flex items-center w-full py-8 border-b border-border/80">
-                <Link href="/#home" className="flex items-center">
-                    <svg width="110" height="30" viewBox="0 0 180 60" xmlns="http://www.w3.org/2000/svg" aria-label="GitHire">
-                        <circle cx="16" cy="16" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
-                        <circle cx="16" cy="44" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
-                        <circle cx="34" cy="30" r="6" fill="#6d28d9" />
-                        <line x1="16" y1="22" x2="16" y2="38" stroke="currentColor" strokeWidth="2" />
-                        <line x1="20" y1="18" x2="30" y2="26" stroke="currentColor" strokeWidth="2" />
-                        <text x="50" y="30" fontFamily="system-ui,sans-serif" fontSize="22" fontWeight="700" fill="currentColor" dominantBaseline="central">
-                            Git<tspan fill="#8b5cf6">Hire</tspan>
-                        </text>
-                    </svg>
-                </Link>
-            </div>
-
-            <div className="flex flex-col items-start gap-y-6 py-8 w-full px-0.5">
+        <AuthShell
+            footer={
+                <p>
+                    Ingat kata sandimu?{" "}
+                    <Link href="/auth/sign-in" className="font-semibold text-primary">
+                        Masuk
+                    </Link>
+                </p>
+            }
+        >
+            <div className="flex flex-col items-start gap-y-6 w-full">
 
                 {/* Step indicator */}
                 <div className="flex items-center gap-2 w-full">
@@ -125,47 +119,47 @@ const ForgotPasswordPage = () => {
                 {step === "email" ? (
                     <>
                         <div>
-                            <h2 className="text-2xl font-semibold">Forgot your password?</h2>
+                            <h2 className="text-2xl font-semibold">Lupa kata sandi?</h2>
                             <p className="text-sm text-muted-foreground mt-1">
-                                We&apos;ll send a reset code to your email.
+                                Kami kirim kode reset ke email-mu.
                             </p>
                         </div>
                         <form onSubmit={handleSendCode} className="w-full space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">Email</Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Enter your email"
+                                    placeholder="nama@email.com"
                                     disabled={!isLoaded || isLoading}
                                     className="w-full focus-visible:border-foreground"
                                 />
                             </div>
                             <Button type="submit" disabled={!isLoaded || isLoading} className="w-full">
-                                {isLoading ? <LoaderIcon className="w-4 h-4 animate-spin" /> : "Send reset code"}
+                                {isLoading ? <LoaderIcon className="w-4 h-4 animate-spin" /> : "Kirim kode reset"}
                             </Button>
                         </form>
                     </>
                 ) : (
                     <>
                         <div>
-                            <h2 className="text-2xl font-semibold">Set a new password</h2>
+                            <h2 className="text-2xl font-semibold">Buat kata sandi baru</h2>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Enter the code sent to <span className="font-medium text-foreground">{email}</span> and choose a new password.
+                                Masukkan kode yang dikirim ke <span className="font-medium text-foreground">{email}</span> lalu buat kata sandi baru.
                             </p>
                         </div>
                         <form onSubmit={handleResetPassword} className="w-full space-y-4">
                             {/* Code */}
                             <div className="space-y-2">
-                                <Label htmlFor="code">Reset code</Label>
+                                <Label htmlFor="code">Kode reset</Label>
                                 <Input
                                     id="code"
                                     type="text"
                                     value={code}
                                     onChange={(e) => setCode(e.target.value)}
-                                    placeholder="Enter code from email"
+                                    placeholder="Kode dari email"
                                     disabled={!isLoaded || isLoading}
                                     className="w-full focus-visible:border-foreground tracking-widest text-center"
                                     maxLength={6}
@@ -174,14 +168,14 @@ const ForgotPasswordPage = () => {
 
                             {/* New password */}
                             <div className="space-y-2">
-                                <Label htmlFor="password">New password</Label>
+                                <Label htmlFor="password">Kata sandi baru</Label>
                                 <div className="relative">
                                     <Input
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="At least 8 characters"
+                                        placeholder="Minimal 8 karakter"
                                         disabled={!isLoaded || isLoading}
                                         className="w-full focus-visible:border-foreground"
                                     />
@@ -199,20 +193,20 @@ const ForgotPasswordPage = () => {
 
                             {/* Confirm */}
                             <div className="space-y-2">
-                                <Label htmlFor="confirm">Confirm password</Label>
+                                <Label htmlFor="confirm">Ulangi kata sandi</Label>
                                 <Input
                                     id="confirm"
                                     type={showPassword ? "text" : "password"}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Re-enter new password"
+                                    placeholder="Ketik ulang kata sandi baru"
                                     disabled={!isLoaded || isLoading}
                                     className="w-full focus-visible:border-foreground"
                                 />
                             </div>
 
                             <Button type="submit" disabled={!isLoaded || isLoading} className="w-full">
-                                {isLoading ? <LoaderIcon className="w-4 h-4 animate-spin" /> : "Reset password"}
+                                {isLoading ? <LoaderIcon className="w-4 h-4 animate-spin" /> : "Simpan kata sandi"}
                             </Button>
 
                             <button
@@ -220,22 +214,14 @@ const ForgotPasswordPage = () => {
                                 onClick={() => setStep("email")}
                                 className="text-sm text-muted-foreground hover:text-primary transition-colors w-full text-center"
                             >
-                                Didn&apos;t receive a code? Go back
+                                Tidak menerima kode? Kembali
                             </button>
                         </form>
                     </>
                 )}
             </div>
 
-            <div className="flex items-center mt-auto border-t border-border/80 py-6 w-full">
-                <p className="text-sm text-muted-foreground">
-                    Remember your password?{" "}
-                    <Link href="/auth/sign-in" className="text-primary">
-                        Sign in
-                    </Link>
-                </p>
-            </div>
-        </div>
+        </AuthShell>
     );
 };
 

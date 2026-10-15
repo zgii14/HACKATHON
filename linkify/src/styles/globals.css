@@ -149,3 +149,13 @@ html.transitioning *::after {
   transform-origin: left;
   animation: landing-progress var(--duration, 4.5s) linear forwards;
 }
+
+/* Mosaik portfolio di halaman auth: kolom bergeser sangat pelan (90 detik per putaran). */
+@keyframes auth-drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .auth-drift { animation: auth-drift 90s linear infinite; }
+  .auth-drift-reverse { animation: auth-drift 90s linear infinite reverse; }
+}

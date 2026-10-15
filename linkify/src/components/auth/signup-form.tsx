@@ -34,7 +34,7 @@ const SignUpForm = () => {
         if (!isLoaded) return;
 
         if (!name || !email || !password) {
-            toast.error("Name, email and password are required!");
+            toast.error("Nama, email, dan kata sandi wajib diisi.");
             return;
         }
 
@@ -52,25 +52,25 @@ const SignUpForm = () => {
                 strategy: "email_code",
             });
 
-            toast.success("Verification code sent to your email.");
+            toast.success("Kode verifikasi sudah dikirim ke email-mu.");
 
             setIsVerifying(true);
         } catch (error: any) {
             switch (error.errors[0]?.code) {
                 case "form_identifier_exists":
-                    toast.error("This email is already registered. Please sign in.");
+                    toast.error("Email ini sudah terdaftar. Silakan masuk.");
                     break;
                 case "form_password_pwned":
-                    toast.error("The password is too common. Please choose a stronger password.");
+                    toast.error("Kata sandi terlalu umum. Pilih yang lebih kuat.");
                     break;
                 case "form_param_format_invalid":
-                    toast.error("Invalid email address. Please enter a valid email address.");
+                    toast.error("Format email tidak valid.");
                     break;
                 case "form_password_length_too_short":
-                    toast.error("Password is too short. Please choose a longer password.");
+                    toast.error("Kata sandi terlalu pendek. Minimal 8 karakter.");
                     break;
                 default:
-                    toast.error("An error occurred. Please try again");
+                    toast.error("Terjadi kesalahan. Coba lagi.");
                     break;
             }
         } finally {
@@ -84,7 +84,7 @@ const SignUpForm = () => {
         if (!isLoaded) return;
 
         if (!code) {
-            toast.error("Verification code is required!");
+            toast.error("Masukkan kode verifikasi.");
             return;
         }
 
@@ -102,29 +102,29 @@ const SignUpForm = () => {
                 const redirectUrl = searchParams.get("redirect_url");
                 router.push(redirectUrl ? `/auth/auth-callback?redirect_url=${encodeURIComponent(redirectUrl)}` : "/auth/auth-callback");
             } else {
-                toast.error("Invalid verification code");
+                toast.error("Kode verifikasi salah.");
                 setIsLoading(false);
             }
         } catch (error) {
             console.error('Error:', JSON.stringify(error, null, 2));
-            toast.error("Something went wrong. Please try again later.");
+            toast.error("Terjadi kesalahan. Coba lagi nanti.");
         } finally {
             setIsLoading(false);
         }
     };
 
     return isVerifying ? (
-        <div className="flex flex-col items-start w-full text-start gap-y-6 py-8 px-0.5">
-            <h2 className="text-2xl font-semibold">
-                Verify your account
+        <div className="flex flex-col items-start w-full text-start gap-y-6">
+            <h2 className="text-2xl font-bold tracking-[-0.02em]">
+                Verifikasi email
             </h2>
             <p className="text-sm text-muted-foreground">
-                To continue, please enter the 6-digit verification code we just sent to {email}.
+                Masukkan 6 digit kode yang baru kami kirim ke {email}.
             </p>
             <form onSubmit={handleVerifyEmail} className="w-full">
                 <div className="space-y-2 w-full pl-0.5">
                     <Label htmlFor="code">
-                        Verification code
+                        Kode verifikasi
                     </Label>
                     <InputOTP
                         id="code"
@@ -153,11 +153,11 @@ const SignUpForm = () => {
                     >
                         {isLoading ? (
                             <LoaderIcon className="w-5 h-5 animate-spin" />
-                        ) : "Verify code"}
+                        ) : "Verifikasi"}
                     </Button>
                 </div>
                 <p className="text-sm text-muted-foreground mt-4">
-                    Didn&apos;t receive the code?{" "}
+                    Tidak menerima kode?{" "}
                     <Link
                         href="#"
                         onClick={(e) => {
@@ -165,19 +165,19 @@ const SignUpForm = () => {
                             signUp?.prepareEmailAddressVerification({
                                 strategy: "email_code",
                             });
-                            toast.success("Verification code resent to your email.");
+                            toast.success("Kode verifikasi dikirim ulang.");
                         }}
                         className="text-primary"
                     >
-                        Resend code
+                        Kirim ulang
                     </Link>
                 </p>
             </form>
         </div>
     ) : (
-        <div className="flex flex-col items-start gap-y-6 py-8 w-full px-0.5">
-            <h2 className="text-2xl font-semibold">
-                Create an account
+        <div className="flex flex-col items-start gap-y-6 w-full">
+            <h2 className="text-2xl font-bold tracking-[-0.02em]">
+                Buat akun
             </h2>
 
             <div className="w-full">
@@ -187,7 +187,7 @@ const SignUpForm = () => {
                 </div>
                 <div className="flex items-center gap-x-3 mt-6">
                     <span className="h-px flex-1 bg-border" />
-                    <span className="text-xs text-muted-foreground">or</span>
+                    <span className="text-xs text-muted-foreground">atau</span>
                     <span className="h-px flex-1 bg-border" />
                 </div>
             </div>
@@ -195,7 +195,7 @@ const SignUpForm = () => {
             <form onSubmit={handleSignUp} className="w-full">
                 <div className="space-y-2 w-full">
                     <Label htmlFor="name">
-                        Name
+                        Nama
                     </Label>
                     <Input
                         id="name"
@@ -203,7 +203,7 @@ const SignUpForm = () => {
                         value={name}
                         disabled={!isLoaded || isUpdating}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Enter your name"
+                        placeholder="Nama lengkap"
                         className="w-full focus-visible:border-foreground"
                     />
                 </div>
@@ -217,13 +217,13 @@ const SignUpForm = () => {
                         value={email}
                         disabled={!isLoaded || isUpdating}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
+                        placeholder="nama@email.com"
                         className="w-full focus-visible:border-foreground"
                     />
                 </div>
                 <div className="mt-4 space-y-2">
                     <Label htmlFor="password">
-                        Password
+                        Kata sandi
                     </Label>
                     <div className="relative w-full">
                         <Input
@@ -232,7 +232,7 @@ const SignUpForm = () => {
                             value={password}
                             disabled={!isLoaded || isUpdating}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
+                            placeholder="Minimal 8 karakter"
                             className="w-full focus-visible:border-foreground"
                         />
                         <Button
@@ -264,7 +264,7 @@ const SignUpForm = () => {
                     >
                         {isUpdating ? (
                             <LoaderIcon className="w-5 h-5 animate-spin" />
-                        ) : "Continue"}
+                        ) : "Lanjut"}
                     </Button>
                 </div>
             </form>

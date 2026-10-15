@@ -1,20 +1,13 @@
-import { MaxWidthWrapper } from "@/components";
+import { AuthBackdrop } from "@/components/auth/auth-backdrop";
 import { AppToastContainer } from "@/components/ui/app-toast";
-import React from 'react';
+import type { ReactNode } from "react";
 
-interface Props {
-    children: React.ReactNode
-}
-
-const MarketingLayout = ({ children }: Props) => {
+export default function AuthLayout({ children }: { children: ReactNode }) {
     return (
-        <MaxWidthWrapper>
+        <>
             <AppToastContainer />
-            <main className="mx-auto w-full relative">
-                {children}
-            </main>
-        </MaxWidthWrapper>
+            <AuthBackdrop />
+            <main className="relative mx-auto w-full">{children}</main>
+        </>
     );
-};
-
-export default MarketingLayout
+}
