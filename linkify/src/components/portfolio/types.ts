@@ -66,6 +66,8 @@ export type PublicPortfolio = {
     public_id: string;
     /** Status terkini identitas GitHub pemilik (bukan snapshot saat publish). */
     github_verified?: boolean;
+    /** Alamat nama.githire.my.id bila sudah diklaim. */
+    subdomain?: string | null;
     content: PublicPortfolioContent;
     verified_skills: Array<{
         skill: string;
