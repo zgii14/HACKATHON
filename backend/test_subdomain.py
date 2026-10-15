@@ -180,5 +180,36 @@ class SubdomainClaimTests(SubdomainApiTestCase):
         self.assertEqual(self.claim("tigaa").status_code, 404)
 
 
+class SubdomainResolveTests(SubdomainApiTestCase):
+    def test_resolves_published_portfolio(self):
+        self.claim("rozagi")
+        res = self.client.get("/public/subdomains/Rozagi")
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertEqual(res.json(), {"public_id": "pub1"})
+        self.assertEqual(res.headers.get("cache-control"), "public, max-age=60")
+
+    def test_unpublished_portfolio_is_404(self):
+        self.current = self.u2
+        self.claim("draf")
+        self.assertEqual(self.client.get("/public/subdomains/draf").status_code, 404)
+
+    def test_unknown_name_is_404(self):
+        self.assertEqual(self.client.get("/public/subdomains/tidakada").status_code, 404)
+
+    def test_held_name_redirects_to_new_name(self):
+        self.claim("satu")
+        self.backdate_change(self.p1.id, 31)
+        self.claim("dua")
+        res = self.client.get("/public/subdomains/satu")
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertEqual(res.json(), {"redirect_to": "dua"})
+
+    def test_public_portfolio_includes_subdomain(self):
+        self.claim("rozagi")
+        res = self.client.get("/portfolios/pub1")
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertEqual(res.json()["subdomain"], "rozagi")
+
+
 if __name__ == "__main__":
     unittest.main()

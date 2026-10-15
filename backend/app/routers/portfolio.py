@@ -489,6 +489,7 @@ def get_public_portfolio(public_id: str, db: Session = Depends(get_db)):
     )
     # Status terkini (bukan snapshot): verifikasi bisa dicabut setelah publish.
     view["github_verified"] = connection_state(owner) == "verified"
+    view["subdomain"] = portfolio.subdomain
     return JSONResponse(
         view,
         headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow"},
