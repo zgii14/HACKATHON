@@ -57,7 +57,7 @@ export function EditorBar({ record, state, status, busy, canRewrite, onPrimary, 
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <h1 className="text-xl font-bold tracking-[-0.02em]">Portfolio</h1>
-                        <span className={cn("whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold", state === "changed" ? "bg-amber-500/10 text-amber-700" : state === "up_to_date" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground")}>
+                        <span className={cn("whitespace-nowrap rounded-full px-2.5 py-0.5 text-meta font-semibold", state === "changed" ? "bg-amber-500/10 text-amber-700" : state === "up_to_date" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground")}>
                             {STATE_LABEL[state]}
                         </span>
                         <span role="status" className="text-meta text-muted-foreground">
