@@ -2,6 +2,7 @@
 
 import { cn } from "@/utils";
 import { Check } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { EDITOR_SECTIONS, type CountedSlug, type SectionSlug } from "./editor-state";
 
 type Props = {
@@ -13,10 +14,16 @@ type Props = {
 
 export function EditorNav({ active, completeness, errorSection, onSelect }: Props) {
     const done = Object.values(completeness).filter(Boolean).length;
+    const activeRef = useRef<HTMLButtonElement | null>(null);
+    // Di HP menu berupa tab geser: pastikan tab aktif terlihat.
+    useEffect(() => {
+        activeRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }, [active]);
     return (
-        <nav aria-label="Bagian portfolio" className="min-w-0 lg:sticky lg:top-28 lg:self-start">
+        // top: header dashboard (3.5rem) + bar editor.
+        <nav aria-label="Bagian portfolio" className="min-w-0 lg:sticky lg:top-40 lg:self-start">
             <p className="hidden px-3 text-meta text-muted-foreground lg:block">{done} dari 6 lengkap</p>
-            <ul className="flex snap-x gap-1 overflow-x-auto pb-1 lg:mt-3 lg:flex-col lg:overflow-visible lg:pb-0">
+            <ul className="flex snap-x gap-1 overflow-x-auto pb-1 [scrollbar-width:none] lg:mt-3 lg:flex-col lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden">
                 {EDITOR_SECTIONS.map((section) => {
                     const isActive = section.slug === active;
                     const isError = errorSection === section.slug;
@@ -24,6 +31,7 @@ export function EditorNav({ active, completeness, errorSection, onSelect }: Prop
                     return (
                         <li key={section.slug} className={cn("shrink-0 snap-start", section.slug === "tampilan" && "lg:mt-3 lg:border-t lg:border-border lg:pt-3")}>
                             <button
+                                ref={isActive ? activeRef : undefined}
                                 type="button"
                                 aria-current={isActive ? "page" : undefined}
                                 onClick={() => onSelect(section.slug)}

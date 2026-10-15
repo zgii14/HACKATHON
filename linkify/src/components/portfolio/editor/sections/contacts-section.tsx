@@ -46,7 +46,7 @@ export function ContactsSection({ form, onChange, errorMessage }: Props) {
                                 value={form.contacts[key].value}
                                 onChange={(event) => update(key, { value: event.target.value })}
                             />
-                            {invalid && <span role="alert" className="text-meta text-destructive">{errorMessage}</span>}
+                            {invalid && <span role="alert" className="text-meta text-destructive">{label} tidak valid. Contoh: {placeholder}</span>}
                         </div>
                     );
                 })}

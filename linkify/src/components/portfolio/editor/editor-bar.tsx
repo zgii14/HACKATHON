@@ -52,7 +52,7 @@ export function EditorBar({ record, state, status, busy, canRewrite, onPrimary, 
     };
 
     return (
-        <div className="sticky top-0 z-20 border-b border-border bg-background/95 py-4 backdrop-blur">
+        <div className="sticky top-14 z-10 border-b border-border bg-background/95 py-4 backdrop-blur">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -65,7 +65,7 @@ export function EditorBar({ record, state, status, busy, canRewrite, onPrimary, 
                             {status.state === "saved" && "Tersimpan"}
                             {status.state === "error" && (
                                 <span className="text-destructive">
-                                    Gagal menyimpan: {status.message}{" "}
+                                    Gagal menyimpan: {status.section === "kontak" ? "ada kontak yang tidak valid." : status.message}{" "}
                                     <button type="button" className="font-semibold underline" onClick={onRetry}>Coba lagi</button>
                                 </span>
                             )}
