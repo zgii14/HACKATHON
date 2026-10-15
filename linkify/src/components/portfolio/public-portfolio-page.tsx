@@ -4,7 +4,7 @@ import { subdomainUrl } from "@/utils/functions/subdomain-host";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-const THEMES: PortfolioTheme[] = ["editorial", "developer", "professional", "maestro"];
+const THEMES: PortfolioTheme[] = ["editorial", "developer", "professional", "maestro", "arcade"];
 
 export const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 

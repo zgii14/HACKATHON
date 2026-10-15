@@ -113,6 +113,10 @@ class PortfolioDomainTests(unittest.TestCase):
         patch = PortfolioPatch(theme="maestro")
         self.assertEqual(patch.theme, "maestro")
 
+    def test_patch_accepts_arcade_theme(self):
+        patch = PortfolioPatch(theme="arcade")
+        self.assertEqual(patch.theme, "arcade")
+
     def test_patch_rejects_more_than_six_projects(self):
         projects = [
             {
@@ -232,6 +236,15 @@ class PortfolioDomainTests(unittest.TestCase):
             False,
         )
         self.assertEqual(result["content"]["theme"], "maestro")
+
+    def test_public_view_preserves_arcade_theme(self):
+        result = public_view(
+            "opaque-id",
+            {"name": "Candidate", "headline": "Developer", "theme": "arcade"},
+            [],
+            False,
+        )
+        self.assertEqual(result["content"]["theme"], "arcade")
 
 
 class GitHubReadmeTests(unittest.IsolatedAsyncioTestCase):

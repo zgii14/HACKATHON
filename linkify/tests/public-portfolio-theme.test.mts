@@ -29,3 +29,11 @@ test("uses cinematic proof-first ordering for Maestro", () => {
         sectionOrder: ["projects", "experience", "skills", "education", "certifications"],
     });
 });
+
+test("uses proof-first ordering for Arcade", () => {
+    assert.deepEqual(getPublicThemePlan("arcade"), {
+        key: "arcade",
+        label: "Arcade portfolio",
+        sectionOrder: ["projects", "skills", "experience", "education", "certifications"],
+    });
+});
