@@ -2,8 +2,10 @@ import { GithubVerifiedLabel } from "@/components/dashboard/github-verified-labe
 import { Reveal } from "@/components/dashboard/ui";
 import type { PublicPortfolio } from "@/components/portfolio/types";
 import { cn } from "@/utils";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { CtaLink } from "./cta-link";
+import { GlowCard } from "./glow-card";
 
 export type PublicJob = {
     id: string;
@@ -123,10 +125,16 @@ export function JobsSection({ jobs }: { jobs: PublicJobs | null }) {
                         {jobs.items.map((job) => (
                             <li key={job.id}>
                                 <Link href={`/dashboard/jobs/${job.id}`} className="group flex flex-col gap-1 py-4 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:justify-between sm:px-2">
-                                    <span className="text-[16px] font-semibold group-hover:text-primary">{job.title.trim()}</span>
-                                    <span className="text-[14px] text-muted-foreground">
-                                        {job.company}
-                                        {job.is_remote ? " · Remote" : job.location ? ` · ${job.location}` : ""}
+                                    <span className="text-[16px] font-semibold transition-colors group-hover:text-primary">{job.title.trim()}</span>
+                                    <span className="flex items-center gap-3 text-[14px] text-muted-foreground">
+                                        <span>
+                                            {job.company}
+                                            {job.is_remote ? " · Remote" : job.location ? ` · ${job.location}` : ""}
+                                        </span>
+                                        <ArrowRight
+                                            aria-hidden="true"
+                                            className="hidden size-4 -translate-x-2 text-primary opacity-0 transition duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100 sm:block"
+                                        />
                                     </span>
                                 </Link>
                             </li>
@@ -180,9 +188,14 @@ export function PricingSection() {
                     <h2 className={h2}>Harga</h2>
                     <div className="mt-10 grid gap-4 md:grid-cols-3">
                         {PLANS.map((plan) => (
-                            <article
+                            <GlowCard
                                 key={plan.name}
-                                className={cn("flex flex-col rounded-xl border bg-card p-6", plan.soon ? "border-border" : "border-primary shadow-[0_16px_40px_-20px_rgba(76,29,149,0.35)]")}
+                                className={cn(
+                                    "flex flex-col rounded-xl border bg-card p-6 transition-[transform,box-shadow] duration-300 ease-out motion-safe:hover:-translate-y-1",
+                                    plan.soon
+                                        ? "border-border hover:shadow-[0_16px_40px_-24px_rgba(76,29,149,0.25)]"
+                                        : "border-primary shadow-[0_16px_40px_-20px_rgba(76,29,149,0.35)] hover:shadow-[0_24px_50px_-20px_rgba(76,29,149,0.45)]",
+                                )}
                             >
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-[17px] font-bold">{plan.name}</h3>
@@ -200,7 +213,7 @@ export function PricingSection() {
                                 {!plan.soon && (
                                     <CtaLink label="Mulai gratis" className={cn(pill, "mt-6 justify-center bg-primary text-primary-foreground hover:brightness-110")} />
                                 )}
-                            </article>
+                            </GlowCard>
                         ))}
                     </div>
                 </Reveal>
@@ -213,9 +226,11 @@ export function PricingSection() {
 export function ClosingSection() {
     return (
         <section className="px-5 py-20 sm:px-8 md:py-24">
-            <Reveal className="mx-auto max-w-6xl rounded-2xl bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12 md:py-20">
-                <h2 className="text-[clamp(2rem,4.2vw,3.2rem)] font-extrabold leading-[1.05] tracking-[-0.04em]">Buat portfolio-mu hari ini.</h2>
-                <CtaLink className={cn(pill, "mt-8 bg-white text-primary hover:bg-white/90")} />
+            <Reveal className="mx-auto max-w-6xl">
+                <GlowCard glow="rgb(255 255 255 / 0.16)" className="rounded-2xl bg-primary px-6 py-14 text-center text-primary-foreground sm:px-12 md:py-20">
+                    <h2 className="text-[clamp(2rem,4.2vw,3.2rem)] font-extrabold leading-[1.05] tracking-[-0.04em]">Buat portfolio-mu hari ini.</h2>
+                    <CtaLink className={cn(pill, "mt-8 bg-white text-primary hover:bg-white/90")} />
+                </GlowCard>
             </Reveal>
         </section>
     );

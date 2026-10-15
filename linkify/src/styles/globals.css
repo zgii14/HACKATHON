@@ -127,3 +127,25 @@ html.transitioning *::after {
   .glass-hover { @apply hover:bg-black/[0.04] dark:hover:bg-white/[0.04]; }
   .glass-divider { @apply border-black/[0.06] dark:border-white/[0.04]; }
 }
+
+/* ── Landing motion ──
+   CSS murni (bukan framer-motion) supaya hero beranimasi sejak paint pertama,
+   tanpa menunggu hydration. Gambar panggung (LCP) sengaja tidak dianimasikan. */
+@keyframes landing-rise {
+  from { opacity: 0; transform: translateY(0.4em); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes landing-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing-rise {
+    animation: landing-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+  }
+}
+.landing-progress {
+  transform-origin: left;
+  animation: landing-progress var(--duration, 4.5s) linear forwards;
+}
