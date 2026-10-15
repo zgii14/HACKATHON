@@ -24,7 +24,8 @@ export function AppearanceSection({ form, onChange }: Props) {
                     <ThemePreviewCards content={form} onSelect={(theme) => onChange({ ...form, theme })} />
                 </div>
                 <div>
-                    <p className="text-[13px] font-semibold">Bahasa label portfolio</p>
+                    <p className="text-[13px] font-semibold">Bahasa portfolio</p>
+                    <p className="mt-0.5 text-meta text-muted-foreground">Dipakai AI saat menulis teks portfoliomu. Tema Maestro juga mengikuti bahasa ini untuk labelnya.</p>
                     <div role="radiogroup" aria-label="Bahasa portfolio" className="mt-2 inline-flex rounded-full border border-border bg-muted/50 p-1">
                         {LANGUAGES.map((item) => (
                             <button
