@@ -28,7 +28,7 @@ export function EditorNav({ active, completeness, errorSection, onSelect }: Prop
                                 aria-current={isActive ? "page" : undefined}
                                 onClick={() => onSelect(section.slug)}
                                 className={cn(
-                                    "flex w-full items-center justify-between gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-body transition-colors",
+                                    "flex w-full items-center justify-between gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-[14px] transition-colors",
                                     isActive ? "bg-primary/10 font-semibold text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
                                 )}
                             >

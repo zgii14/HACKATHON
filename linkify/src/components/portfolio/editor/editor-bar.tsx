@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/utils";
 import { MoreHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import type { PortfolioRecord } from "../types";
 import type { PublishState } from "./editor-state";
@@ -27,17 +28,20 @@ type Props = {
 const STATE_LABEL: Record<PublishState, string> = {
     draft: "Draft",
     up_to_date: "Sudah publik",
-    changed: "Sudah publik · Ada perubahan belum dipublikasikan",
+    changed: "Publik · ada perubahan",
 };
 
-function publicAddress(record: PortfolioRecord): string | null {
+// origin kosong saat render server; dilengkapi setelah mount supaya hasil server dan browser sama (tanpa hydration error).
+function publicAddress(record: PortfolioRecord, origin: string): string | null {
     if (record.status !== "published") return null;
     if (record.subdomain_url && record.subdomain_live) return record.subdomain_url;
-    return record.public_url.startsWith("http") ? record.public_url : `${window.location.origin}${record.public_url}`;
+    return record.public_url.startsWith("http") ? record.public_url : `${origin}${record.public_url}`;
 }
 
 export function EditorBar({ record, state, status, busy, canRewrite, onPrimary, onRewrite, onRetry }: Props) {
-    const address = typeof window === "undefined" ? null : publicAddress(record);
+    const [origin, setOrigin] = useState("");
+    useEffect(() => setOrigin(window.location.origin), []);
+    const address = publicAddress(record, origin);
     const blocked = busy !== null || status.state === "saving" || status.state === "error";
     const primaryLabel = busy === "publish" ? "Memproses…" : state === "draft" ? "Publikasikan" : state === "changed" ? "Perbarui publik" : "Sudah terbaru";
 
@@ -53,7 +57,7 @@ export function EditorBar({ record, state, status, busy, canRewrite, onPrimary, 
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <h1 className="text-xl font-bold tracking-[-0.02em]">Portfolio</h1>
-                        <span className={cn("rounded-full px-2.5 py-0.5 text-meta font-semibold", state === "changed" ? "bg-amber-500/10 text-amber-700" : state === "up_to_date" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground")}>
+                        <span className={cn("whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold", state === "changed" ? "bg-amber-500/10 text-amber-700" : state === "up_to_date" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground")}>
                             {STATE_LABEL[state]}
                         </span>
                         <span role="status" className="text-meta text-muted-foreground">
