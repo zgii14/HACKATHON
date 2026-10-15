@@ -14,6 +14,7 @@ import type {
     PortfolioRecord,
 } from "./types";
 import { ThemePreviewCards } from "./theme-preview-cards";
+import { SubdomainCard } from "./subdomain-card";
 import { appendRepositoriesToProjects, canRestoreProject, createEmptyEducation, createEmptyExperience, createOneShotUndo, getEligibleRepositories, getPhotoUploadCopy, getProjectSlots, MAX_PORTFOLIO_PROJECTS, mergeAiCopy, rankRepositories, restoreAt, transitionDraftRemoval } from "./portfolio-editor-helpers";
 
 type Repo = {
@@ -28,6 +29,7 @@ type Profile = {
     cv_data: Record<string, unknown> | null;
     github_signals: { repos_detail?: Repo[] } | null;
     github_connection?: "verified" | "legacy_unverified" | "none";
+    github_username?: string | null;
 };
 
 const contactLabels = {
@@ -276,7 +278,8 @@ export function PortfolioEditor() {
 
     const copyLink = async () => {
         if (!portfolio) return;
-        const url = `${window.location.origin}${portfolio.public_url}`;
+        // public_url bisa absolut (subdomain) atau relatif (/p/{id}).
+        const url = portfolio.public_url.startsWith("http") ? portfolio.public_url : `${window.location.origin}${portfolio.public_url}`;
         await navigator.clipboard.writeText(url);
         toast.success("Link portfolio disalin.");
     };
@@ -512,6 +515,7 @@ export function PortfolioEditor() {
                 </div>
 
                 <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
+                    {portfolio && <SubdomainCard portfolio={portfolio} suggestion={profile?.github_username ?? null} />}
                     <section className="border border-border p-4">
                         <p className="text-meta uppercase tracking-wide text-muted-foreground">Pilih presentasi</p>
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">Lihat struktur portfolio sebelum kamu memilih tema.</p>

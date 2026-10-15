@@ -56,6 +56,11 @@ export type PortfolioRecord = {
     public_url: string;
     published_at: string | null;
     updated_at: string | null;
+    subdomain: string | null;
+    subdomain_changed_at: string | null;
+    subdomain_url: string | null;
+    /** false sampai DNS wildcard aktif; public_url masih /p/{id}. */
+    subdomain_live: boolean;
 };
 
 export type PublicPortfolioContent = Omit<PortfolioContent, "contacts"> & {
