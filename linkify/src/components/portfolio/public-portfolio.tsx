@@ -1,4 +1,5 @@
 import { getPublicThemePlan } from "./public-portfolio-theme";
+import { ArcadePortfolio } from "./arcade-portfolio";
 import { EditorialPortfolio } from "./editorial-portfolio";
 import { MaestroPortfolio } from "./maestro-portfolio";
 import { MaxfolioPortfolio } from "./maxfolio-portfolio";
@@ -126,6 +127,7 @@ export function PublicPortfolioView({ portfolio, apiBase }: Pick<LayoutProps, "p
 
     if (theme === "editorial") return <EditorialLayout {...props} />;
     if (theme === "developer") return <DeveloperLayout {...props} />;
+    if (theme === "arcade") return <ArcadePortfolio portfolio={portfolio} apiBase={apiBase} contacts={contacts} />;
     if (theme === "maestro") return <MaestroPortfolio portfolio={portfolio} apiBase={apiBase} contacts={contacts} />;
     return <ProfessionalLayout {...props} />;
 }
