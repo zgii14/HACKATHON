@@ -138,7 +138,7 @@ function HalftonePhoto({ portfolio, apiBase, className = "" }: Pick<ArcadePortfo
                 <span className="flex size-full items-center justify-center text-4xl font-extrabold text-[#F5F3EE]">{initials(name)}</span>
             )}
             <span className="pointer-events-none absolute inset-0 mix-blend-color" style={{ backgroundImage: HOLO }} aria-hidden="true" />
-            <span className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(#0B0D17 1.1px, transparent 1.5px)", backgroundSize: "5px 5px" }} aria-hidden="true" />
+            <span className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(11,13,23,0.75) 0.9px, transparent 1.2px)", backgroundSize: "4px 4px" }} aria-hidden="true" />
         </div>
     );
 }
@@ -217,7 +217,7 @@ function ProjectCard({ project, index, copy }: { project: PortfolioProject; inde
     const tech = (project.tech_stack ?? []).slice(0, 5);
     return (
         <a href={project.url} target="_blank" rel="noreferrer" aria-label={`${copy.openRepo}: ${project.repo_name}`} className={`group block transition-transform duration-300 hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none ${FOCUS}`}>
-            <Window tone="violet" title={String(index + 1).padStart(2, "0")} bodyClassName="flex min-h-48 flex-col">
+            <Window tone="violet" title={`level ${String(index + 1).padStart(2, "0")}`} bodyClassName="flex min-h-48 flex-col">
                 <div className="flex-1 p-5">
                     <p className="truncate font-mono text-xs text-[#9AA0C3]"><span className="text-[#5EEAD4]">$</span> cd {project.repo_name}</p>
                     {project.description && <p className="mt-4 line-clamp-3 text-[15px] leading-7 text-[#F5F3EE]/85">{project.description}</p>}
@@ -289,7 +289,7 @@ export function ArcadePortfolio({ portfolio, apiBase, contacts }: ArcadePortfoli
             {bio && (
                 <section id="about" className="mx-auto max-w-4xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
                     <Boot reduceMotion={reduceMotion}>
-                        <Window tone="plain" title={copy.about} bodyClassName="p-6 sm:p-10">
+                        <Window tone="plain" title="about.txt" bodyClassName="p-6 sm:p-10">
                             <p className="whitespace-pre-line text-[17px] leading-8 text-[#F5F3EE]/90">{bio}</p>
                         </Window>
                     </Boot>
@@ -338,7 +338,7 @@ export function ArcadePortfolio({ portfolio, apiBase, contacts }: ArcadePortfoli
 
             {sectionOn("experience") && experience.length > 0 && (
                 <Section id="experience" title={copy.experience} reduceMotion={reduceMotion}>
-                    <Window tone="plain" title={copy.experience} bodyClassName="p-6 sm:p-10">
+                    <Window tone="plain" title="experience.log" bodyClassName="p-6 sm:p-10">
                         <Timeline items={experience.map((item, index) => ({
                             key: `${item.company}-${item.role}-${index}`,
                             title: item.role || item.company,
@@ -352,7 +352,7 @@ export function ArcadePortfolio({ portfolio, apiBase, contacts }: ArcadePortfoli
 
             {sectionOn("education") && education.length > 0 && (
                 <Section id="education" title={copy.education} reduceMotion={reduceMotion}>
-                    <Window tone="plain" title={copy.education} bodyClassName="p-6 sm:p-10">
+                    <Window tone="plain" title="education.log" bodyClassName="p-6 sm:p-10">
                         <Timeline items={education.map((item, index) => ({
                             key: `${item.institution}-${index}`,
                             title: item.institution,
@@ -365,7 +365,7 @@ export function ArcadePortfolio({ portfolio, apiBase, contacts }: ArcadePortfoli
 
             {sectionOn("certifications") && certifications.length > 0 && (
                 <Section id="certifications" title={copy.certifications} reduceMotion={reduceMotion}>
-                    <Window tone="plain" title={copy.certifications} bodyClassName="p-6 sm:p-8">
+                    <Window tone="plain" title="certs.txt" bodyClassName="p-6 sm:p-8">
                         <ul className="grid gap-4 sm:grid-cols-2">
                             {certifications.map((item, index) => <li key={`${item}-${index}`} className="flex gap-3 text-[15px] leading-7 text-[#F5F3EE]/90"><Award className="mt-1 size-4 shrink-0 text-[#FDE68A]" aria-hidden="true" /><span className="[overflow-wrap:anywhere]">{item}</span></li>)}
                         </ul>

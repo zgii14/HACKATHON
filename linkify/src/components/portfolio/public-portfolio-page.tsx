@@ -39,7 +39,7 @@ export async function PublicPortfolioPage({ publicId, theme, embed = false }: Pr
     };
 
     // Tema Editorial sudah punya stiker "GitHub verified" sendiri.
-    const showVerifiedChip = fetched.github_verified && !embed && portfolio.content.theme !== "editorial";
+    const showVerifiedChip = fetched.github_verified && !embed && !["editorial", "arcade"].includes(portfolio.content.theme);
 
     return (
         <>
