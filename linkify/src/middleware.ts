@@ -1,17 +1,11 @@
 import { subdomainFromHost, ROOT_DOMAIN } from "@/utils/functions/subdomain-host";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 const isDashboardRoute = createRouteMatcher(["/dashboard(.*)"]);
 
-const clerk = clerkMiddleware(async (auth, req) => {
-    if (isDashboardRoute(req)) {
-        await auth().protect();
-    }
-});
-
-export default function middleware(req: NextRequest, event: NextFetchEvent) {
-    // nama.githire.my.id hanya melayani portfolio publik; Clerk tidak dijalankan di sana.
+export default clerkMiddleware(async (auth, req) => {
+    // nama.githire.my.id hanya melayani portfolio publik.
     const name = subdomainFromHost(req.headers.get("host"));
     if (name) {
         if (req.nextUrl.pathname === "/") {
@@ -19,12 +13,17 @@ export default function middleware(req: NextRequest, event: NextFetchEvent) {
         }
         return NextResponse.redirect(new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, `https://www.${ROOT_DOMAIN}`), 307);
     }
-    return clerk(req, event);
-}
+    if (isDashboardRoute(req)) {
+        await auth().protect();
+    }
+});
 
 export const config = {
     matcher: [
-        "/((?!.*\..*|_next).*)",
+        // WAJIB dua backslash ("\\." = titik literal). Dengan satu backslash pola ini mengecualikan
+        // hampir semua path, middleware Clerk tidak jalan, dan auth()/currentUser() di server error.
+        // Dijaga oleh tests/middleware-matcher.test.mts.
+        "/((?!.*\\..*|_next).*)",
         "/(api|trpc)(.*)",
         "/dashboard(.*)",
         "/",
