@@ -2,8 +2,10 @@
 
 Cara pakai:
 1. Isi bagian **[ISI SENDIRI]** di bawah (nama tema dan arah desainnya).
-2. Lampirkan file skill desain `.claude/skills/design-taste-frontend/SKILL.md` ke AI tersebut
-   (atau tempel isinya). Itu skill yang dipakai untuk landing dan editor GitHire.
+2. Lampirkan file skill desain ke AI tersebut (atau tempel isinya). File aslinya ada di
+   `.agents/skills/design-taste-frontend/SKILL.md` (sekitar 90 KB); `.claude/skills/design-taste-frontend`
+   hanya junction ke folder itu. Folder `.agents/` di-gitignore, jadi file ini **tidak ada** di GitHub atau
+   hasil clone: selalu lampirkan manual.
 3. Beri AI akses ke repo (folder `linkify/` dan `backend/`), lalu tempel seluruh blok "PROMPT" di bawah.
 4. Satu tema per percakapan. Setelah selesai, cek dengan perintah di bagian "Verifikasi".
 
@@ -17,6 +19,9 @@ Tugasmu: menambahkan **satu tema portfolio publik baru**.
 
 ### [ISI SENDIRI]
 - Key tema (huruf kecil, satu kata, mis. `brutal`): `<KEY>`
+  Jangan pakai key yang sudah ada (`editorial`, `developer`, `professional`, `maestro`), `maxfolio`,
+  atau `retro` / `neon`: dua key terakhir dipakai test sebagai contoh tema tidak valid
+  (`linkify/tests/public-portfolio-theme.test.mts`, `backend/test_portfolio.py`), jadi memakainya memecahkan test.
 - Nama tampil (mis. "Brutal"): `<LABEL>`
 - Deskripsi singkat untuk kartu pilihan tema (maks 5 kata, Bahasa Indonesia): `<DETAIL>`
 - Arah desain / referensi / mood: `<ARAH DESAIN>`
@@ -28,6 +33,8 @@ Tugasmu: menambahkan **satu tema portfolio publik baru**.
    `prefers-reduced-motion`, Pre-Flight Check di akhir.
 2. Tema contoh yang paling lengkap: `linkify/src/components/portfolio/maestro-portfolio.tsx`
    + `maestro-portfolio-config.ts`. Ikuti polanya (komponen client, `Copy` object id/en, helper murni di file config).
+   Catatan penamaan: key `developer` dirender oleh `MaxfolioPortfolio` (`maxfolio-portfolio.tsx`) lewat
+   `DeveloperLayout`; tidak ada key `maxfolio`.
 3. Tipe data: `linkify/src/components/portfolio/types.ts` (`PublicPortfolio`, `PublicPortfolioContent`).
 
 ### Data yang tersedia untuk tema (props)
@@ -86,14 +93,31 @@ type Props = { portfolio: PublicPortfolio; apiBase: string; contacts: Array<[str
 
 Jangan ubah tema lain, editor, atau API lain.
 
+### Kenapa semua file di atas wajib (jebakan yang tidak ketahuan compiler)
+Hanya `types.ts`, `themePlans`, `themeMeta`, dan `themeIcons` yang dijaga TypeScript (`Record<PortfolioTheme, ...>`).
+Sisanya gagal **senyap**: tema tetap "jalan" tapi tampil sebagai tema lain.
+- Lupa `PORTFOLIO_THEMES` (backend): tema tersimpan tanpa error, tapi `public_view()` mengembalikan
+  `theme: "professional"`, jadi halaman publik tampil Professional.
+- Lupa `schemas.py`: penyimpanan ditolak 422 (yang ini terlihat).
+- Lupa cabang di `PublicPortfolioView`: jatuh ke `ProfessionalLayout`.
+- Lupa cabang preview di `theme-preview-cards.tsx`: kartu memakai `ProfessionalPreview`.
+- Lupa `THEMES` di `public-portfolio-page.tsx`: `?theme=<KEY>` diabaikan.
+Karena itu verifikasi di bawah wajib memeriksa hasil nyata, bukan hanya `tsc`.
+
 ### Verifikasi (jalankan dan laporkan hasilnya)
 ```bash
 cd linkify
 npx tsc --noEmit
 npx eslint src/components/portfolio
 node --test tests/*.test.mts
+pnpm build        # salah batas client/server component hanya ketahuan saat build
 cd ../backend && python -m unittest discover -p "test_*.py"
 ```
+Cek hasil nyata (wajib, menangkap jebakan senyap di atas):
+- Simpan tema `<KEY>` dari editor (bagian Tampilan), publish, lalu `GET <API>/portfolios/<publicId>`
+  harus mengembalikan `"content": { "theme": "<KEY>", ... }`, bukan `"professional"`.
+- Kartu tema `<KEY>` di editor memakai mini-preview baru, bukan preview Professional.
+- `/p/<publicId>?theme=<KEY>` merender tema baru.
 Lalu jalankan `pnpm dev` di `linkify` dan buka `http://localhost:3000/p/<publicId>?theme=<KEY>` (minta `publicId`
 portfolio yang sudah publish ke pemilik) pada lebar 375, 768, 1280; cek juga dengan
 "Emulate prefers-reduced-motion: reduce".
@@ -106,7 +130,7 @@ Terakhir, tulis Pre-Flight Check dari skill desain (centang tiap butir yang rele
 
 | Skill | Dipakai untuk | Lokasi |
 |---|---|---|
-| **design-taste-frontend** (taste-skill) | Arah visual, anti-AI-slop, motion, pre-flight check (landing, auth, editor) | `.claude/skills/design-taste-frontend/SKILL.md` |
+| **design-taste-frontend** (taste-skill) | Arah visual, anti-AI-slop, motion, pre-flight check (landing, auth, editor) | `.agents/skills/design-taste-frontend/SKILL.md` (gitignored; `.claude/skills/...` adalah junction ke sini) |
 | superpowers: brainstorming → writing-plans → executing-plans | Proses: tanya-jawab desain, tulis spec, tulis rencana per task (TDD), kerjakan task demi task | Plugin Claude Code `superpowers`; contoh hasilnya di `docs/superpowers/specs/` dan `docs/superpowers/plans/` |
 | superpowers: systematic-debugging | Cari akar masalah sebelum memperbaiki bug | Plugin `superpowers` |
 
