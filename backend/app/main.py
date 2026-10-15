@@ -365,6 +365,22 @@ async def lifespan(app: FastAPI):
         ))
         conn.commit()
 
+    # DDL Migration: subdomain portfolio (nama.githire.my.id) + paket user
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS subdomain VARCHAR(30) NULL"))
+        conn.execute(text("ALTER TABLE portfolios ADD COLUMN IF NOT EXISTS subdomain_changed_at TIMESTAMPTZ NULL"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_portfolios_subdomain ON portfolios (subdomain)"))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS subdomain_holds (
+                name VARCHAR(30) PRIMARY KEY,
+                portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
+                expires_at TIMESTAMPTZ NOT NULL
+            )
+        """))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS idx_subdomain_holds_portfolio ON subdomain_holds (portfolio_id)"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(16) NOT NULL DEFAULT 'free'"))
+        conn.commit()
+
     db = Session(bind=engine)
     try:
         seed_jobs_if_empty(db)

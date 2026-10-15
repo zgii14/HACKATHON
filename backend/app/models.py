@@ -31,6 +31,8 @@ class User(Base):
     # NULL = user belum pilih role (tampilkan role picker). candidate | recruiter setelah dipilih.
     role: Mapped[str | None] = mapped_column(String(20), nullable=True)
     is_premium: Mapped[bool] = mapped_column(Boolean, default=False)  # B2B premium flag
+    # Paket kandidat: free | premium. Belum dipakai untuk gating (subdomain gratis saat early access).
+    plan: Mapped[str] = mapped_column(String(16), default="free", server_default="free")
 
     profile: Mapped["CandidateProfile | None"] = relationship(
         "CandidateProfile", back_populates="user", uselist=False
@@ -125,6 +127,9 @@ class Portfolio(Base):
     published_photo: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     published_photo_content_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Alamat nama.githire.my.id; NULL = belum diklaim.
+    subdomain: Mapped[str | None] = mapped_column(String(30), unique=True, nullable=True)
+    subdomain_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow, server_default="now()"
     )
@@ -133,6 +138,18 @@ class Portfolio(Base):
     )
 
     user: Mapped["User"] = relationship("User", back_populates="portfolio")
+
+
+class SubdomainHold(Base):
+    """Nama subdomain lama yang ditahan 30 hari: redirect ke nama baru, tidak bisa diklaim orang lain."""
+
+    __tablename__ = "subdomain_holds"
+
+    name: Mapped[str] = mapped_column(String(30), primary_key=True)
+    portfolio_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class Job(Base):

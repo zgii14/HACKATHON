@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     admin_secret: str | None = None  # Set di .env: ADMIN_SECRET=your_secret
     recruiter_emails: str = ""
     admin_emails: str = ""  # comma-separated admin allowlist, e.g. admin.githire@gmail.com
+    portfolio_root_domain: str = "githire.my.id"
+    # True setelah DNS wildcard *.githire.my.id aktif di Vercel; sebelum itu public_url tetap /p/{id}.
+    portfolio_subdomains_live: bool = False
 
 
 settings = Settings()

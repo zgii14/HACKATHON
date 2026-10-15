@@ -206,6 +206,14 @@ class PortfolioOut(BaseModel):
     public_url: str
     published_at: datetime | None = None
     updated_at: datetime | None = None
+    subdomain: str | None = None
+    subdomain_changed_at: datetime | None = None
+    subdomain_url: str | None = None
+    subdomain_live: bool = False
+
+
+class SubdomainClaim(BaseModel):
+    name: str = Field(max_length=64)
 
 
 class BioDataOut(BaseModel):

@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
@@ -14,8 +15,9 @@ from app.services.github_identity import connection_state
 from app.auth import get_current_user
 from app.config import settings
 from app.database import get_db
-from app.models import CandidateProfile, Portfolio, User
-from app.schemas import PortfolioGenerateRequest, PortfolioOut, PortfolioPatch
+from app.models import CandidateProfile, Portfolio, SubdomainHold, User
+from app.schemas import PortfolioGenerateRequest, PortfolioOut, PortfolioPatch, SubdomainClaim
+from app.services import subdomain as subdomain_rules
 from app.services.gemini_service import (
     GeminiQuotaExceededError,
     GeminiRateLimitError,
@@ -70,15 +72,23 @@ def _as_out(portfolio: Portfolio) -> PortfolioOut:
         for key, value in (portfolio.published_content or {}).items()
         if not key.startswith("_")
     } or None
+    subdomain_url = (
+        f"https://{portfolio.subdomain}.{settings.portfolio_root_domain}" if portfolio.subdomain else None
+    )
+    live = settings.portfolio_subdomains_live
     return PortfolioOut(
         public_id=portfolio.public_id,
         status=portfolio.status,
         draft_content=draft_content,
         published_content=published_content,
         has_photo=bool(portfolio.draft_photo),
-        public_url=f"/p/{portfolio.public_id}",
+        public_url=subdomain_url if live and subdomain_url else f"/p/{portfolio.public_id}",
         published_at=portfolio.published_at,
         updated_at=portfolio.updated_at,
+        subdomain=portfolio.subdomain,
+        subdomain_changed_at=portfolio.subdomain_changed_at,
+        subdomain_url=subdomain_url,
+        subdomain_live=live,
     )
 
 
@@ -323,6 +333,68 @@ def unpublish_my_portfolio(
         raise HTTPException(404, "Portfolio belum dibuat.")
     portfolio.status = "draft"
     db.commit()
+    db.refresh(portfolio)
+    return _as_out(portfolio)
+
+
+SUBDOMAIN_ERRORS = {
+    "invalid": "Alamat harus 3-30 karakter: huruf kecil, angka, atau tanda -, tidak diawali atau diakhiri -.",
+    "reserved": "Alamat ini dipakai sistem GitHire. Pilih nama lain.",
+    "taken": "Alamat ini sudah dipakai. Pilih nama lain.",
+}
+
+
+@router.get("/me/portfolio/subdomain/check")
+def check_subdomain(
+    name: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_candidate(current_user)
+    portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first()
+    return subdomain_rules.check(db, name, portfolio.id if portfolio else None, datetime.now(timezone.utc))
+
+
+@router.put("/me/portfolio/subdomain", response_model=PortfolioOut)
+def claim_subdomain(
+    payload: SubdomainClaim,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_candidate(current_user)
+    portfolio = db.query(Portfolio).filter(Portfolio.user_id == current_user.id).first()
+    if not portfolio:
+        raise HTTPException(404, "Buat portfolio terlebih dahulu.")
+    now = datetime.now(timezone.utc)
+    result = subdomain_rules.check(db, payload.name, portfolio.id, now)
+    name = result["name"]
+    if name == portfolio.subdomain:
+        return _as_out(portfolio)
+    if result["reason"] in ("invalid", "reserved"):
+        raise HTTPException(422, SUBDOMAIN_ERRORS[result["reason"]])
+    if result["reason"] == "taken":
+        raise HTTPException(409, SUBDOMAIN_ERRORS["taken"])
+    allowed_at = subdomain_rules.next_change_at(portfolio.subdomain_changed_at, now) if portfolio.subdomain else None
+    if allowed_at:
+        raise HTTPException(429, f"Alamat bisa diganti lagi mulai {allowed_at:%d-%m-%Y}.")
+
+    # Hold atas nama ini (milik sendiri atau sudah kedaluwarsa) dilepas.
+    db.query(SubdomainHold).filter(SubdomainHold.name == name).delete()
+    old_name = portfolio.subdomain
+    if old_name:
+        hold = db.get(SubdomainHold, old_name)
+        if hold:
+            hold.portfolio_id = portfolio.id
+            hold.expires_at = now + subdomain_rules.HOLD_DURATION
+        else:
+            db.add(SubdomainHold(name=old_name, portfolio_id=portfolio.id, expires_at=now + subdomain_rules.HOLD_DURATION))
+    portfolio.subdomain = name
+    portfolio.subdomain_changed_at = now
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(409, SUBDOMAIN_ERRORS["taken"])
     db.refresh(portfolio)
     return _as_out(portfolio)
 
