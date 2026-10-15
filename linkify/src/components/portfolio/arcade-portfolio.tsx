@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Award, BadgeCheck, Github, Globe, Linkedin, Mail, MessageCircle, Star, Trophy, type LucideIcon } from "lucide-react";
 import { Yellowtail } from "next/font/google";
 import type { MotionValue } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ProjectCover } from "./arcade-cover";
 import { ARCADE_EASE, CountUp, CrtBoot, DrawWave, GlitchName, GrowLine, HOLO, ParallaxLayer, PopText, Shimmer, TiltCard, Unlock, XpBar, usePointerParallax } from "./arcade-motion";
 import { contactHref, getArcadeCopy, pickSkills, splitHeadline, type ArcadeCopy } from "./arcade-portfolio-config";
@@ -32,6 +32,17 @@ const CONTACT_ICONS: Record<string, LucideIcon> = {
     whatsapp: MessageCircle,
     website: Globe,
 };
+
+/**
+ * useReducedMotion bernilai null di server tapi bisa langsung true di client, sehingga render pertama berbeda
+ * (hydration mismatch). Preferensi baru dipakai setelah mount agar markup awal identik dengan server.
+ */
+function useHydratedReducedMotion() {
+    const prefersReduced = useReducedMotion();
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+    return mounted ? prefersReduced : null;
+}
 
 function initials(name: string) {
     return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "GH";
@@ -94,7 +105,7 @@ function SectionHeading({ text, reduceMotion }: Reduce & { text: string }) {
     return <h2 className="text-4xl font-extrabold tracking-[-0.03em] text-[#5EEAD4] sm:text-5xl"><PopText text={text} reduceMotion={reduceMotion} /></h2>;
 }
 
-function ContactIcons({ contacts, size = "md", reduceMotion = null, delay = 0 }: { contacts: Array<[string, string]>; size?: "md" | "lg"; reduceMotion?: boolean | null; delay?: number }) {
+function ContactIcons({ contacts, size = "md", reduceMotion = null, delay = 0, onMount = false }: { contacts: Array<[string, string]>; size?: "md" | "lg"; reduceMotion?: boolean | null; delay?: number; onMount?: boolean }) {
     const links = contacts.map(([kind, value]) => [kind, contactHref(kind, value)] as const).filter((entry): entry is readonly [string, string] => Boolean(entry[1]));
     if (!links.length) return null;
     return (
@@ -109,8 +120,7 @@ function ContactIcons({ contacts, size = "md", reduceMotion = null, delay = 0 }:
                         rel="noreferrer"
                         aria-label={kind}
                         initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
+                        {...(onMount ? { animate: { opacity: 1, y: 0 } } : { whileInView: { opacity: 1, y: 0 }, viewport: { once: true } })}
                         transition={{ duration: 0.45, delay: delay + index * 0.08, ease: ARCADE_EASE }}
                         whileHover={reduceMotion ? undefined : { y: -3 }}
                         className={`inline-flex items-center gap-2 border-2 border-[#2A2F55] bg-[#0B0D17] text-[#F5F3EE] transition-colors duration-200 hover:border-[#5EEAD4] hover:text-[#5EEAD4] hover:shadow-[3px_3px_0_#5B3FD9] motion-reduce:transition-none ${size === "lg" ? "min-h-12 px-4 text-sm font-semibold capitalize" : "size-11 justify-center"} ${FOCUS}`}
@@ -214,7 +224,7 @@ function Hero({ portfolio, apiBase, contacts, copy, reduceMotion }: ArcadePortfo
                                             ))}
                                         </p>
                                     )}
-                                    <div className="mt-7 flex justify-center md:justify-start"><ContactIcons contacts={contacts} reduceMotion={reduceMotion} delay={1.9} /></div>
+                                    <div className="mt-7 flex justify-center md:justify-start"><ContactIcons contacts={contacts} reduceMotion={reduceMotion} delay={1.9} onMount /></div>
                                 </div>
                             </div>
                             <Shimmer reduceMotion={reduceMotion} delay={2.4} />
@@ -317,7 +327,7 @@ function Section({ id, title, reduceMotion, children }: Reduce & { id: string; t
 }
 
 export function ArcadePortfolio({ portfolio, apiBase, contacts }: ArcadePortfolioProps) {
-    const reduceMotion = useReducedMotion();
+    const reduceMotion = useHydratedReducedMotion();
     const content = portfolio.content;
     const copy = getArcadeCopy(content.language);
     const sectionOn = (key: SectionKey) => content.sections?.[key] !== false;
