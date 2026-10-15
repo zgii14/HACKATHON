@@ -4,15 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**GitHire** ("From Code to Career") — AI-powered recruitment platform for Indonesian developers. Built for Hackathon Digdaya 2026. Status: ~99% complete. All core features shipped; pending final end-to-end live verification on production.
+**GitHire** ("From Code to Career") — AI-powered portfolio + recruitment platform for Indonesian developers. Started at Hackathon Digdaya 2026; now a **production product** (design for startup scale, not a demo). Candidates publish a portfolio at `nama.githire.my.id`. Candidate flow verified live on production; recruiter flow still pending live verification.
 
 ## Repository Structure
 
 ```
-backend/          FastAPI backend (Python 3.12)
-linkify/          Next.js 14 frontend (TypeScript)
-githire-backend/  Copy of backend for Hugging Face deploy — DO NOT EDIT THIS
+backend/          FastAPI backend (Python 3.12); tests are backend/test_*.py (unittest)
+linkify/          Next.js 14 frontend (TypeScript); helper tests in linkify/tests/*.test.mts
 docs/plans/       Task tracker (task.md) + design/implementation docs
+docs/superpowers/ Specs + implementation plans per feature
+docs/runbooks/    Ops runbooks (DNS migration)
+docs/prompts/     Prompts for other AIs (new portfolio theme)
 docker-compose.yml PostgreSQL 16 local dev DB
 ```
 
@@ -33,8 +35,11 @@ pip install -r requirements.txt
 # Run dev server
 uvicorn app.main:app --reload --port 8000
 
-# Type check (no dedicated test suite)
-python -m py_compile app/main.py
+# Tests (unittest, ~310 tests; pytest is not installed)
+python -m unittest discover -p "test_*.py"
+
+# Single test file
+python -m unittest test_portfolio
 ```
 
 ### Frontend (Next.js)
@@ -57,6 +62,9 @@ pnpm lint
 
 # TypeScript check
 npx tsc --noEmit
+
+# Helper tests (node:test, Node 24 strips types)
+node --test tests/*.test.mts
 ```
 
 ### Local Database
@@ -159,7 +167,17 @@ All dashboard pages follow **Workbench (app-surface)** aesthetic — modern-mini
 
 **Motion constants**: `EASE_OUT = [0.16, 1, 0.3, 1]`. All animation via `framer-motion` (v11.9.0, already installed — do NOT add new animation deps).
 
-**Theme**: GitHire violet — LOCKED. Never change `--primary` or color tokens.
+**Typography tokens** (`tailwind.config.ts` → `fontSize`): `text-micro` 10.5px, `text-meta` 11.5px (mono labels/metadata), `text-body` 14px, `text-read` 15px. Use these instead of ad-hoc `text-[11px]`-style sizes.
+
+**Theme**: GitHire violet — LOCKED. Never change `--primary` or color tokens. Light theme is forced on `/`, `/dashboard*`, `/auth*`. Fonts (Plus Jakarta Sans, JetBrains Mono) are imported only in `app/layout.tsx` from `utils/constants/fonts` — never re-export them from the `@/utils` barrel (the font CSS then drops off the root layout).
+
+The custom text sizes are registered with tailwind-merge in `utils/functions/cn.ts`, so `cn("text-meta", "text-primary")` keeps both.
+
+### Portfolio + subdomains
+
+- Public portfolio: `/p/[publicId]` (`?theme=`, `embed=1` for the landing iframe). Themes live in `components/portfolio/` and are registered in several places (frontend + `backend/app/services/portfolio.py` `PORTFOLIO_THEMES` + `schemas.py`); see `docs/prompts/portfolio-theme-prompt.md` before adding one — several registrations fail silently.
+- Subdomains: `middleware.ts` rewrites `nama.githire.my.id/` → `/s/[name]`, which resolves via `GET /public/subdomains/{name}`. Claim/check in `routers/portfolio.py`, rules in `services/subdomain.py` (30-day change cooldown, old name held 30 days). `PORTFOLIO_SUBDOMAINS_LIVE` (Railway) switches `public_url` to the subdomain.
+- Editor: `components/portfolio/editor/` — sidebar sections (`?bagian=`), autosave via a single-flight queue, localStorage backup.
 
 ### Admin Endpoints
 
@@ -171,10 +189,16 @@ All dashboard pages follow **Workbench (app-surface)** aesthetic — modern-mini
 | Layer    | Service              | Notes                                          |
 |----------|----------------------|------------------------------------------------|
 | DB       | Neon (serverless PG) | Connection string in `DATABASE_URL`            |
-| Backend  | Hugging Face Spaces  | Docker, port 7860 (`PORT` env var)             |
-| Frontend | Vercel               | Root dir: `/linkify`                           |
+| Backend  | Railway              | `https://githire.up.railway.app` — root `/backend`, `backend/Dockerfile`, healthcheck `/health` |
+| Frontend | Vercel               | `https://www.githire.my.id` — root dir `/linkify` |
 
-The `githire-backend/` directory is the backend copy pushed to the HF Space repo. Sync changes from `backend/` → `githire-backend/` before deploying. Never edit `githire-backend/` directly.
+Both auto-deploy on push to `master` of `zgii14/HACKATHON` (Vercel ~15s, Railway a few minutes). Check with the GitHub commit status API (`/repos/zgii14/HACKATHON/commits/<sha>/status`) — it reports both.
+
+- Railway account: `admin.githire@gmail.com`, project `hearty-recreation`, service `HACKATHON`, env `production`. Other Railway accounts on dev machines (e.g. project `impartial-grace`) are NOT production.
+- Railway env must include `RECRUITER_EMAILS` (set) and `ADMIN_SECRET` (**not set yet** — `/admin/*` endpoints are unusable in production until it is).
+- After a deploy, a browser may serve cached chunks for a minute; verify with a cache-busting query string.
+- DNS for `githire.my.id` is on **Vercel DNS** (moved from sitequ.id on 2026-10-15): 5 Clerk CNAMEs + wildcard `*.githire.my.id` on the Vercel project. Zoho email was dropped on purpose. Runbook: `docs/runbooks/2026-10-15-dns-vercel-migration.md`.
+- `fork` remote (`reginaadelisa/HACKATHON`) is stale and not used for deploys.
 
 ## Key Files
 

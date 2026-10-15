@@ -93,6 +93,7 @@ worktrees/
 
 # ── Local agent, audit, and experiment artifacts ───
 .agents/
+.commandcode/
 .opencode/
 .playwright-mcp/
 AGENTS.md
