@@ -58,3 +58,28 @@ test("provides id and en copy with the verified label", () => {
     assert.equal(getArcadeCopy("en").verified, "Verified from GitHub");
     assert.equal(getArcadeCopy("en").projects, "Projects");
 });
+
+test("builds a deterministic cover for each project", async () => {
+    const { getProjectCover, hashString } = await import("../src/components/portfolio/arcade-portfolio-config.ts");
+    assert.equal(hashString("abc"), hashString("abc"));
+    assert.notEqual(hashString("abc"), hashString("abd"));
+    const project = { repo_name: "laporan-keuangan", url: "", description: "", tech_stack: ["PHP", "Laravel"], stars: 0, own_commits: 3 };
+    const a = getProjectCover(project);
+    assert.deepEqual(a, getProjectCover(project));
+    assert.equal(a.initials, "LK");
+    assert.equal(a.cells.length, 40);
+    assert.ok(a.cells.every((value) => value >= 0 && value <= 3));
+    assert.ok(["pixels", "halftone", "scan", "rings"].includes(a.pattern));
+    assert.ok(a.palette.from.startsWith("#") && a.palette.to.startsWith("#"));
+});
+
+test("derives cover initials from varied repo names", async () => {
+    const { getProjectCover } = await import("../src/components/portfolio/arcade-portfolio-config.ts");
+    const base = { url: "", description: "", tech_stack: [], stars: 0, own_commits: 0 };
+    assert.equal(getProjectCover({ ...base, repo_name: "HACKATHON" }).initials, "HA");
+    assert.equal(getProjectCover({ ...base, repo_name: "moodmate-app" }).initials, "MA");
+    assert.equal(getProjectCover({ ...base, repo_name: "Penerapan_AI_Dicoding" }).initials, "PA");
+    assert.equal(getProjectCover({ ...base, repo_name: "zgii14" }).initials, "ZG");
+    assert.equal(getProjectCover({ ...base, repo_name: "workflowCI" }).initials, "WC");
+    assert.equal(getProjectCover({ ...base, repo_name: "" }).initials, "GH");
+});

@@ -120,3 +120,19 @@ with reduced motion, and in `embed=1` at 1280×800.
 ## Out of scope
 
 Landing poster (`portfolio-arcade.webp`, `portfolio-stage.tsx`, `auth-backdrop.tsx`) — optional follow-up.
+
+## Revision 2026-10-15: project covers + motion kit
+
+User feedback after the first build: project windows were too plain and motion was not impressive enough.
+
+**Generated project covers** (`arcade-cover.tsx`, helper `getProjectCover` in config): every project window now
+opens with a 16:9 "game cartridge" cover drawn from the repo name hash (FNV-1a): a pattern
+(`pixels` | `halftone` | `scan` synthwave sun | `rings`), one of four holo palette pairs, an 8x5 pixel grid that
+lights up in a diagonal wave, the `$ cd repo` caption, and two-letter initials. No external requests, no images.
+
+**Motion kit** (`arcade-motion.tsx`), every primitive renders its final state under reduced motion:
+CRT boot of the hero window, title-bar squares popping in, holo wipe + periodic RGB-split glitch on the name,
+shimmer sweep, staggered headline, floating photo, mouse parallax ornaments (mouse only), XP bar tied to scroll,
+3D tilt + glare on project cards, count-up stats, achievement "unlock" flip with pixel sparks, letter pop on
+section headings, self-drawing wavy dividers (`pathLength`, the one non transform/opacity animation, accepted),
+growing timeline line.

@@ -28,3 +28,16 @@ test("routes only the Arcade theme to the Arcade renderer", () => {
     assert.match(router, /theme === "arcade"/);
     assert.match(router, /<ArcadePortfolio/);
 });
+
+test("uses generated project covers and the arcade motion kit", () => {
+    const motionKit = readFileSync(new URL("../src/components/portfolio/arcade-motion.tsx", import.meta.url), "utf8");
+    const cover = readFileSync(new URL("../src/components/portfolio/arcade-cover.tsx", import.meta.url), "utf8");
+    for (const name of ["ProjectCover", "TiltCard", "GlitchName", "CrtBoot", "XpBar", "Unlock", "CountUp", "DrawWave"]) {
+        assert.match(renderer, new RegExp(`<${name}`));
+    }
+    assert.match(cover, /getProjectCover/);
+    // Setiap primitif harus punya jalur reduced-motion.
+    for (const name of ["CrtBoot", "Shimmer", "GlitchName", "PopText", "TiltCard", "Unlock"]) {
+        assert.match(motionKit, new RegExp(String.raw`export function ${name}[\s\S]*?if \(reduceMotion\)`));
+    }
+});

@@ -1,4 +1,4 @@
-import type { PortfolioLanguage, PublicPortfolio } from "./types";
+import type { PortfolioLanguage, PortfolioProject, PublicPortfolio } from "./types";
 
 type VerifiedSkill = PublicPortfolio["verified_skills"][number];
 
@@ -103,4 +103,58 @@ export function contactHref(kind: string, value: string): string | null {
         return /^https?:\/\//i.test(v) ? v : `https://${v}`;
     }
     return null;
+}
+
+export type ArcadeCoverPattern = "pixels" | "halftone" | "scan" | "rings";
+
+export type ArcadeCover = {
+    initials: string;
+    pattern: ArcadeCoverPattern;
+    palette: { from: string; to: string };
+    /** 8x5 grid, nilai 0-3 = intensitas pixel. */
+    cells: number[];
+};
+
+const COVER_PATTERNS: ArcadeCoverPattern[] = ["pixels", "halftone", "scan", "rings"];
+const COVER_PALETTES = [
+    { from: "#5EEAD4", to: "#A78BFA" },
+    { from: "#A78BFA", to: "#F0ABFC" },
+    { from: "#F0ABFC", to: "#FDE68A" },
+    { from: "#FDE68A", to: "#5EEAD4" },
+];
+/** FNV-1a 32-bit: hash stabil agar cover tiap repo selalu sama. */
+export function hashString(value: string): number {
+    let hash = 0x811c9dc5;
+    for (let index = 0; index < value.length; index += 1) {
+        hash ^= value.charCodeAt(index);
+        hash = Math.imul(hash, 0x01000193) >>> 0;
+    }
+    return hash >>> 0;
+}
+
+function coverInitials(name: string) {
+    const words = name
+        .split(/[-_.\s]+|(?<=[a-z0-9])(?=[A-Z])/)
+        .map((word) => word.replace(/[^A-Za-z0-9]/g, ""))
+        .filter(Boolean);
+    if (!words.length) return "GH";
+    const letters = words.length > 1 ? `${words[0][0]}${words[1][0]}` : words[0].slice(0, 2);
+    return letters.toUpperCase();
+}
+
+export function getProjectCover(project: PortfolioProject): ArcadeCover {
+    const seed = hashString(project.repo_name || "githire");
+    let state = seed || 1;
+    const cells = Array.from({ length: 40 }, () => {
+        state ^= state << 13;
+        state ^= state >>> 17;
+        state ^= state << 5;
+        return (state >>> 0) % 4;
+    });
+    return {
+        initials: coverInitials(project.repo_name ?? ""),
+        pattern: COVER_PATTERNS[seed % COVER_PATTERNS.length],
+        palette: COVER_PALETTES[(seed >>> 3) % COVER_PALETTES.length],
+        cells,
+    };
 }
