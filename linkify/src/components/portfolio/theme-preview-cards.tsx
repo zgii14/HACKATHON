@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, FileText, PanelsTopLeft, Sparkles, UserRound } from "lucide-react";
+import { Check, FileText, Gamepad2, PanelsTopLeft, Sparkles, UserRound } from "lucide-react";
 import type { PortfolioContent, PortfolioTheme } from "./types";
 import { getThemePreviewData } from "./theme-preview-data";
 
@@ -9,6 +9,7 @@ const themeMeta: Record<PortfolioTheme, { label: string; detail: string }> = {
     developer: { label: "Developer", detail: "Visual gelap dan project-first" },
     professional: { label: "Professional", detail: "Ringkas dan mudah dipindai" },
     maestro: { label: "Maestro", detail: "Sinematik, editorial, dan immersive" },
+    arcade: { label: "Arcade", detail: "Retro hologram ala game" },
 };
 
 type ThemePreviewCardsProps = {
@@ -69,14 +70,36 @@ function MaestroPreview({ name, headline, projectName }: ReturnType<typeof getTh
     );
 }
 
+const ARCADE_HOLO = "linear-gradient(90deg, #5EEAD4 0%, #A78BFA 38%, #F0ABFC 70%, #FDE68A 100%)";
+
+function ArcadePreview({ name, headline, projectName }: ReturnType<typeof getThemePreviewData>) {
+    return (
+        <div className="relative h-28 overflow-hidden bg-[#0B0D17] p-2.5 text-[#F5F3EE]" style={{ backgroundImage: "radial-gradient(#2A2F55 0.8px, transparent 1px)", backgroundSize: "8px 8px" }} aria-hidden="true">
+            <div className="p-[1.5px]" style={{ backgroundImage: ARCADE_HOLO }}>
+                <div className="flex h-2 items-center gap-0.5 px-1">{[0, 1, 2].map((item) => <span key={item} className="size-1 border border-[#0B0D17]" />)}</div>
+                <div className="bg-[#0B0D17] px-2 py-1.5">
+                    <p className="truncate bg-clip-text text-[11px] font-extrabold uppercase leading-none tracking-[-0.03em] text-transparent" style={{ backgroundImage: ARCADE_HOLO }}>{name}</p>
+                    <p className="mt-1 truncate font-mono text-[5.5px] text-[#FDE68A]">{headline}</p>
+                </div>
+            </div>
+            <div className="absolute bottom-2 left-2.5 w-[58%] border-[1.5px] border-[#5B3FD9]">
+                <div className="flex h-1.5 items-center gap-0.5 bg-[#5B3FD9] px-0.5">{[0, 1, 2].map((item) => <span key={item} className="size-[3px] border-[0.5px] border-[#0B0D17]" />)}</div>
+                <p className="truncate bg-[#0B0D17] px-1 py-1 font-mono text-[5px] text-[#5EEAD4]">$ cd {projectName}</p>
+            </div>
+            <span className="absolute bottom-3 right-3 size-0 border-x-[9px] border-b-[15px] border-x-transparent border-b-[#5B3FD9]/60" />
+        </div>
+    );
+}
+
 function ThemeArt({ theme, data }: { theme: PortfolioTheme; data: ReturnType<typeof getThemePreviewData> }) {
     if (theme === "editorial") return <EditorialPreview {...data} />;
     if (theme === "developer") return <DeveloperPreview {...data} />;
     if (theme === "maestro") return <MaestroPreview {...data} />;
+    if (theme === "arcade") return <ArcadePreview {...data} />;
     return <ProfessionalPreview {...data} />;
 }
 
-const themeIcons = { editorial: FileText, developer: PanelsTopLeft, professional: UserRound, maestro: Sparkles } as const;
+const themeIcons = { editorial: FileText, developer: PanelsTopLeft, professional: UserRound, maestro: Sparkles, arcade: Gamepad2 } as const;
 
 export function ThemePreviewCards({ content, onSelect }: ThemePreviewCardsProps) {
     const data = getThemePreviewData(content);
