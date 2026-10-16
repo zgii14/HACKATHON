@@ -1,11 +1,13 @@
 "use client";
 
-import { animate, motion, useInView, useMotionValue, type Variants } from "framer-motion";
-import { ArrowUpRight, BadgeCheck, Github, Globe, Linkedin, Mail, MessageCircle, Phone, type LucideIcon } from "lucide-react";
+import { AnimatePresence, animate, motion, useInView, useMotionValue, useTransform, type Variants } from "framer-motion";
+import { ArrowUpRight, BadgeCheck, Github, Globe, Linkedin, Mail, MessageCircle, Phone, PhoneOff, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/utils/functions/cn";
 import {
     buildFoldStats,
+    callContacts,
+    formatCallTime,
     firstSentences,
     formatClock,
     initials,
@@ -14,6 +16,7 @@ import {
     pickNotifications,
     primaryContact,
     splitSkills,
+    type CallContact,
     type FoldCopy,
     type FoldNav,
 } from "./fold-portfolio-config";
@@ -104,11 +107,6 @@ export function contactLabel(kind: string) {
 export function ContactIcon({ kind, className }: { kind: string; className?: string }) {
     const Icon = CONTACT_ICONS[kind] ?? Globe;
     return <Icon className={className} aria-hidden="true" />;
-}
-
-function openContact(href: string) {
-    if (href.startsWith("mailto:")) window.location.href = href;
-    else window.open(href, "_blank", "noopener,noreferrer");
 }
 
 export function Clock({ className }: { className?: string }) {
@@ -515,53 +513,162 @@ export function ListScreen({ portfolio, copy, compact, kind }: SceneProps & { ki
 }
 
 export function CallScreen({ portfolio, apiBase, copy, contacts }: SceneProps) {
-    const primary = primaryContact(contacts);
-    const trackRef = useRef<HTMLDivElement>(null);
+    const list = callContacts(contacts);
+    const [answered, setAnswered] = useState(false);
     const name = portfolio.content.name || "Portfolio";
 
     return (
         <div className={cn("flex h-full w-full flex-col items-center bg-[#0c0c0c] px-[7cqw] pb-[7cqw] pt-[12cqw] text-center text-white [container-type:inline-size]")}>
             <p className={cn("break-words text-[clamp(40px,13cqw,76px)] leading-[0.86]", DISPLAY)}>{name}</p>
-            {primary && <p className="mt-3 text-[14px] text-white/65">{copy.incoming}</p>}
-            <Photo portfolio={portfolio} apiBase={apiBase} className="mt-[8cqw] size-28 rounded-full" fallbackClassName="text-[40px]" />
-            {primary && (
-                <div ref={trackRef} className="relative mt-auto flex h-16 w-full max-w-[360px] items-center rounded-full bg-white/10 p-2">
-                    <motion.button
-                        type="button"
-                        aria-label={`${copy.slide}: ${contactLabel(primary.kind)}`}
-                        drag="x"
-                        dragConstraints={trackRef}
-                        dragElastic={0.04}
-                        dragSnapToOrigin
-                        onDragEnd={(_, info) => {
-                            const width = trackRef.current?.offsetWidth ?? 0;
-                            if (info.offset.x > width * 0.55) openContact(primary.href);
-                        }}
-                        onTap={() => openContact(primary.href)}
-                        whileTap={{ scale: 0.94 }}
-                        className="relative z-10 grid size-12 shrink-0 cursor-grab place-items-center rounded-full bg-[#34c759] text-white active:cursor-grabbing"
-                    >
-                        <Phone className="size-5" aria-hidden="true" />
-                    </motion.button>
-                    <a
-                        href={primary.href}
-                        target={primary.kind === "email" ? undefined : "_blank"}
-                        rel="noreferrer"
-                        className="absolute inset-0 flex items-center justify-center pl-12 text-[15px] font-medium text-white/80"
-                    >
-                        <motion.span
-                            animate={{ opacity: [0.45, 1, 0.45] }}
-                            transition={{
-                                duration: 2.4,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                            }}
+            <AnimatePresence mode="wait" initial={false}>
+                {answered ? (
+                    <motion.p key="connected" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-3 text-[14px] text-[#34c759]">
+                        {copy.connected} · <CallTimer />
+                    </motion.p>
+                ) : (
+                    list.length > 0 && (
+                        <motion.p key="incoming" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mt-3 text-[14px] text-white/65">
+                            {copy.incoming}
+                        </motion.p>
+                    )
+                )}
+            </AnimatePresence>
+            <div className="relative mt-[6cqw]">
+                {!answered && list.length > 0 && (
+                    <motion.span
+                        className="absolute inset-0 rounded-full border border-white/30"
+                        animate={{ scale: [1, 1.35], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                        aria-hidden="true"
+                    />
+                )}
+                <Photo
+                    portfolio={portfolio}
+                    apiBase={apiBase}
+                    className={cn("rounded-full transition-[width,height] duration-500", answered ? "size-16" : "size-28")}
+                    fallbackClassName="text-[32px]"
+                />
+            </div>
+            {list.length > 0 &&
+                (answered ? (
+                    <ConnectedPanel list={list} copy={copy} onEnd={() => setAnswered(false)} />
+                ) : (
+                    <SlideToAnswer label={copy.slide} ariaLabel={`${copy.slide}: ${contactLabel(list[0].kind)}`} onAnswer={() => setAnswered(true)} />
+                ))}
+        </div>
+    );
+}
+
+function CallTimer() {
+    const [seconds, setSeconds] = useState(0);
+    useEffect(() => {
+        const id = window.setInterval(() => setSeconds((value) => value + 1), 1000);
+        return () => window.clearInterval(id);
+    }, []);
+    return <span className="tabular-nums">{formatCallTime(seconds)}</span>;
+}
+
+const KNOB = 48;
+const TRACK_PAD = 8;
+
+/**
+ * Geser untuk mengangkat. Posisi knob dipegang motion value sendiri dengan batas angka dari ResizeObserver;
+ * batas berbentuk ref membuat framer menskalakan ulang posisi saat resize, dan salinan layar yang sedang
+ * display:none (lebar 0) menaruh knob di tengah.
+ */
+function SlideToAnswer({ label, ariaLabel, onAnswer }: { label: string; ariaLabel: string; onAnswer: () => void }) {
+    const trackRef = useRef<HTMLDivElement>(null);
+    const dragged = useRef(false);
+    const x = useMotionValue(0);
+    const [max, setMax] = useState(0);
+    const labelOpacity = useTransform(x, (value) => (max ? 1 - Math.min(1, value / (max * 0.6)) : 1));
+    const fillWidth = useTransform(x, (value) => value + KNOB);
+
+    useEffect(() => {
+        const node = trackRef.current;
+        if (!node) return;
+        const measure = () => {
+            setMax(Math.max(0, node.clientWidth - KNOB - TRACK_PAD * 2));
+            x.set(0);
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [x]);
+
+    const finish = () => {
+        animate(x, max, { duration: 0.25, ease: FOLD_EASE }).then(onAnswer);
+    };
+
+    return (
+        <div ref={trackRef} className="relative mt-auto h-16 w-full max-w-[360px] rounded-full bg-white/10 p-2">
+            <motion.span className="absolute inset-y-2 left-2 rounded-full bg-[#34c759]/25" style={{ width: fillWidth }} aria-hidden="true" />
+            <motion.span style={{ opacity: labelOpacity }} className="pointer-events-none absolute inset-0 flex items-center justify-center pl-12 text-[15px] font-medium text-white/80">
+                <motion.span animate={{ opacity: [0.45, 1, 0.45] }} transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}>
+                    {label}
+                </motion.span>
+            </motion.span>
+            <motion.button
+                type="button"
+                aria-label={ariaLabel}
+                drag="x"
+                dragConstraints={{ left: 0, right: max }}
+                dragElastic={0}
+                dragMomentum={false}
+                style={{ x }}
+                onDragStart={() => {
+                    dragged.current = true;
+                }}
+                onDragEnd={() => {
+                    if (x.get() > max * 0.7) finish();
+                    else animate(x, 0, { type: "spring", stiffness: 500, damping: 35 });
+                }}
+                onClick={() => {
+                    // Klik/Enter tanpa geser juga mengangkat; klik sisa dari geseran diabaikan.
+                    if (dragged.current) {
+                        dragged.current = false;
+                        return;
+                    }
+                    finish();
+                }}
+                whileTap={{ scale: 0.94 }}
+                className="relative z-10 grid size-12 cursor-grab touch-none place-items-center rounded-full bg-[#34c759] text-white active:cursor-grabbing"
+            >
+                <Phone className="size-5" aria-hidden="true" />
+            </motion.button>
+        </div>
+    );
+}
+
+function ConnectedPanel({ list, copy, onEnd }: { list: CallContact[]; copy: FoldCopy; onEnd: () => void }) {
+    return (
+        <div className="mt-auto flex w-full max-w-[360px] flex-col items-center">
+            <p className={cn("mb-2.5 text-white/50", MONO)}>{copy.reachVia}</p>
+            <Stagger immediate className="grid w-full gap-1.5">
+                {list.map((item) => (
+                    <Item key={item.kind}>
+                        <a
+                            href={item.href}
+                            target={item.kind === "email" ? undefined : "_blank"}
+                            rel="noreferrer"
+                            className="flex items-center gap-3 rounded-2xl bg-white/[0.08] px-3 py-2.5 text-left transition-colors hover:bg-white/[0.14]"
                         >
-                            {copy.slide}
-                        </motion.span>
-                    </a>
-                </div>
-            )}
+                            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white/10">
+                                <ContactIcon kind={item.kind} className="size-4" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                                <span className="block text-[13px] font-semibold">{contactLabel(item.kind)}</span>
+                                <span className="block truncate text-[12px] text-white/60">{item.display}</span>
+                            </span>
+                            <ArrowUpRight className="size-4 shrink-0 text-white/50" aria-hidden="true" />
+                        </a>
+                    </Item>
+                ))}
+            </Stagger>
+            <button type="button" onClick={onEnd} aria-label={copy.endCall} className="mt-4 grid size-12 place-items-center rounded-full bg-[#ff3b30] text-white transition-transform hover:scale-105">
+                <PhoneOff className="size-5" aria-hidden="true" />
+            </button>
         </div>
     );
 }

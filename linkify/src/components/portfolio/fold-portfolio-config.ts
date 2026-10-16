@@ -24,6 +24,9 @@ export type FoldCopy = {
     certifications: string;
     incoming: string;
     slide: string;
+    connected: string;
+    reachVia: string;
+    endCall: string;
     madeWith: string;
     nav: Record<FoldNav, string>;
     backdrops: Record<FoldBackdrop, string>;
@@ -59,6 +62,9 @@ const COPY: Record<PortfolioLanguage, FoldCopy> = {
         certifications: "Sertifikasi",
         incoming: "Panggilan masuk · soal proyekmu berikutnya",
         slide: "geser untuk bicara",
+        connected: "Terhubung",
+        reachVia: "Pilih cara menghubungi",
+        endCall: "Akhiri panggilan",
         madeWith: "Dibuat dengan",
         nav: { home: "Beranda", work: "Proyek", skills: "Skill", about: "Tentang", contact: "Kontak" },
         backdrops: { basic: "Polos", glow: "Glow", orbit: "Orbit" },
@@ -88,6 +94,9 @@ const COPY: Record<PortfolioLanguage, FoldCopy> = {
         certifications: "Certifications",
         incoming: "Incoming call · about your next project",
         slide: "slide to talk",
+        connected: "Connected",
+        reachVia: "Pick how to reach me",
+        endCall: "End call",
         madeWith: "Created with",
         nav: { home: "Home", work: "Work", skills: "Skills", about: "About", contact: "Contact" },
         backdrops: { basic: "Basic", glow: "Glow", orbit: "Orbit" },
@@ -312,4 +321,30 @@ export function splitSkills(skills: string[], verified: VerifiedSkill[], maxVeri
         others.push(skill.trim());
     }
     return { verified: verifiedList, others: others.slice(0, maxOthers), hiddenOthers: Math.max(0, others.length - maxOthers) };
+}
+
+export type CallContact = { kind: string; value: string; href: string; display: string };
+
+/** Semua kontak yang bisa dipakai, urut prioritas, dengan teks ringkas untuk layar panggilan. */
+export function callContacts(contacts: Array<[string, string]>): CallContact[] {
+    const list: CallContact[] = [];
+    for (const kind of CONTACT_PRIORITY) {
+        const entry = contacts.find(([key, value]) => key === kind && value.trim());
+        const href = entry ? contactHref(kind, entry[1]) : null;
+        if (!entry || !href) continue;
+        const value = entry[1].trim();
+        const display =
+            kind === "whatsapp"
+                ? `+${value.replace(/\D/g, "")}`
+                : kind === "email"
+                  ? value
+                  : value.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/+$/, "");
+        list.push({ kind, value, href, display });
+    }
+    return list;
+}
+
+export function formatCallTime(seconds: number): string {
+    const safe = Math.max(0, Math.floor(seconds));
+    return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
 }

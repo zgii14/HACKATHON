@@ -4,6 +4,8 @@ import {
     FOLD_BLOCKS,
     buildFoldStats,
     buildTrack,
+    callContacts,
+    formatCallTime,
     giantNameSize,
     buildScreens,
     firstSentences,
@@ -55,6 +57,8 @@ const portfolio = (content: Record<string, unknown> = {}, verified_skills: unkno
 test("returns copy per language with id fallback", () => {
     assert.equal(getFoldCopy("en").verified, "Verified from GitHub");
     assert.equal(getFoldCopy("id").verified, "Terverifikasi dari GitHub");
+    assert.equal(getFoldCopy("en").connected, "Connected");
+    assert.equal(getFoldCopy("id").endCall, "Akhiri panggilan");
     assert.equal(getFoldCopy("xx" as never).unfold, getFoldCopy("id").unfold);
 });
 
@@ -201,4 +205,34 @@ test("splits verified skills from the rest without duplicates and with caps", ()
     const capped = splitSkills(["A", "B", "C", "D"], [], 6, 2);
     assert.deepEqual(capped.others, ["A", "B"]);
     assert.equal(capped.hiddenOthers, 2);
+});
+
+test("lists every usable contact in priority order with a readable value", () => {
+    const list = callContacts([
+        ["github", "https://github.com/zgii14/"],
+        ["whatsapp", "6283173289305"],
+        ["website", "rozagi.dev"],
+        ["email", "a@b.c"],
+        ["linkedin", "https://www.linkedin.com/in/rozagi"],
+        ["fax", "123"],
+        ["email", " "],
+    ]);
+    assert.deepEqual(
+        list.map((item) => [item.kind, item.display]),
+        [
+            ["email", "a@b.c"],
+            ["whatsapp", "+6283173289305"],
+            ["linkedin", "linkedin.com/in/rozagi"],
+            ["website", "rozagi.dev"],
+            ["github", "github.com/zgii14"],
+        ],
+    );
+    assert.equal(list[1].href, "https://wa.me/6283173289305");
+    assert.deepEqual(callContacts([]), []);
+});
+
+test("formats the call timer as mm:ss", () => {
+    assert.equal(formatCallTime(0), "00:00");
+    assert.equal(formatCallTime(65), "01:05");
+    assert.equal(formatCallTime(3600), "60:00");
 });

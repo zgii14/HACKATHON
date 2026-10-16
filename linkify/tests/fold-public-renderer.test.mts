@@ -55,3 +55,14 @@ test("routes only the Fold theme to the Fold renderer", () => {
     assert.match(router, /theme === "fold"/);
     assert.match(router, /<FoldPortfolio/);
 });
+
+test("answers the call by sliding and then lists every contact", () => {
+    assert.match(scenes, /callContacts\(contacts\)/);
+    assert.match(scenes, /copy\.connected/);
+    assert.match(scenes, /copy\.endCall/);
+    // Batas geser angka dari ResizeObserver: ref constraints membuat knob pindah ke tengah setelah resize
+    // ketika salinan layar yang tersembunyi (display:none) berukuran 0.
+    assert.doesNotMatch(scenes, /dragConstraints=\{trackRef\}/);
+    assert.match(scenes, /new ResizeObserver/);
+    assert.match(scenes, /dragConstraints=\{\{ left: 0, right: max \}\}/);
+});
