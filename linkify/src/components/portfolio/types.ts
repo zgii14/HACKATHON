@@ -1,4 +1,4 @@
-export type PortfolioTheme = "editorial" | "developer" | "professional" | "maestro" | "arcade";
+export type PortfolioTheme = "editorial" | "developer" | "professional" | "maestro" | "arcade" | "fold";
 export type PortfolioLanguage = "id" | "en";
 
 export type PortfolioProject = {

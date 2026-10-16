@@ -4,7 +4,7 @@ import { subdomainUrl } from "@/utils/functions/subdomain-host";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-const THEMES: PortfolioTheme[] = ["editorial", "developer", "professional", "maestro", "arcade"];
+const THEMES: PortfolioTheme[] = ["editorial", "developer", "professional", "maestro", "arcade", "fold"];
 
 export const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
@@ -39,7 +39,7 @@ export async function PublicPortfolioPage({ publicId, theme, embed = false }: Pr
     };
 
     // Tema Editorial sudah punya stiker "GitHub verified" sendiri.
-    const showVerifiedChip = fetched.github_verified && !embed && !["editorial", "arcade"].includes(portfolio.content.theme);
+    const showVerifiedChip = fetched.github_verified && !embed && !["editorial", "arcade", "fold"].includes(portfolio.content.theme);
 
     return (
         <>

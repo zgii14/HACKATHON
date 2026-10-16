@@ -37,3 +37,11 @@ test("uses proof-first ordering for Arcade", () => {
         sectionOrder: ["projects", "skills", "experience", "education", "certifications"],
     });
 });
+
+test("uses scene ordering for Fold", () => {
+    assert.deepEqual(getPublicThemePlan("fold"), {
+        key: "fold",
+        label: "Fold portfolio",
+        sectionOrder: ["projects", "skills", "experience", "education", "certifications"],
+    });
+});

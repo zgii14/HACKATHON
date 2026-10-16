@@ -117,6 +117,10 @@ class PortfolioDomainTests(unittest.TestCase):
         patch = PortfolioPatch(theme="arcade")
         self.assertEqual(patch.theme, "arcade")
 
+    def test_patch_accepts_fold_theme(self):
+        patch = PortfolioPatch(theme="fold")
+        self.assertEqual(patch.theme, "fold")
+
     def test_patch_rejects_more_than_six_projects(self):
         projects = [
             {
@@ -245,6 +249,15 @@ class PortfolioDomainTests(unittest.TestCase):
             False,
         )
         self.assertEqual(result["content"]["theme"], "arcade")
+
+    def test_public_view_preserves_fold_theme(self):
+        result = public_view(
+            "opaque-id",
+            {"name": "Candidate", "headline": "Developer", "theme": "fold"},
+            [],
+            False,
+        )
+        self.assertEqual(result["content"]["theme"], "fold")
 
 
 class GitHubReadmeTests(unittest.IsolatedAsyncioTestCase):
