@@ -66,3 +66,10 @@ test("answers the call by sliding and then lists every contact", () => {
     assert.match(scenes, /new ResizeObserver/);
     assert.match(scenes, /dragConstraints=\{\{ left: 0, right: max \}\}/);
 });
+
+test("keeps scrolling smooth inside the device", () => {
+    // Roda mouse melompat per klik: progres scroll dihaluskan pegas sebelum menggerakkan device.
+    assert.match(device, /useSpring\(scrollYProgress/);
+    // backdrop-filter di layar yang bergeser/berputar dihitung ulang tiap frame.
+    assert.doesNotMatch(scenes + device, /backdrop-blur/);
+});

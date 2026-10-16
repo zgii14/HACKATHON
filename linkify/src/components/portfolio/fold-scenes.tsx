@@ -165,7 +165,7 @@ export function ProjectTile({ project, className, showTech = true }: { project: 
 
 function VerifiedBadge({ copy, className }: { copy: FoldCopy; className?: string }) {
     return (
-        <span className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/75 px-2.5 py-1 text-[11px] font-medium text-[#111111] backdrop-blur", className)}>
+        <span className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-medium text-[#111111]", className)}>
             <BadgeCheck className="size-3.5 text-[#2f5bd3]" aria-hidden="true" />
             {copy.githubVerified}
         </span>
@@ -204,12 +204,7 @@ export function LockScreen({ portfolio, apiBase, copy, contacts }: SceneProps) {
                 <div className="mt-auto grid gap-2">
                     {notifications.map((project) => (
                         <Item key={project.repo_name}>
-                            <a
-                                href={project.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-3 rounded-2xl bg-white/75 p-2.5 backdrop-blur-md transition-colors hover:bg-white/90"
-                            >
+                            <a href={project.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-2xl bg-white/85 p-2.5 transition-colors hover:bg-white">
                                 <ProjectTile project={project} showTech={false} className="size-10 shrink-0 rounded-[10px] !p-1.5 text-[13px]" />
                                 <span className="min-w-0">
                                     <span className="block truncate text-[14px] font-semibold">{project.repo_name}</span>
@@ -225,14 +220,14 @@ export function LockScreen({ portfolio, apiBase, copy, contacts }: SceneProps) {
                                 target="_blank"
                                 rel="noreferrer"
                                 aria-label="GitHub"
-                                className="grid size-11 place-items-center rounded-full bg-white/80 backdrop-blur transition-transform hover:scale-105"
+                                className="grid size-11 place-items-center rounded-full bg-white/90 transition-transform hover:scale-105"
                             >
                                 <Github className="size-5" aria-hidden="true" />
                             </a>
                         ) : (
                             <span className="size-11" />
                         )}
-                        <span className="rounded-full bg-white/80 px-4 py-2 text-[13px] font-medium backdrop-blur">{copy.unfold}</span>
+                        <span className="rounded-full bg-white/90 px-4 py-2 text-[13px] font-medium">{copy.unfold}</span>
                         {primary ? (
                             <a
                                 href={primary.href}
@@ -518,7 +513,12 @@ export function CallScreen({ portfolio, apiBase, copy, contacts }: SceneProps) {
     const name = portfolio.content.name || "Portfolio";
 
     return (
-        <div className={cn("flex h-full w-full flex-col items-center bg-[#0c0c0c] px-[7cqw] pb-[7cqw] pt-[12cqw] text-center text-white [container-type:inline-size]")}>
+        <div
+            className={cn(
+                "flex h-full w-full flex-col items-center overflow-hidden bg-[#0c0c0c] px-[7cqw] pb-[7cqw] text-center text-white [container-type:inline-size]",
+                answered ? "pt-[8cqw]" : "pt-[12cqw]",
+            )}
+        >
             <p className={cn("break-words text-[clamp(40px,13cqw,76px)] leading-[0.86]", DISPLAY)}>{name}</p>
             <AnimatePresence mode="wait" initial={false}>
                 {answered ? (
@@ -533,7 +533,7 @@ export function CallScreen({ portfolio, apiBase, copy, contacts }: SceneProps) {
                     )
                 )}
             </AnimatePresence>
-            <div className="relative mt-[6cqw]">
+            <div className={cn("relative shrink-0", answered ? "mt-3" : "mt-[6cqw]")}>
                 {!answered && list.length > 0 && (
                     <motion.span
                         className="absolute inset-0 rounded-full border border-white/30"
@@ -643,9 +643,9 @@ function SlideToAnswer({ label, ariaLabel, onAnswer }: { label: string; ariaLabe
 
 function ConnectedPanel({ list, copy, onEnd }: { list: CallContact[]; copy: FoldCopy; onEnd: () => void }) {
     return (
-        <div className="mt-auto flex w-full max-w-[360px] flex-col items-center">
-            <p className={cn("mb-2.5 text-white/50", MONO)}>{copy.reachVia}</p>
-            <Stagger immediate className="grid w-full gap-1.5">
+        <div className="mt-4 flex min-h-0 w-full max-w-[360px] flex-1 flex-col items-center">
+            <p className={cn("mb-2.5 shrink-0 text-white/50", MONO)}>{copy.reachVia}</p>
+            <Stagger immediate className="grid min-h-0 w-full grid-cols-[minmax(0,1fr)] gap-1.5 overflow-y-auto">
                 {list.map((item) => (
                     <Item key={item.kind}>
                         <a
@@ -666,7 +666,12 @@ function ConnectedPanel({ list, copy, onEnd }: { list: CallContact[]; copy: Fold
                     </Item>
                 ))}
             </Stagger>
-            <button type="button" onClick={onEnd} aria-label={copy.endCall} className="mt-4 grid size-12 place-items-center rounded-full bg-[#ff3b30] text-white transition-transform hover:scale-105">
+            <button
+                type="button"
+                onClick={onEnd}
+                aria-label={copy.endCall}
+                className="mt-3 grid size-12 shrink-0 place-items-center rounded-full bg-[#ff3b30] text-white transition-transform hover:scale-105"
+            >
                 <PhoneOff className="size-5" aria-hidden="true" />
             </button>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, transform, useMotionValueEvent, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { motion, transform, useMotionValueEvent, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion";
 import { useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { cn } from "@/utils/functions/cn";
 import { buildScreens, buildTrack, giantNameSize, type FoldNav, type FoldScreen } from "./fold-portfolio-config";
@@ -37,7 +37,9 @@ function useFoldScroll(portfolio: StageProps["portfolio"]) {
 
     const ref = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-    const t = useTransform(scrollYProgress, [0, 1], [0, track.steps]);
+    // Roda mouse melompat ~100px per klik; pegas membuat device mengejar posisi scroll dengan halus.
+    const smoothProgress = useSpring(scrollYProgress, { stiffness: 160, damping: 30, mass: 0.35, restDelta: 0.0002 });
+    const t = useTransform(smoothProgress, [0, 1], [0, track.steps]);
     const [foldStart] = track.fold;
     const stripIndex = useTransform(t, track.stripInput, track.stripOutput);
     const stripY = useTransform(stripIndex, (value) => `${(-value * 100) / strip.length}%`);
@@ -45,11 +47,16 @@ function useFoldScroll(portfolio: StageProps["portfolio"]) {
     const [open, setOpen] = useState(false);
     const [closing, setClosing] = useState(false);
     const [activeNav, setActiveNav] = useState<FoldNav>("home");
+    const flags = useRef<{ open: boolean; closing: boolean; nav: FoldNav }>({ open: false, closing: false, nav: "home" });
     useMotionValueEvent(t, "change", (value) => {
-        setOpen(value > 0.9 && value < foldStart + 0.2);
-        setClosing(value >= foldStart + 0.2);
+        // Dipanggil tiap frame: state hanya disetel saat nilainya berubah agar tidak memicu render berulang.
+        const nextOpen = value > 0.9 && value < foldStart + 0.2;
+        const nextClosing = value >= foldStart + 0.2;
+        const nextNav = value >= foldStart + 0.3 ? "contact" : navAt(strip, Math.round(transform(value, track.stripInput, track.stripOutput)));
+        if (nextOpen !== flags.current.open) setOpen((flags.current.open = nextOpen));
+        if (nextClosing !== flags.current.closing) setClosing((flags.current.closing = nextClosing));
+        if (nextNav !== flags.current.nav) setActiveNav((flags.current.nav = nextNav));
         // Hitung dari `value` langsung: motion value turunan belum tentu sudah diperbarui di sini.
-        setActiveNav(value >= foldStart + 0.3 ? "contact" : navAt(strip, Math.round(transform(value, track.stripInput, track.stripOutput))));
     });
 
     const goTo = (nav: FoldNav) => {
@@ -107,9 +114,9 @@ function GiantName({ name, opacity, scale }: { name: string; opacity: MotionValu
 
 function Strip({ strip, stripY, sceneProps }: { strip: FoldScreen[]; stripY: MotionValue<string>; sceneProps: SceneProps }) {
     return (
-        <motion.div style={{ y: stripY, height: `${strip.length * 100}%` }} className="flex flex-col">
+        <motion.div style={{ y: stripY, height: `${strip.length * 100}%` }} className="flex flex-col will-change-transform">
             {strip.map((screen, index) => (
-                <div key={screen.id === "project" ? `project-${screen.index}` : screen.id} className="relative w-full" style={{ height: `${100 / strip.length}%` }}>
+                <div key={screen.id === "project" ? `project-${screen.index}` : screen.id} className="relative w-full [container-type:inline-size]" style={{ height: `${100 / strip.length}%` }}>
                     <Screen screen={screen} props={sceneProps} />
                     {index === 0 && <StatusBar />}
                 </div>
@@ -125,7 +132,7 @@ function Dock({ navItems, activeNav, goTo, copy, compact }: DockProps) {
     return (
         <nav
             className={cn(
-                "absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-0.5 whitespace-nowrap rounded-full bg-[#111111]/75 p-1 font-medium text-white backdrop-blur-md",
+                "absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-0.5 whitespace-nowrap rounded-full bg-[#111111]/85 p-1 font-medium text-white",
                 compact ? "text-[11.5px]" : "text-[13px]",
             )}
             aria-label={copy.nav.home}
@@ -190,12 +197,12 @@ export function FoldStage(props: StageProps) {
                         <motion.div className="size-full rounded-r-[36px] bg-[#fafafa]" style={{ borderTopLeftRadius: seamInner, borderBottomLeftRadius: seamInner }} />
                     </motion.div>
                     {/* Belahan kiri: berputar di engsel tengah */}
-                    <motion.div style={{ rotateY: panelRotate, transformOrigin: "100% 50%", transformStyle: "preserve-3d" }} className="absolute inset-y-0 left-0 z-10 w-1/2">
+                    <motion.div style={{ rotateY: panelRotate, transformOrigin: "100% 50%", transformStyle: "preserve-3d" }} className="absolute inset-y-0 left-0 z-10 w-1/2 will-change-transform">
                         <div className="absolute inset-0 rounded-l-[46px] p-[10px] pr-0 [backface-visibility:hidden]" style={frame}>
                             <div className="size-full rounded-l-[36px] bg-[#fafafa]" />
                         </div>
                         <div className="absolute inset-0 rounded-[46px] p-[10px] shadow-[0_40px_80px_-30px_rgba(0,0,0,0.5)] [backface-visibility:hidden] [transform:rotateY(180deg)]" style={frame}>
-                            <div className="relative size-full overflow-hidden rounded-[36px]">
+                            <div className="relative size-full overflow-hidden rounded-[36px] [container-type:inline-size]">
                                 <motion.div style={{ opacity: lockOpacity }} className="absolute inset-0">
                                     <LockScreen {...sceneProps} />
                                 </motion.div>
@@ -247,7 +254,7 @@ export function FoldPhone(props: StageProps) {
                     className="relative rounded-[44px] p-[9px] shadow-[0_30px_60px_-28px_rgba(0,0,0,0.5)]"
                     style={{ backgroundColor: bezel, width: "min(400px, 86vw)", height: "min(780px, calc(100svh - 128px))" }}
                 >
-                    <div className="relative size-full overflow-hidden rounded-[35px] bg-[#fafafa] [perspective:1600px]">
+                    <div className="relative size-full overflow-hidden rounded-[35px] bg-[#fafafa] [container-type:inline-size] [perspective:1600px]">
                         <div className={cn("absolute inset-0 z-0", !open && "pointer-events-none")} aria-hidden={!open}>
                             <Strip strip={strip} stripY={stripY} sceneProps={sceneProps} />
                             <Dock navItems={navItems} activeNav={activeNav} goTo={goTo} copy={copy} compact />
