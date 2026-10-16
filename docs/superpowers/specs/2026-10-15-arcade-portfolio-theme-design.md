@@ -136,3 +136,21 @@ shimmer sweep, staggered headline, floating photo, mouse parallax ornaments (mou
 3D tilt + glare on project cards, count-up stats, achievement "unlock" flip with pixel sparks, letter pop on
 section headings, self-drawing wavy dividers (`pathLength`, the one non transform/opacity animation, accepted),
 growing timeline line.
+
+## Revision 2026-10-16: framer-motion skill pass
+
+Applied the `framer-motion-*` skills (installed in `.claude/skills/`; upstream `framer-motion-core` has broken
+YAML frontmatter, installed manually with a quoted description).
+
+- **Variants orchestration:** the hero runs as one variant tree. `CrtBoot` uses `when: "beforeChildren"` +
+  `staggerChildren`, so title-bar squares, photo, name wipe, headline and contacts follow each other without
+  hand-tuned delays. Lists (achievements, skill chips, timeline, certificates, footer contacts) use
+  `StaggerGroup` (one viewport observer per group instead of one per item).
+- **Scroll-linked:** `useHeroDepth` (hero content recedes, scales and fades, offset `["start start","end start"]`),
+  `useInnerParallax` inside project covers (pattern and initials move opposite ways), `VelocitySkew` on section
+  headings (skew from scroll velocity).
+- **Gestures:** `whileTap`/`whileFocus` on cards, contacts and filter tabs; hover uses springs.
+- **Layout:** tech filter above the project grid (`getTechFilters`/`filterProjects`): `layout` reflow,
+  `AnimatePresence mode="popLayout"` exits, `layoutId` for the active-tab marker.
+- **Fix:** each cover is a single variants root; the pixel grid no longer has its own `whileInView`, which
+  had cut off the `hover` label (and created one observer per cell).

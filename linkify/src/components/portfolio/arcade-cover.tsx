@@ -1,6 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
+import { useRef } from "react";
+import { useInnerParallax } from "./arcade-motion";
 import { getProjectCover, type ArcadeCover } from "./arcade-portfolio-config";
 import type { PortfolioProject } from "./types";
 
@@ -51,16 +53,44 @@ function PatternLayer({ cover, reduceMotion }: { cover: ArcadeCover; reduceMotio
     return null;
 }
 
+type CellCustom = { wave: number; value: number };
+
+// Sel menyala bergelombang diagonal (wave = kolom + baris) dan mengerut saat cover di-hover.
+const cellVariants: Variants = {
+    hidden: { opacity: 0, scale: 0.2 },
+    show: ({ wave, value }: CellCustom) => ({ opacity: CELL_OPACITY[value], scale: 1, transition: { duration: 0.35, delay: wave * 0.045 } }),
+    hover: ({ wave }: CellCustom) => ({ scale: 0.7, transition: { type: "spring", stiffness: 500, damping: 14, delay: wave * 0.015 } }),
+};
+const initialsVariants: Variants = {
+    hover: { y: -6, transition: { type: "spring", stiffness: 400, damping: 14 } },
+};
+
 /** Cover "kartrid game" generatif per repo: pola, pixel grid bergelombang, dan inisial hologram. */
 export function ProjectCover({ project, reduceMotion }: { project: PortfolioProject; reduceMotion: boolean | null }) {
+    const ref = useRef<HTMLDivElement>(null);
+    // Pola dan inisial bergerak berlawanan arah saat discroll: kesan kedalaman di dalam bingkai.
+    const patternY = useInnerParallax(ref, 18);
+    const initialsY = useInnerParallax(ref, -10);
     const cover = getProjectCover(project);
     const { from, to } = cover.palette;
     const pixelsMain = cover.pattern === "pixels";
 
     return (
-        <div className="relative aspect-[16/9] overflow-hidden border-b-[3px] border-[#5B3FD9] bg-[#0B0D17]" aria-hidden="true">
+        // Satu akar variants: hidden/show (masuk layar) dan hover mengalir ke sel dan inisial. Jangan beri
+        // anak initial/whileInView sendiri, karena anak itu jadi akar baru dan berhenti menerima "hover".
+        <motion.div
+            ref={ref}
+            className="relative aspect-[16/9] overflow-hidden border-b-[3px] border-[#5B3FD9] bg-[#0B0D17]"
+            initial={reduceMotion ? false : "hidden"}
+            whileInView="show"
+            viewport={{ once: true, amount: 0.3 }}
+            whileHover={reduceMotion ? undefined : "hover"}
+            aria-hidden="true"
+        >
             <span className="absolute inset-0 opacity-60" style={{ backgroundImage: `radial-gradient(circle at 20% 15%, ${from}33, transparent 55%), radial-gradient(circle at 85% 90%, ${to}33, transparent 55%)` }} />
-            <PatternLayer cover={cover} reduceMotion={reduceMotion} />
+            <motion.span className="absolute inset-[-24px_0]" style={reduceMotion ? undefined : { y: patternY }}>
+                <PatternLayer cover={cover} reduceMotion={reduceMotion} />
+            </motion.span>
 
             <div className={`absolute grid grid-cols-8 ${pixelsMain ? "right-4 top-9 w-[56%] gap-1.5" : "bottom-3 right-3 w-[34%] gap-1"}`}>
                 {cover.cells.map((value, index) => {
@@ -70,25 +100,26 @@ export function ProjectCover({ project, reduceMotion }: { project: PortfolioProj
                     return (
                         <motion.span
                             key={index}
-                            className="aspect-square transition-transform duration-300 group-hover:scale-75 motion-reduce:transition-none"
+                            className="aspect-square"
+                            custom={{ wave: col + row, value } satisfies CellCustom}
+                            variants={cellVariants}
                             style={{ backgroundColor: color, opacity: reduceMotion ? CELL_OPACITY[value] : undefined }}
-                            initial={reduceMotion ? false : { opacity: 0, scale: 0.2 }}
-                            whileInView={{ opacity: CELL_OPACITY[value], scale: 1 }}
-                            viewport={{ once: true, amount: 0.3 }}
-                            transition={{ duration: 0.35, delay: (col + row) * 0.045 }}
                         />
                     );
                 })}
             </div>
 
             <span className="absolute left-3 top-2.5 max-w-[70%] truncate font-mono text-[11px] text-[#9AA0C3]"><span className="text-[#5EEAD4]">$</span> cd {project.repo_name}</span>
-            <span
-                className="absolute bottom-3 left-4 bg-clip-text text-[clamp(3.5rem,9vw,5.5rem)] font-extrabold leading-none tracking-[-0.06em] text-transparent transition-transform duration-500 group-hover:-translate-y-1 motion-reduce:transition-none"
-                style={{ backgroundImage: `linear-gradient(120deg, ${from}, ${to})`, filter: "drop-shadow(3px 3px 0 #5B3FD9)" }}
-            >
-                {cover.initials}
-            </span>
+            <motion.span className="absolute bottom-3 left-4" style={reduceMotion ? undefined : { y: initialsY }}>
+                <motion.span
+                    className="block bg-clip-text text-[clamp(3.5rem,9vw,5.5rem)] font-extrabold leading-none tracking-[-0.06em] text-transparent"
+                    style={{ backgroundImage: `linear-gradient(120deg, ${from}, ${to})`, filter: "drop-shadow(3px 3px 0 #5B3FD9)" }}
+                    variants={initialsVariants}
+                >
+                    {cover.initials}
+                </motion.span>
+            </motion.span>
             <span className="pointer-events-none absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(180deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 4px)" }} />
-        </div>
+        </motion.div>
     );
 }

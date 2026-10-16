@@ -29,6 +29,24 @@ test("routes only the Arcade theme to the Arcade renderer", () => {
     assert.match(router, /<ArcadePortfolio/);
 });
 
+test("filters projects with layout animations and orchestrates lists with variants", () => {
+    assert.match(renderer, /getTechFilters/);
+    assert.match(renderer, /<AnimatePresence mode="popLayout">/);
+    assert.match(renderer, /layoutId="arcade-filter-active"/);
+    assert.match(renderer, /aria-pressed=\{selected\}/);
+    for (const name of ["StaggerGroup", "VelocitySkew"]) {
+        assert.match(renderer, new RegExp(`<${name}`));
+    }
+    assert.match(renderer, /useHeroDepth\(heroRef, reduceMotion\)/);
+});
+
+test("keeps the cover as a single variants root so hover reaches its cells", () => {
+    const cover = readFileSync(new URL("../src/components/portfolio/arcade-cover.tsx", import.meta.url), "utf8");
+    assert.match(cover, /whileHover=\{reduceMotion \? undefined : "hover"\}/);
+    // Hanya akar cover yang boleh memakai whileInView; anak dengan whileInView memutus label "hover".
+    assert.equal(cover.match(/whileInView=/g)?.length, 1);
+});
+
 test("uses generated project covers and the arcade motion kit", () => {
     const motionKit = readFileSync(new URL("../src/components/portfolio/arcade-motion.tsx", import.meta.url), "utf8");
     const cover = readFileSync(new URL("../src/components/portfolio/arcade-cover.tsx", import.meta.url), "utf8");

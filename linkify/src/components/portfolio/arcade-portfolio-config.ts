@@ -19,6 +19,8 @@ export type ArcadeCopy = {
     openRepo: string;
     scroll: string;
     madeWith: string;
+    allProjects: string;
+    filterTech: string;
 };
 
 const COPY: Record<PortfolioLanguage, ArcadeCopy> = {
@@ -39,6 +41,8 @@ const COPY: Record<PortfolioLanguage, ArcadeCopy> = {
         openRepo: "Buka repository",
         scroll: "Gulir ke bawah",
         madeWith: "Dibuat dengan",
+        allProjects: "Semua",
+        filterTech: "Filter proyek berdasarkan teknologi",
     },
     en: {
         about: "About",
@@ -57,6 +61,8 @@ const COPY: Record<PortfolioLanguage, ArcadeCopy> = {
         openRepo: "Open repository",
         scroll: "Scroll down",
         madeWith: "Created with",
+        allProjects: "All",
+        filterTech: "Filter projects by technology",
     },
 };
 
@@ -157,4 +163,35 @@ export function getProjectCover(project: PortfolioProject): ArcadeCover {
         palette: COVER_PALETTES[(seed >>> 3) % COVER_PALETTES.length],
         cells,
     };
+}
+
+/**
+ * Pilihan filter tech untuk grid proyek: urut frekuensi lalu alfabet, tanpa duplikat beda huruf besar,
+ * dan hanya tech yang benar-benar memisahkan proyek (bukan milik semua proyek).
+ */
+export function getTechFilters(projects: PortfolioProject[], max = 6): string[] {
+    if (projects.length < 2) return [];
+    const counts = new Map<string, { label: string; count: number }>();
+    for (const project of projects) {
+        const seen = new Set<string>();
+        for (const tech of project.tech_stack ?? []) {
+            const key = tech.trim().toLowerCase();
+            if (!key || seen.has(key)) continue;
+            seen.add(key);
+            const entry = counts.get(key);
+            if (entry) entry.count += 1;
+            else counts.set(key, { label: tech.trim(), count: 1 });
+        }
+    }
+    return Array.from(counts.values())
+        .filter((entry) => entry.count < projects.length)
+        .sort((a, b) => b.count - a.count || a.label.toLowerCase().localeCompare(b.label.toLowerCase()))
+        .slice(0, max)
+        .map((entry) => entry.label);
+}
+
+export function filterProjects(projects: PortfolioProject[], tech: string | null): PortfolioProject[] {
+    if (!tech) return projects;
+    const key = tech.toLowerCase();
+    return projects.filter((project) => (project.tech_stack ?? []).some((item) => item.trim().toLowerCase() === key));
 }

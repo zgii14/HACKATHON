@@ -73,6 +73,36 @@ test("builds a deterministic cover for each project", async () => {
     assert.ok(a.palette.from.startsWith("#") && a.palette.to.startsWith("#"));
 });
 
+test("lists tech filters by frequency, capped, only when they split the projects", async () => {
+    const { getTechFilters } = await import("../src/components/portfolio/arcade-portfolio-config.ts");
+    const base = { url: "", description: "", stars: 0, own_commits: 0 };
+    const projects = [
+        { ...base, repo_name: "a", tech_stack: ["TypeScript", "CSS"] },
+        { ...base, repo_name: "b", tech_stack: ["python", "TypeScript"] },
+        { ...base, repo_name: "c", tech_stack: ["Python"] },
+        { ...base, repo_name: "d", tech_stack: ["Go"] },
+    ];
+    // Python dan TypeScript sama-sama 2 (urut alfabet), dedup case-insensitive, label pertama yang dipakai.
+    assert.deepEqual(getTechFilters(projects), ["python", "TypeScript", "CSS", "Go"]);
+    assert.equal(getTechFilters(projects, 2).length, 2);
+    // Satu proyek: filter tidak berguna.
+    assert.deepEqual(getTechFilters(projects.slice(0, 1)), []);
+    // Tech yang dimiliki semua proyek tidak memisahkan apa pun.
+    assert.deepEqual(getTechFilters([projects[0], { ...projects[1] }]), ["CSS", "python"]);
+});
+
+test("filters projects by tech case-insensitively, null shows all", async () => {
+    const { filterProjects } = await import("../src/components/portfolio/arcade-portfolio-config.ts");
+    const base = { url: "", description: "", stars: 0, own_commits: 0 };
+    const projects = [
+        { ...base, repo_name: "a", tech_stack: ["TypeScript"] },
+        { ...base, repo_name: "b", tech_stack: ["Python"] },
+    ];
+    assert.equal(filterProjects(projects, null).length, 2);
+    assert.deepEqual(filterProjects(projects, "typescript").map((item) => item.repo_name), ["a"]);
+    assert.deepEqual(filterProjects(projects, "Rust"), []);
+});
+
 test("derives cover initials from varied repo names", async () => {
     const { getProjectCover } = await import("../src/components/portfolio/arcade-portfolio-config.ts");
     const base = { url: "", description: "", tech_stack: [], stars: 0, own_commits: 0 };
