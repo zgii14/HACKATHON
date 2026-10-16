@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, FileText, Gamepad2, PanelsTopLeft, Sparkles, UserRound } from "lucide-react";
+import { Check, FileText, Gamepad2, PanelsTopLeft, Smartphone, Sparkles, UserRound } from "lucide-react";
 import type { PortfolioContent, PortfolioTheme } from "./types";
 import { getThemePreviewData } from "./theme-preview-data";
 
@@ -10,6 +10,7 @@ const themeMeta: Record<PortfolioTheme, { label: string; detail: string }> = {
     professional: { label: "Professional", detail: "Ringkas dan mudah dipindai" },
     maestro: { label: "Maestro", detail: "Sinematik, editorial, dan immersive" },
     arcade: { label: "Arcade", detail: "Retro hologram ala game" },
+    fold: { label: "Fold", detail: "HP lipat, huruf raksasa" },
 };
 
 type ThemePreviewCardsProps = {
@@ -91,15 +92,34 @@ function ArcadePreview({ name, headline, projectName }: ReturnType<typeof getThe
     );
 }
 
+function FoldPreview({ name, headline, projectName }: ReturnType<typeof getThemePreviewData>) {
+    return (
+        <div className="relative flex h-28 items-center justify-center overflow-hidden bg-[#F5F4F2] text-[#111111]" aria-hidden="true">
+            <p className="absolute inset-x-0 top-1/2 truncate px-1 text-center text-[34px] font-black uppercase leading-none tracking-[-0.06em] [transform:translateY(-50%)_scaleX(0.62)]">{name}</p>
+            <div className="relative h-[92px] w-[64px] rounded-[12px] bg-[#D9D6D0] p-[3px] shadow-[0_8px_16px_-8px_rgba(0,0,0,0.45)]">
+                <div className="flex size-full flex-col rounded-[9px] bg-gradient-to-b from-white to-[#CFC9BE] px-1.5 pb-1.5 pt-2">
+                    <p className="text-center text-[15px] font-black leading-none tracking-[-0.04em] [transform:scaleX(0.7)]">09:41</p>
+                    <p className="mt-0.5 truncate text-center text-[4.5px] font-medium">{headline}</p>
+                    <div className="mt-auto flex items-center gap-1 rounded-[4px] bg-white/80 p-[3px]">
+                        <span className="size-2 shrink-0 rounded-[2px] bg-[#2F5BD3]" />
+                        <span className="truncate text-[4.5px] font-semibold">{projectName}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function ThemeArt({ theme, data }: { theme: PortfolioTheme; data: ReturnType<typeof getThemePreviewData> }) {
     if (theme === "editorial") return <EditorialPreview {...data} />;
     if (theme === "developer") return <DeveloperPreview {...data} />;
     if (theme === "maestro") return <MaestroPreview {...data} />;
     if (theme === "arcade") return <ArcadePreview {...data} />;
+    if (theme === "fold") return <FoldPreview {...data} />;
     return <ProfessionalPreview {...data} />;
 }
 
-const themeIcons = { editorial: FileText, developer: PanelsTopLeft, professional: UserRound, maestro: Sparkles, arcade: Gamepad2 } as const;
+const themeIcons = { editorial: FileText, developer: PanelsTopLeft, professional: UserRound, maestro: Sparkles, arcade: Gamepad2, fold: Smartphone } as const;
 
 export function ThemePreviewCards({ content, onSelect }: ThemePreviewCardsProps) {
     const data = getThemePreviewData(content);

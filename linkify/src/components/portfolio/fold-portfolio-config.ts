@@ -258,3 +258,58 @@ export function parseFoldPrefs(raw: string | null): FoldPrefs {
         return fallback;
     }
 }
+
+export type FoldTrack = {
+    /** Jumlah langkah scroll; satu langkah = satu tinggi viewport. */
+    steps: number;
+    unfold: [number, number];
+    fold: [number, number];
+    /** Titik kunci strip layar: langkah → indeks layar (diam di awal langkah, bergeser di 45% akhir). */
+    stripInput: number[];
+    stripOutput: number[];
+    restStep: (index: number) => number;
+};
+
+/** Jadwal scroll desktop untuk `screenCount` layar strip (tanpa layar panggilan di sisi belakang). */
+export function buildTrack(screenCount: number): FoldTrack {
+    const count = Math.max(1, screenCount);
+    const steps = count + 2;
+    const stripInput = [0, 1];
+    const stripOutput = [0, 0];
+    for (let index = 0; index < count - 1; index += 1) {
+        stripInput.push(1 + index + 0.55, 2 + index);
+        stripOutput.push(index, index + 1);
+    }
+    stripInput.push(steps);
+    stripOutput.push(count - 1);
+    return {
+        steps,
+        unfold: [0, 1],
+        fold: [count + 1, steps],
+        stripInput,
+        stripOutput,
+        restStep: (index) => (index >= count ? steps : 1 + index + 0.25),
+    };
+}
+
+/** Ukuran nama raksasa (vw) agar satu baris condensed tidak melebihi lebar layar. */
+export function giantNameSize(name: string): number {
+    const length = Math.max(1, (name ?? "").trim().length);
+    // Huruf kapital Sofia Sans Extra Condensed 900 rata-rata ~0.5em; sisakan 6% tepi.
+    return Math.min(22, Math.floor((94 / (length * 0.5)) * 10) / 10);
+}
+
+type VerifiedSkill = PublicPortfolio["verified_skills"][number];
+
+export function splitSkills(skills: string[], verified: VerifiedSkill[], maxVerified = 6, maxOthers = 14) {
+    const verifiedList = (verified ?? []).filter((item) => item?.skill?.trim()).slice(0, maxVerified);
+    const seen = new Set(verifiedList.map((item) => item.skill.trim().toLowerCase()));
+    const others: string[] = [];
+    for (const skill of skills ?? []) {
+        const key = skill.trim().toLowerCase();
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        others.push(skill.trim());
+    }
+    return { verified: verifiedList, others: others.slice(0, maxOthers), hiddenOthers: Math.max(0, others.length - maxOthers) };
+}

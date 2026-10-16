@@ -3,6 +3,8 @@ import test from "node:test";
 import {
     FOLD_BLOCKS,
     buildFoldStats,
+    buildTrack,
+    giantNameSize,
     buildScreens,
     firstSentences,
     formatClock,
@@ -15,6 +17,7 @@ import {
     pickNotifications,
     primaryContact,
     readableInk,
+    splitSkills,
 } from "../src/components/portfolio/fold-portfolio-config.ts";
 
 const project = (repo_name: string, own_commits: number, extra: Record<string, unknown> = {}) => ({
@@ -163,4 +166,39 @@ test("parses stored preferences defensively", () => {
     assert.deepEqual(parseFoldPrefs("{rusak"), { backdrop: "basic", bezel: "silver" });
     assert.deepEqual(parseFoldPrefs('{"backdrop":"orbit","bezel":"rose"}'), { backdrop: "orbit", bezel: "rose" });
     assert.deepEqual(parseFoldPrefs('{"backdrop":"neon","bezel":7}'), { backdrop: "basic", bezel: "silver" });
+});
+
+test("schedules unfold, screen stops and fold-back along the scroll track", () => {
+    const track = buildTrack(3);
+    assert.equal(track.steps, 5);
+    assert.deepEqual(track.unfold, [0, 1]);
+    assert.deepEqual(track.fold, [4, 5]);
+    assert.deepEqual(track.stripInput, [0, 1, 1.55, 2, 2.55, 3, 5]);
+    assert.deepEqual(track.stripOutput, [0, 0, 0, 1, 1, 2, 2]);
+    assert.equal(track.restStep(0), 1.25);
+    assert.equal(track.restStep(2), 3.25);
+    assert.equal(track.restStep(3), 5);
+});
+
+test("keeps the strip transform valid with a single screen", () => {
+    const track = buildTrack(1);
+    assert.equal(track.steps, 3);
+    assert.deepEqual(track.stripInput, [0, 1, 3]);
+    assert.deepEqual(track.stripOutput, [0, 0, 0]);
+});
+
+test("shrinks the giant name for long names", () => {
+    assert.equal(giantNameSize("Lio"), 22);
+    assert.ok(giantNameSize("Muhammad Rozagi") < 22);
+    assert.ok(giantNameSize("Muhammad Rozagi") * "Muhammad Rozagi".length * 0.5 <= 94);
+});
+
+test("splits verified skills from the rest without duplicates and with caps", () => {
+    const result = splitSkills(["react", "Go", "PYTHON", " ", "Docker", "go"], [{ skill: "React" }, { skill: "Python" }, { skill: "" }], 6, 2);
+    assert.deepEqual(result.verified.map((item) => item.skill), ["React", "Python"]);
+    assert.deepEqual(result.others, ["Go", "Docker"]);
+    assert.equal(result.hiddenOthers, 0);
+    const capped = splitSkills(["A", "B", "C", "D"], [], 6, 2);
+    assert.deepEqual(capped.others, ["A", "B"]);
+    assert.equal(capped.hiddenOthers, 2);
 });

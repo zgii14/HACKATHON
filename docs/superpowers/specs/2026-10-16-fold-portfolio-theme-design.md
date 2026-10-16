@@ -20,7 +20,7 @@ yang bergerak mengikuti scroll, dengan tipografi extra condensed raksasa dan blo
 | Topik | Keputusan |
 |---|---|
 | Kedalaman konsep | **Full device**: seluruh portfolio hidup di frame device sticky; scroll halaman menggerakkan isi layar (satu scrollbar, bukan scroll bersarang). |
-| Mobile (< 768px) | **Layar = device**: tanpa bezel; layar kunci layar penuh lalu dilipat keluar (reveal), sisanya section biasa bergaya sama. Frame + engsel mulai 768px. |
+| Mobile (< 768px) | **HP potret berbezel** (revisi user saat implementasi; awalnya "layar = device"): mekanisme scroll sama dengan desktop tetapi tanpa unfold. Layar kunci berayun keluar seperti pintu, isi bergeser di layar HP (dipadatkan: foto hero di atas, daftar dibatasi), layar panggilan berayun masuk di akhir. Tablet + engsel mulai 768px. |
 | Font | Persis referensi: **Sofia Sans Extra Condensed 900** (`next/font/google`), **Geist** + **Geist Mono** dari paket npm **`geist`** (dependency baru disetujui). Semua diimpor hanya di file tema. |
 | Toggle pengunjung | Ikut dua-duanya: pil latar **Basic / Glow / Orbit** dan 4 titik warna bezel. Disimpan per pengunjung di localStorage, dibaca setelah mount. Default Basic + perak. |
 | Reduced-motion | **Tidak dihormati** (permintaan user): motion jalan untuk semua pengunjung, tanpa cabang render reduced-motion. |
@@ -58,8 +58,8 @@ tinggi adegan, dan progres scroll menggerakkan isi layar.
    "slide to talk" yang membuka kontak utama (drag sampai ujung, atau klik/Enter). Tanpa kontak → slider
    tidak ada, layar hanya nama. Nama raksasa terbelah atas-bawah. Footer kredit GitHire di luar device.
 
-Mobile: adegan 1 layar penuh tanpa bezel, lalu dilipat keluar saat scroll (rotateY + fade); adegan 3–8
-menjadi section biasa bertipografi dan warna sama; dock jadi pil mengambang di bawah.
+Mobile: HP potret sticky (lebar min(400px, 86vw)); adegan sama dengan desktop tanpa engsel. Toggle latar dan
+warna bezel juga tampil di mobile. Desktop vs HP dipilih CSS (`hidden md:block` / `md:hidden`), bukan JS.
 
 ## Sistem visual
 
