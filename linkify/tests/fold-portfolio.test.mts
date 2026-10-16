@@ -172,23 +172,25 @@ test("parses stored preferences defensively", () => {
     assert.deepEqual(parseFoldPrefs('{"backdrop":"neon","bezel":7}'), { backdrop: "basic", bezel: "silver" });
 });
 
-test("schedules unfold, screen stops and fold-back along the scroll track", () => {
+test("moves the screens continuously between unfold and fold-back", () => {
+    // Tanpa jeda diam per layar: jeda membuat scroll terasa berhenti-berhenti.
     const track = buildTrack(3);
-    assert.equal(track.steps, 5);
+    assert.equal(track.steps, 4);
     assert.deepEqual(track.unfold, [0, 1]);
-    assert.deepEqual(track.fold, [4, 5]);
-    assert.deepEqual(track.stripInput, [0, 1, 1.55, 2, 2.55, 3, 5]);
-    assert.deepEqual(track.stripOutput, [0, 0, 0, 1, 1, 2, 2]);
-    assert.equal(track.restStep(0), 1.25);
-    assert.equal(track.restStep(2), 3.25);
-    assert.equal(track.restStep(3), 5);
+    assert.deepEqual(track.fold, [3, 4]);
+    assert.deepEqual(track.stripInput, [0, 1, 3, 4]);
+    assert.deepEqual(track.stripOutput, [0, 0, 2, 2]);
+    assert.equal(track.restStep(0), 1);
+    assert.equal(track.restStep(2), 3);
+    assert.equal(track.restStep(3), 4);
 });
 
-test("keeps the strip transform valid with a single screen", () => {
+test("keeps the strip transform strictly increasing with a single screen", () => {
     const track = buildTrack(1);
-    assert.equal(track.steps, 3);
-    assert.deepEqual(track.stripInput, [0, 1, 3]);
-    assert.deepEqual(track.stripOutput, [0, 0, 0]);
+    assert.equal(track.steps, 2);
+    assert.deepEqual(track.fold, [1, 2]);
+    assert.deepEqual(track.stripInput, [0, 2]);
+    assert.deepEqual(track.stripOutput, [0, 0]);
 });
 
 test("shrinks the giant name for long names", () => {

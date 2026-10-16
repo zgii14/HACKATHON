@@ -273,31 +273,29 @@ export type FoldTrack = {
     steps: number;
     unfold: [number, number];
     fold: [number, number];
-    /** Titik kunci strip layar: langkah → indeks layar (diam di awal langkah, bergeser di 45% akhir). */
+    /** Titik kunci strip layar: langkah → indeks layar. Bergeser terus tanpa jeda diam per layar. */
     stripInput: number[];
     stripOutput: number[];
     restStep: (index: number) => number;
 };
 
-/** Jadwal scroll desktop untuk `screenCount` layar strip (tanpa layar panggilan di sisi belakang). */
+/**
+ * Jadwal scroll untuk `screenCount` layar strip (tanpa layar panggilan di sisi belakang):
+ * langkah 0→1 membuka engsel, 1→count menggeser strip linear (satu layar per langkah), lalu satu langkah melipat.
+ */
 export function buildTrack(screenCount: number): FoldTrack {
     const count = Math.max(1, screenCount);
-    const steps = count + 2;
-    const stripInput = [0, 1];
-    const stripOutput = [0, 0];
-    for (let index = 0; index < count - 1; index += 1) {
-        stripInput.push(1 + index + 0.55, 2 + index);
-        stripOutput.push(index, index + 1);
-    }
-    stripInput.push(steps);
-    stripOutput.push(count - 1);
+    const steps = count + 1;
+    // Satu layar: strip tidak bergerak; titik input harus naik ketat agar useTransform valid.
+    const stripInput = count === 1 ? [0, steps] : [0, 1, count, steps];
+    const stripOutput = count === 1 ? [0, 0] : [0, 0, count - 1, count - 1];
     return {
         steps,
         unfold: [0, 1],
-        fold: [count + 1, steps],
+        fold: [count, steps],
         stripInput,
         stripOutput,
-        restStep: (index) => (index >= count ? steps : 1 + index + 0.25),
+        restStep: (index) => (index >= count ? steps : 1 + index),
     };
 }
 
