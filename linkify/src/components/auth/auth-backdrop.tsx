@@ -1,13 +1,13 @@
 import { cn } from "@/utils";
 import Image from "next/image";
 
-const POSTERS = ["editorial", "developer", "professional", "maestro", "arcade"] as const;
+const POSTERS = ["editorial", "developer", "professional", "maestro", "arcade", "fold"] as const;
 const COLUMNS = 4;
 
 /**
  * Latar halaman auth: mosaik poster portfolio GitHire, miring dan nyaris
  * transparan, memudar ke warna latar di tengah supaya form tetap terbaca.
- * Pesannya: ini yang akan kamu buat. Hanya 5 gambar unik (di-cache browser);
+ * Pesannya: ini yang akan kamu buat. Hanya 6 gambar unik (di-cache browser);
  * kolom bergeser pelan dan diam saat prefers-reduced-motion.
  */
 export function AuthBackdrop() {

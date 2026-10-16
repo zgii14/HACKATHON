@@ -19,7 +19,7 @@ Tugasmu: menambahkan **satu tema portfolio publik baru**.
 
 ### [ISI SENDIRI]
 - Key tema (huruf kecil, satu kata, mis. `brutal`): `<KEY>`
-  Jangan pakai key yang sudah ada (`editorial`, `developer`, `professional`, `maestro`, `arcade`), `maxfolio`,
+  Jangan pakai key yang sudah ada (`editorial`, `developer`, `professional`, `maestro`, `arcade`, `fold`), `maxfolio`,
   atau `retro` / `neon`: dua key terakhir dipakai test sebagai contoh tema tidak valid
   (`linkify/tests/public-portfolio-theme.test.mts`, `backend/test_portfolio.py`), jadi memakainya memecahkan test.
 - Nama tampil (mis. "Brutal"): `<LABEL>`

@@ -10,6 +10,7 @@ const THEMES = [
     { key: "professional", label: "Professional" },
     { key: "maestro", label: "Maestro" },
     { key: "arcade", label: "Arcade" },
+    { key: "fold", label: "Fold" },
 ] as const;
 
 type ThemeKey = (typeof THEMES)[number]["key"];

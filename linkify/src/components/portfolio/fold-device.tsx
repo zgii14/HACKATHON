@@ -169,6 +169,7 @@ export function FoldStage(props: StageProps) {
     const lockOpacity = useTransform(callOpacity, (value) => 1 - value);
     const nameOpacity = useTransform(t, [0, 0.55, foldStart + 0.4, foldEnd], [1, 0, 0, 1]);
     const nameScale = useTransform(t, [0, 0.55], [1, 1.08]);
+    const phoneShadow = useTransform(contentOpacity, (value) => 1 - value);
 
     const sceneProps: SceneProps = { ...props, onNavigate: goTo };
     const frame: CSSProperties = { backgroundColor: bezel };
@@ -178,7 +179,9 @@ export function FoldStage(props: StageProps) {
             <GiantName name={portfolio.content.name || "Portfolio"} opacity={nameOpacity} scale={nameScale} />
             <DeviceEntrance className="mt-6">
                 <motion.div style={{ x: deviceX, width: "min(1040px, 92vw)", height: "min(640px, calc(100svh - 170px))", perspective: 2600 }} className="relative">
-                    <div className="absolute -bottom-10 left-[12%] right-[12%] h-10 rounded-[50%] bg-black/25 blur-2xl" aria-hidden="true" />
+                    {/* Bayangan lantai: selebar HP saat terlipat, selebar tablet saat terbuka. */}
+                    <motion.div style={{ opacity: phoneShadow }} className="absolute -bottom-10 left-[56%] right-[6%] h-10 rounded-[50%] bg-black/25 blur-2xl" aria-hidden="true" />
+                    <motion.div style={{ opacity: contentOpacity }} className="absolute -bottom-10 left-[12%] right-[12%] h-10 rounded-[50%] bg-black/25 blur-2xl" aria-hidden="true" />
                     {/* Belahan kanan (diam) */}
                     <motion.div
                         className="absolute inset-y-0 right-0 w-1/2 rounded-r-[46px] p-[10px] pl-0 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.45)]"
@@ -202,7 +205,7 @@ export function FoldStage(props: StageProps) {
                             </div>
                         </div>
                     </motion.div>
-                    <div className="absolute inset-y-[10px] left-1/2 z-[5] w-px bg-black/10" aria-hidden="true" />
+                    <motion.div style={{ opacity: contentOpacity }} className="absolute inset-y-[10px] left-1/2 z-[5] w-px bg-black/10" aria-hidden="true" />
 
                     {/* Isi layar lebar */}
                     <motion.div
